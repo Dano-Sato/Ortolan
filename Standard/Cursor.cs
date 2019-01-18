@@ -26,6 +26,11 @@ namespace TestSheet
 		private MouseState OldMouseState;
 
 
+		public void SetSprite(string s)
+		{
+			TestTexture = Game1.content.Load<Texture2D>(s);
+		}
+
 		public Point getPos()
 		{
 			return mousePos;

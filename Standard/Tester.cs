@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System;
+using System.Collections.Generic;
 
 namespace TestSheet
 {
@@ -73,7 +70,18 @@ namespace TestSheet
 				}
 				return;
 			}
-			foreach(Enemy e in enemies)
+
+			for(int i=0;i<enemies.Count;i++)
+			{
+				if (enemies[i].getBound().Contains(Game1.cursor.getPos()) && Distance(enemies[i].getPos(), player.getPos()) < player.getRange())
+				{
+					Game1.cursor.SetSprite("Sword");
+					break;
+				}
+				Game1.cursor.SetSprite("Cursor");
+			}
+			/*
+			foreach (Enemy e in enemies)
 			{
 				if(e.getBound().Contains(Game1.cursor.getPos())&&Distance(e.getPos(),player.getPos())<player.getRange())
 				{
@@ -81,7 +89,7 @@ namespace TestSheet
 					break;
 				}
 				Game1.cursor.SetSprite("Cursor");
-			}
+			}*/
 
 
 			player.MoveUpdate();
@@ -111,11 +119,15 @@ namespace TestSheet
 				if (Timer % ZombieTime == 0)
 				{
 					enemies.Add(new Enemy());
+					if (enemies.Count > 300)
+						enemies.RemoveAt(0);
 				}
 			}
 			else
 			{
-				ZombieDance = true; 
+				ZombieDance = true;
+				MouseLogo.setSprite("Cake");
+				MouseButton.setSprite("Cake2");
 			}
 
 		}
@@ -124,10 +136,11 @@ namespace TestSheet
 		public void Draw()
 		{
 
-
 			MouseLogo.Draw();
 			if(Timer%10<=5&&Score<10)
 				MouseButton.Draw(Color.Red);
+			if (Timer % 10 <= 5 && ZombieDance)
+				MouseButton.Draw(Color.Crimson);
 			Game1.spriteBatch.Begin();
 			Game1.spriteBatch.DrawString(font, "SCORE : " + Score, new Vector2(300, 450), Color.White);
 			if(Score<300)
@@ -147,9 +160,9 @@ namespace TestSheet
 			if (Score > 200)
 				LightLayer3.Draw(Color.AntiqueWhite * 0.15f * Math.Min(5f, (float)((Score - 150.0)/50)));
 
-			foreach (Enemy e in enemies)
+			for(int i=0;i<enemies.Count;i++)
 			{
-				e.Draw();
+				enemies[i].Draw();
 			}
 			for(int i=0;i<AnimationList.Count;i++)
 			{
@@ -162,6 +175,7 @@ namespace TestSheet
 				Game1.spriteBatch.DrawString(font, "Press \"R\" button to restart", new Vector2(400, 450), Color.Red);
 				Game1.spriteBatch.End(); 
 			}
+			
 		}
 
 		public class Player
@@ -221,10 +235,10 @@ namespace TestSheet
 				{
 					if (Game1.cursor.didPlayerJustRightClick() || Game1.cursor.didPlayerJustLeftClick())
 					{
-						foreach (Enemy e in enemies)
-						{
 
-							if (e.getBound().Contains(Game1.cursor.getPos()) && Distance(getPos(), e.getPos()) < Range)
+						for(int i=0;i<enemies.Count;i++)
+						{
+							if (enemies[i].getBound().Contains(Game1.cursor.getPos()) && Distance(getPos(), enemies[i].getPos()) < Range)
 							{
 								return;
 							}
@@ -237,18 +251,16 @@ namespace TestSheet
 				}
 				if (Game1.cursor.didPlayerJustRightClick()||Game1.cursor.didPlayerJustLeftClick())
 				{
-					int i = 0;
-					foreach(Enemy e in enemies)
+					for (int i = 0; i < enemies.Count; i++)
 					{
-						
-						if(e.getBound().Contains(Game1.cursor.getPos())&&Distance(getPos(),e.getPos())<Range)
+						if (enemies[i].getBound().Contains(Game1.cursor.getPos()) && Distance(getPos(), enemies[i].getPos()) < Range)
 						{
 							isAttacking = true;
 							AttackIndex = i;
 							AttackTimer = AttackSpeed;
 							return;
 						}
-						i++;
+
 					}
 					MovePoint = Game1.cursor.getPos();
 					AnimationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X-15, MovePoint.Y-15, 30, 30)));

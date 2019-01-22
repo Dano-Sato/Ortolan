@@ -34,6 +34,7 @@ namespace TestSheet
 		public static bool GameOver=false;
 		public static bool ZombieDance = false;
 		public static int Timer = 0;
+		public static int EndTimer = 0;
 		public static int Score = 0;
 		public static int ZombieTime = 40;
 		public static DrawingLayer LightLayer = new DrawingLayer("Light", new Rectangle(0,0,1200,1200));
@@ -41,6 +42,7 @@ namespace TestSheet
 		public static DrawingLayer LightLayer3 = new DrawingLayer("Player", new Rectangle(0, 0, 150, 150));
 		public static DrawingLayer MouseLogo = new DrawingLayer("Mouse", new Rectangle(270, 400, 30, 30));
 		public static DrawingLayer MouseButton = new DrawingLayer("Mouse3", new Rectangle(270, 400, 30, 30));
+		public static DrawingLayer RealMonoLogo = new DrawingLayer("RealMono", new Rectangle(0, 0, 800, 800));
 
 		public static KeyboardState OldkeyboardState;
 		public static KeyboardState keyboardState;
@@ -50,6 +52,8 @@ namespace TestSheet
 		public static List<int> AnimationTimerList = new List<int>();
 		public static int SoundTrack = 0;
 		public static int FadeTimer = 0;
+		public static float BaseVolume = 1.0f;
+		public static bool GameEnd = false;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -64,6 +68,26 @@ namespace TestSheet
 		{
 			Timer++;
 			keyboardState = Keyboard.GetState();
+			if (GameEnd)
+			{
+				if(EndTimer<1000)
+					EndTimer++;
+				if(EndTimer==1000)
+				{
+					Score = 0;
+					Timer = 0;
+					ZombieTime = 40;
+					enemies.Clear();
+					enemies.Add(new Enemy());
+					enemies.Add(new Enemy());
+
+					player.reset();
+					GameOver = false;
+					GameEnd = false;
+					ZombieDance = false;
+				}
+				return;
+			}
 			if (GameOver)
 			{
 				if (keyboardState.IsKeyDown(Keys.R))
@@ -82,46 +106,49 @@ namespace TestSheet
 			}
 			if (keyboardState!=OldkeyboardState)
 			{
-				
+				if(keyboardState.IsKeyDown(Keys.OemTilde))
+				{
+					BaseVolume = 0f;
+				}
 				if (keyboardState.IsKeyDown(Keys.D1))
 				{
-					MediaPlayer.Volume = 0.1f;
+					BaseVolume = 0.1f;
 				}
 				if (keyboardState.IsKeyDown(Keys.D2))
 				{
-					MediaPlayer.Volume = 0.2f;
+					BaseVolume = 0.2f;
 				}
 				if (keyboardState.IsKeyDown(Keys.D3))
 				{
-					MediaPlayer.Volume = 0.3f;
+					BaseVolume = 0.3f;
 				}
 				if (keyboardState.IsKeyDown(Keys.D4))
 				{
-					MediaPlayer.Volume = 0.4f;
+					BaseVolume = 0.4f;
 				}
 				if (keyboardState.IsKeyDown(Keys.D5))
 				{
-					MediaPlayer.Volume = 0.5f;
+					BaseVolume = 0.5f;
 				}
 				if (keyboardState.IsKeyDown(Keys.D6))
 				{
-					MediaPlayer.Volume = 0.6f;
+					BaseVolume = 0.6f;
 				}
 				if (keyboardState.IsKeyDown(Keys.D7))
 				{
-					MediaPlayer.Volume = 0.7f;
+					BaseVolume = 0.7f;
 				}
 				if (keyboardState.IsKeyDown(Keys.D8))
 				{
-					MediaPlayer.Volume = 0.8f;
+					BaseVolume = 0.8f;
 				}
 				if (keyboardState.IsKeyDown(Keys.D9))
 				{
-					MediaPlayer.Volume = 0.9f;
+					BaseVolume = 0.9f;
 				}
 				if (keyboardState.IsKeyDown(Keys.D0))
 				{
-					MediaPlayer.Volume = 1.0f;
+					BaseVolume = 1.0f;
 				}
 				
 			}
@@ -173,9 +200,40 @@ namespace TestSheet
 				ZombieDance = true;
 				MouseLogo.setSprite("Cake");
 				MouseButton.setSprite("Cake2");
-
+				EndTimer = 3000;
 			}
-			
+
+			if (ZombieDance&&EndTimer>0)
+				EndTimer--;
+			if (ZombieDance && EndTimer == 0)
+				GameEnd = true;
+		
+
+			if (Score <= 280)
+				MediaPlayer.Volume = BaseVolume;
+			if(Score>280&&Score<=300)
+			{
+				MediaPlayer.Volume = BaseVolume*(float)((300-Score)/20.0);
+			}
+			if(Score==306&&SoundTrack==0)
+			{
+				SoundTrack = 1;
+				song = Game1.content.Load<Song>("Tchai3");
+				MediaPlayer.Play(song);
+				MediaPlayer.IsRepeating = false;
+			}
+			if(Score>306)
+			{
+				MediaPlayer.Volume = Math.Min(BaseVolume*0.6f, MediaPlayer.Volume + BaseVolume * 0.001f);
+			}
+			if (Score > 330)
+			{
+				MediaPlayer.Volume = Math.Min(BaseVolume * 0.6f, MediaPlayer.Volume + BaseVolume * 0.003f);
+			}
+			if (Score>=400)
+			{
+				MediaPlayer.Volume = Math.Min(BaseVolume, MediaPlayer.Volume + BaseVolume * 0.003f);
+			}
 			OldkeyboardState = Keyboard.GetState();
 
 		}
@@ -183,7 +241,15 @@ namespace TestSheet
 		//Game1.Class 내에 Tester.Draw()로 추가될 드로우 액션문입니다. 다양한 드로잉을 시험할 수 있습니다.
 		public void Draw()
 		{
-
+			if(GameEnd)
+			{
+				LightLayer2.Draw(Color.White);
+				RealMonoLogo.Draw(Color.White,Math.Min((float)(EndTimer/300.0),1.0f));
+				Game1.spriteBatch.Begin();
+				Game1.spriteBatch.DrawString(font, "Thank you for playing!", new Vector2(500, 500), Color.Aquamarine);
+				Game1.spriteBatch.End();
+				return;
+			}
 			MouseLogo.Draw();
 			if(Timer%10<=5&&Score<10)
 				MouseButton.Draw(Color.Red);
@@ -206,7 +272,7 @@ namespace TestSheet
 			if (Score > 200)
 				LightLayer3.Draw(Color.AntiqueWhite * 0.15f * Math.Min(5f, (float)((Score - 150.0)/50)));
 			if (ZombieDance)
-				LightLayer2.Draw(Color.White * (float)((Timer%3000)/3000.0));
+				LightLayer2.Draw(Color.White * (float)((3000-EndTimer)/3000.0));
 			player.Draw();
 			player.DrawAttack();
 
@@ -255,6 +321,13 @@ namespace TestSheet
 				AttackTimer = 0;
 				AttackIndex = -1;
 				isAttacking = false;
+				if(SoundTrack!=0)
+				{
+					SoundTrack = 0;
+					song = Game1.content.Load<Song>("12Var");
+					MediaPlayer.Play(song);
+					MediaPlayer.IsRepeating = true;
+				}
 			}
 
 			public Point getPos()
@@ -363,7 +436,15 @@ namespace TestSheet
 					}
 					else//투사체 적중
 					{
+						Rectangle r = enemies[AttackIndex].getBound();
 						enemies.RemoveAt(AttackIndex);
+						int rn = random.Next(3, 5);
+						for (int i=0;i<rn; i++)
+						{
+							int s = random.Next(10, 50);
+							AnimationList.Add(new DrawingLayer("Player2", new Rectangle(r.Center.X-random.Next(-30,30), r.Center.Y- random.Next(-30, 30),s,s)));
+							AnimationTimerList.Add(random.Next(5,15));
+						}
 						Score++;
 						isAttacking = false;
 						return;
@@ -438,7 +519,7 @@ namespace TestSheet
 				if (ZombieDance)
 					enemy.Draw(Color.White);
 				else if (Score >= 10)
-					enemy.Draw(Color.Black);
+					enemy.Draw(Color.White);
 				else
 					enemy.Draw(Color.White);
 			}

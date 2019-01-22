@@ -35,7 +35,7 @@ namespace TestSheet
 		public static bool ZombieDance = false;
 		public static int Timer = 0;
 		public static int EndTimer = 0;
-		public static int Score = 0;
+		public static int Score = 300;
 		public static int ZombieTime = 40;
 		public static DrawingLayer LightLayer = new DrawingLayer("Light", new Rectangle(0,0,1200,1200));
 		public static DrawingLayer LightLayer2 = new DrawingLayer("WhiteSpace", new Rectangle(0, 0, 1200, 1200));
@@ -54,6 +54,8 @@ namespace TestSheet
 		public static int FadeTimer = 0;
 		public static float BaseVolume = 1.0f;
 		public static bool GameEnd = false;
+		public static bool PressedQ = false;
+		public static int QTimer = 0;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -150,6 +152,11 @@ namespace TestSheet
 				{
 					BaseVolume = 1.0f;
 				}
+				if(keyboardState.IsKeyDown(Keys.Q)&&!OldkeyboardState.IsKeyDown(Keys.Q))
+				{
+					PressedQ = true;
+					QTimer = 10;
+				}
 				
 			}
 		
@@ -167,9 +174,9 @@ namespace TestSheet
 			player.MoveUpdate();
 			LightLayer3.setPosition(player.getPos().X-40+random.Next(-3,3), player.getPos().Y-40 + random.Next(-3,3));
 			player.AttackUpdate();
-			foreach(Enemy e in enemies)
+			for(int i=0;i<enemies.Count;i++)
 			{
-				e.MoveUpdate();
+				enemies[i].MoveUpdate(i);
 			}
 
 			for (int i = 0; i < AnimationTimerList.Count; i++)
@@ -303,7 +310,7 @@ namespace TestSheet
 			private Point MovePoint=new Point(0,0);
 			private int Range=160;
 			private int MoveSpeed=4;
-			private int AttackSpeed = 9;
+			private int AttackSpeed = 15;
 			private int AttackTimer = 0;
 			private int AttackIndex = -1;
 			private bool isAttacking=false;
@@ -328,6 +335,11 @@ namespace TestSheet
 					MediaPlayer.Play(song);
 					MediaPlayer.IsRepeating = true;
 				}
+			}
+
+			public int getAttackIndex()
+			{
+				return AttackIndex;
 			}
 
 			public Point getPos()
@@ -373,7 +385,15 @@ namespace TestSheet
 				{
 					direction.MoveTo(getPos().X+20, getPos().Y+20, 7);
 				}
-
+				if(PressedQ)
+				{
+					QTimer--;
+					if (QTimer == 0)
+						PressedQ = false;
+					player.MoveTo(Game1.cursor.getPos().X-40, Game1.cursor.getPos().Y-40, MoveSpeed);
+					MovePoint = new Point(0, 0);
+					return;
+				}
 
 				if (isAttacking)
 				{
@@ -391,6 +411,8 @@ namespace TestSheet
 						AnimationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)));
 						AnimationTimerList.Add(10);
 					}
+					if(AttackTimer<AttackSpeed-2)
+					player.MoveTo(Game1.cursor.getPos().X - 40, Game1.cursor.getPos().Y - 40, MoveSpeed * 2);
 					return;
 				}
 				if (Game1.cursor.didPlayerJustRightClick()||Game1.cursor.didPlayerJustLeftClick())
@@ -447,6 +469,7 @@ namespace TestSheet
 						}
 						Score++;
 						isAttacking = false;
+						AttackIndex = -1;
 						return;
 					}
 				}
@@ -510,7 +533,7 @@ namespace TestSheet
 				if (enemy.GetBound().Contains(Game1.cursor.getPos()))
 				{
 					if (Distance(player.getPos(), getPos()) > player.getRange())
-						enemy.Draw(Color.Chocolate);
+						enemy.Draw(Color.Blue);
 					else
 						enemy.Draw(Color.Crimson);
 					return;
@@ -524,7 +547,7 @@ namespace TestSheet
 					enemy.Draw(Color.White);
 			}
 
-			public void MoveUpdate()
+			public void MoveUpdate(int Index)
 			{
 				if(ZombieDance)
 				{
@@ -549,7 +572,7 @@ namespace TestSheet
 				}
 
 				enemy.MoveTo(player.getPos().X+random.Next(-300,300), player.getPos().Y+random.Next(-300,300), 5);
-				if((Distance(player.getPos(),getPos()))<=10)
+				if((Distance(player.getPos(),getPos()))<=10&&Index!=player.getAttackIndex())
 				{
 					GameOver = true; 
 				}

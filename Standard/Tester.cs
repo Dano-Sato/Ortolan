@@ -40,7 +40,7 @@ namespace TestSheet
 		public static bool ZombieDance = false;
 		public static int Timer = 0;
 		public static int EndTimer = 0;
-		public static int Score = 300;
+		public static int Score = 0;
 		public static int ZombieTime = 40;
 		public static DrawingLayer LightLayer = new DrawingLayer("Light", new Rectangle(0,0,1200,1200));
 		public static DrawingLayer LightLayer2 = new DrawingLayer("WhiteSpace", new Rectangle(0, 0, 1200, 1200));
@@ -61,6 +61,11 @@ namespace TestSheet
 		public static bool GameEnd = false;
 		public static bool PressedQ = false;
 		public static int BoostTimer = 0;
+		public static bool MoveLock = false;
+		public static int ComboTimer = 0;
+		public static int Combo = 0;
+		public static int Interval = 0;
+		public static int Test = 0;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -156,6 +161,10 @@ namespace TestSheet
 				if (keyboardState.IsKeyDown(Keys.D0))
 				{
 					BaseVolume = 1.0f;
+				}
+				if(keyboardState.IsKeyDown(Keys.M)&&!OldkeyboardState.IsKeyDown(Keys.M))
+				{
+					MoveLock = !MoveLock;
 				}
 			}
 		
@@ -262,6 +271,8 @@ namespace TestSheet
 			if (Timer % 10 <= 5 && ZombieDance)
 				MouseButton.Draw(Color.Crimson);
 			Game1.spriteBatch.Begin();
+			Game1.spriteBatch.DrawString(font, "COMBO : " + Combo , new Vector2(300,550), Color.White);//임시
+			Game1.spriteBatch.DrawString(font, Test.ToString(), new Vector2(200, 200), Color.White);//임시
 			Game1.spriteBatch.DrawString(font, "SCORE : " + Score+"/400", new Vector2(300, 450), Color.White);
 			if(Score<300)
 				Game1.spriteBatch.DrawString(font, "Right Click to live", new Vector2(300, 400), Color.White);
@@ -269,10 +280,12 @@ namespace TestSheet
 				Game1.spriteBatch.DrawString(font, "Live to click", new Vector2(300, 400), Color.White);
 			else
 				Game1.spriteBatch.DrawString(font, "Congratulation!", new Vector2(300, 400), Color.White);
+			if (MoveLock)
+				Game1.spriteBatch.DrawString(font, "* Move Locked", new Vector2(300, 600), Color.White);
 			Game1.spriteBatch.DrawString(font, "Press \"ESC\" Button to leave", new Vector2(300, 500), Color.White);
 			Game1.spriteBatch.End();
-
 	
+
 			LightLayer.Draw();
 			LightLayer2.Draw(Color.Purple * 0.3f * Math.Min(1.2f,(float)(Score / 100.0)));
 			if (Score > 200)
@@ -438,7 +451,8 @@ namespace TestSheet
 					AnimationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X-15, MovePoint.Y-15, 30, 30)));
 					AnimationTimerList.Add(10);
 				}
-				if (MovePoint.X!=0||MovePoint.Y!=0)
+				
+				if (!MoveLock&&(MovePoint.X!=0||MovePoint.Y!=0))
 				{
 					if (BoostTimer > 0)
 						BoostTimer--;
@@ -455,7 +469,30 @@ namespace TestSheet
 				{
 					if(AttackTimer==AttackSpeed)
 					{
-						soundEffect.Play();
+						Interval = Timer - ComboTimer;
+						Test = (Interval + 3) % 30;
+						if(Score<300)
+						{
+							if (Interval % 30 > 26 || Interval % 30 < 4)
+							{
+								Combo++;
+							}
+							else
+								Combo = 0;
+						}
+						else if(Score<400)
+						{
+							if (Interval % 26 > 23 || Interval % 26 < 3)
+							{
+								Combo++;
+							}
+							else
+								Combo = 0;
+						}
+						SoundEffectInstance soundEffectInstance = soundEffect.CreateInstance();
+						soundEffectInstance.Volume = BaseVolume;
+						soundEffectInstance.Play();
+						ComboTimer = Timer;
 					}
 					if (AttackTimer>0)//투사체 날아가는중
 					{

@@ -63,6 +63,11 @@ namespace TestSheet
 			return Bound.Location;
 		}
 
+		public Point GetCenter()
+		{
+			return Bound.Center;
+		}
+
 		public void setPosition(int x, int y)
 		{
 			MoveTo(x, y);

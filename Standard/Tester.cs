@@ -26,6 +26,11 @@ namespace TestSheet
 			return new Point((int)x, (int)y);
 		}
 
+		public static bool JustPressedA()
+		{
+			return keyboardState.IsKeyDown(Keys.A) && !OldkeyboardState.IsKeyDown(Keys.A);
+		}
+
 		//아마 당신은 기본 폰트를 필요로 할 것입니다.
 		public static SpriteFont font = Game1.content.Load<SpriteFont>("TestFont");
 		public static Random random=new Random();
@@ -55,7 +60,7 @@ namespace TestSheet
 		public static float BaseVolume = 1.0f;
 		public static bool GameEnd = false;
 		public static bool PressedQ = false;
-		public static int QTimer = 0;
+		public static int BoostTimer = 0;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -152,12 +157,6 @@ namespace TestSheet
 				{
 					BaseVolume = 1.0f;
 				}
-				if(keyboardState.IsKeyDown(Keys.Q)&&!OldkeyboardState.IsKeyDown(Keys.Q))
-				{
-					PressedQ = true;
-					QTimer = 10;
-				}
-				
 			}
 		
 			for (int i=0;i<enemies.Count;i++)
@@ -265,9 +264,9 @@ namespace TestSheet
 			Game1.spriteBatch.Begin();
 			Game1.spriteBatch.DrawString(font, "SCORE : " + Score+"/400", new Vector2(300, 450), Color.White);
 			if(Score<300)
-				Game1.spriteBatch.DrawString(font, "Right click to live", new Vector2(300, 400), Color.White);
+				Game1.spriteBatch.DrawString(font, "Right Click to live", new Vector2(300, 400), Color.White);
 			else if(Score<400)
-				Game1.spriteBatch.DrawString(font, "Live to right click", new Vector2(300, 400), Color.White);
+				Game1.spriteBatch.DrawString(font, "Live to click", new Vector2(300, 400), Color.White);
 			else
 				Game1.spriteBatch.DrawString(font, "Congratulation!", new Vector2(300, 400), Color.White);
 			Game1.spriteBatch.DrawString(font, "Press \"ESC\" Button to leave", new Vector2(300, 500), Color.White);
@@ -385,19 +384,11 @@ namespace TestSheet
 				{
 					direction.MoveTo(getPos().X+20, getPos().Y+20, 7);
 				}
-				if(PressedQ)
-				{
-					QTimer--;
-					if (QTimer == 0)
-						PressedQ = false;
-					player.MoveTo(Game1.cursor.getPos().X-40, Game1.cursor.getPos().Y-40, MoveSpeed);
-					MovePoint = new Point(0, 0);
-					return;
-				}
+				
 
 				if (isAttacking)
 				{
-					if (Game1.cursor.didPlayerJustRightClick() || Game1.cursor.didPlayerJustLeftClick())
+					if (Game1.cursor.didPlayerJustRightClick() || Game1.cursor.didPlayerJustLeftClick() || JustPressedA())
 					{
 
 						for(int i=0;i<enemies.Count;i++)
@@ -411,18 +402,32 @@ namespace TestSheet
 						AnimationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)));
 						AnimationTimerList.Add(10);
 					}
+					MovePoint = DivPoint(player.GetCenter(), Game1.cursor.getPos(),0.8);
 					if(AttackTimer<AttackSpeed-2)
-					player.MoveTo(Game1.cursor.getPos().X - 40, Game1.cursor.getPos().Y - 40, MoveSpeed * 2);
+					{
+						player.MoveTo(Game1.cursor.getPos().X - 40, Game1.cursor.getPos().Y - 40, MoveSpeed * 2);
+						AnimationList.Add(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))));
+						AnimationTimerList.Add(8);
+					}
 					return;
 				}
-				if (Game1.cursor.didPlayerJustRightClick()||Game1.cursor.didPlayerJustLeftClick())
+				if (Game1.cursor.didPlayerJustRightClick()||Game1.cursor.didPlayerJustLeftClick()||JustPressedA())
 				{
 					for (int i = 0; i < enemies.Count; i++)
 					{
 						if (enemies[i].getBound().Contains(Game1.cursor.getPos()) && Distance(getPos(), enemies[i].getPos()) < Range)
 						{
-							isAttacking = true;
+							int ClickDistance= Distance(Game1.cursor.getPos(), enemies[i].getCenter());
 							AttackIndex = i;
+							for (int j=i;j<enemies.Count;j++)
+							{
+								if(Distance(Game1.cursor.getPos(), enemies[i].getCenter())<ClickDistance)
+								{
+									AttackIndex = j;
+									ClickDistance = Distance(Game1.cursor.getPos(), enemies[i].getCenter());
+								}
+							}
+							isAttacking = true;
 							AttackTimer = AttackSpeed;
 							return;
 						}
@@ -435,7 +440,9 @@ namespace TestSheet
 				}
 				if (MovePoint.X!=0||MovePoint.Y!=0)
 				{
-					player.MoveTo(MovePoint.X - 40, MovePoint.Y - 40, MoveSpeed);
+					if (BoostTimer > 0)
+						BoostTimer--;
+					player.MoveTo(MovePoint.X - 40, MovePoint.Y - 40, MoveSpeed-BoostTimer);
 					int x2 = (MovePoint.X + 4 * getPos().X) / 5;
 					int y2 = (MovePoint.Y + 4 * getPos().Y) / 5;
 					direction.setPosition(x2 + 25, y2 + 25);
@@ -446,7 +453,6 @@ namespace TestSheet
 			{
 				if(isAttacking)
 				{
-					MovePoint = new Point(0, 0);
 					if(AttackTimer==AttackSpeed)
 					{
 						soundEffect.Play();
@@ -470,6 +476,7 @@ namespace TestSheet
 						Score++;
 						isAttacking = false;
 						AttackIndex = -1;
+						BoostTimer = 3;
 						return;
 					}
 				}
@@ -502,6 +509,11 @@ namespace TestSheet
 				return enemy.GetPosition();
 			}
 
+			public Point getCenter()
+			{
+				return enemy.GetCenter();
+			}
+
 			public Rectangle getBound()
 			{
 				return enemy.GetBound();
@@ -514,17 +526,17 @@ namespace TestSheet
 					enemy = new DrawingLayer("Player", new Rectangle(random.Next(0, 800), random.Next(0, 800), 80, 80));
 					return;
 				}
-				int x;
-				int y;
+				int x=0;
+				int y=0;
+			
 				if (random.Next(0, 2) == 0)
 					x = random.Next(15, 80);
 				else
-					x  = random.Next(670, 750);
+					x  = random.Next(800, 880);
 				if (random.Next(0, 2) == 0)
 					y = random.Next(15, 80);
 				else
 					y = random.Next(720, 800);
-
 				enemy = new DrawingLayer("Player", new Rectangle(x, y, 80, 80));
 			}
 
@@ -574,7 +586,7 @@ namespace TestSheet
 				enemy.MoveTo(player.getPos().X+random.Next(-300,300), player.getPos().Y+random.Next(-300,300), 5);
 				if((Distance(player.getPos(),getPos()))<=10&&Index!=player.getAttackIndex())
 				{
-					GameOver = true; 
+					GameOver = true;
 				}
 			}
 		}

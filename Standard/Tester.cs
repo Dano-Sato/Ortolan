@@ -65,7 +65,9 @@ namespace TestSheet
 		public static int ComboTimer = 0;
 		public static int Combo = 0;
 		public static int Interval = 0;
-		public static int Test = 0;
+		public static double TempoChecker = 0;
+		public static double NewTempo = 0;
+		public static double Tempo = 30;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -272,7 +274,7 @@ namespace TestSheet
 				MouseButton.Draw(Color.Crimson);
 			Game1.spriteBatch.Begin();
 			Game1.spriteBatch.DrawString(font, "COMBO : " + Combo , new Vector2(300,550), Color.White);//임시
-			Game1.spriteBatch.DrawString(font, Test.ToString(), new Vector2(200, 200), Color.White);//임시
+			Game1.spriteBatch.DrawString(font, String.Format("{0:0.##} {0:0.##}", TempoChecker,NewTempo), new Vector2(200, 200), Color.White);//임시
 			Game1.spriteBatch.DrawString(font, "SCORE : " + Score+"/400", new Vector2(300, 450), Color.White);
 			if(Score<300)
 				Game1.spriteBatch.DrawString(font, "Right Click to live", new Vector2(300, 400), Color.White);
@@ -469,8 +471,41 @@ namespace TestSheet
 				{
 					if(AttackTimer==AttackSpeed)
 					{
+						if(Score<307)
+						{
+							Tempo = 30;
+						}
+						else
+						{
+							Tempo = 25.7;
+						}
+						if (Combo == 0)
+						{
+							TempoChecker = Timer % Tempo;
+							Combo++;
+						}
+						else
+						{
+							NewTempo = Timer % Tempo;
+							if(Tempo - Math.Abs(TempoChecker - NewTempo) <= 5)
+							{
+								NewTempo = Tempo - NewTempo;
+							}
+							double TempoDisposition = Math.Abs(TempoChecker-NewTempo);
+							if(TempoDisposition>5)
+							{
+								Combo = 0;
+								TempoChecker = -1;
+							}
+							else
+							{
+								TempoChecker = (double)(TempoChecker * Combo) / (Combo + 1) + (double)(NewTempo) / (Combo + 1);
+								Combo++;
+							}
+
+						}
+						/*
 						Interval = Timer - ComboTimer;
-						Test = (Interval + 3) % 30;
 						if(Score<300)
 						{
 							if (Interval % 30 > 26 || Interval % 30 < 4)
@@ -489,6 +524,7 @@ namespace TestSheet
 							else
 								Combo = 0;
 						}
+						*/
 						SoundEffectInstance soundEffectInstance = soundEffect.CreateInstance();
 						soundEffectInstance.Volume = BaseVolume;
 						soundEffectInstance.Play();

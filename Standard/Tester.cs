@@ -28,7 +28,7 @@ namespace TestSheet
 
 		public static bool JustPressedA()
 		{
-			return keyboardState.IsKeyDown(Keys.A) && !OldkeyboardState.IsKeyDown(Keys.A);
+				return keyboardState.IsKeyDown(Keys.A) && !OldkeyboardState.IsKeyDown(Keys.A);
 		}
 
 		//아마 당신은 기본 폰트를 필요로 할 것입니다.
@@ -38,20 +38,25 @@ namespace TestSheet
 		public static List<Enemy> enemies=new List<Enemy>();
 		public static bool GameOver=false;
 		public static bool ZombieDance = false;
+		public static bool isZombieMode = false;
 		public static int Timer = 0;
 		public static int EndTimer = 0;
 		public static int Score = 0;
 		public static int ZombieTime = 40;
+		public static double Lightr = 0;
+		public static string ButtonInfoString = "Right Click";
 		public static DrawingLayer LightLayer = new DrawingLayer("Light", new Rectangle(0,0,1200,1200));
 		public static DrawingLayer LightLayer2 = new DrawingLayer("WhiteSpace", new Rectangle(0, 0, 1200, 1200));
 		public static DrawingLayer LightLayer3 = new DrawingLayer("Player", new Rectangle(0, 0, 150, 150));
 		public static DrawingLayer MouseLogo = new DrawingLayer("Mouse", new Rectangle(270, 400, 30, 30));
 		public static DrawingLayer MouseButton = new DrawingLayer("Mouse3", new Rectangle(270, 400, 30, 30));
 		public static DrawingLayer RealMonoLogo = new DrawingLayer("RealMono", new Rectangle(0, 0, 800, 800));
+		public static DrawingLayer BloodLayer= new DrawingLayer("Blood", new Rectangle(0, 0, 1200, 1200));
 
 		public static KeyboardState OldkeyboardState;
 		public static KeyboardState keyboardState;
 		public static SoundEffect soundEffect = Game1.content.Load<SoundEffect>("EnemyDead");
+		public static SoundEffect ZombieSoundEffect = Game1.content.Load<SoundEffect>("ZombieSound");
 		public static Song song = Game1.content.Load<Song>("12Var");
 		public static List<DrawingLayer> AnimationList=new List<DrawingLayer>();
 		public static List<int> AnimationTimerList = new List<int>();
@@ -62,12 +67,11 @@ namespace TestSheet
 		public static bool PressedQ = false;
 		public static int BoostTimer = 0;
 		public static bool MoveLock = false;
-		public static int ComboTimer = 0;
-		public static int Combo = 0;
 		public static int Interval = 0;
 		public static double TempoChecker = 0;
 		public static double NewTempo = 0;
 		public static double Tempo = 30;
+		public static Color ZombieColor = Color.White;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -203,6 +207,7 @@ namespace TestSheet
 			}
 
 			ZombieTime = 40 - Score/10;
+		
 			if(ZombieTime>0)
 			{
 				if (Timer % ZombieTime == 0)
@@ -228,28 +233,38 @@ namespace TestSheet
 
 			if (Score <= 280)
 				MediaPlayer.Volume = BaseVolume;
-			if(Score>280&&Score<=300)
+			else if(Score<=300)
 			{
 				MediaPlayer.Volume = BaseVolume*(float)((300-Score)/20.0);
 			}
-			if(Score==306&&SoundTrack==0)
+			else if(Score<=306&&SoundTrack==0)
 			{
 				SoundTrack = 1;
 				song = Game1.content.Load<Song>("Tchai3");
 				MediaPlayer.Play(song);
 				MediaPlayer.IsRepeating = false;
 			}
-			if(Score>306)
+			else if(Score<=330)
 			{
 				MediaPlayer.Volume = Math.Min(BaseVolume*0.6f, MediaPlayer.Volume + BaseVolume * 0.001f);
 			}
-			if (Score > 330)
+			else if (Score <= 400)
 			{
 				MediaPlayer.Volume = Math.Min(BaseVolume * 0.6f, MediaPlayer.Volume + BaseVolume * 0.003f);
 			}
-			if (Score>=400)
+			else
 			{
 				MediaPlayer.Volume = Math.Min(BaseVolume, MediaPlayer.Volume + BaseVolume * 0.003f);
+			}
+
+			if (Score == 10)
+			{
+				ZombieColor = Color.LightSeaGreen;
+				if(!isZombieMode)
+				{
+					isZombieMode = true;
+					soundEffect = Game1.content.Load<SoundEffect>("GunSound");
+				}
 			}
 			OldkeyboardState = Keyboard.GetState();
 
@@ -267,24 +282,27 @@ namespace TestSheet
 				Game1.spriteBatch.End();
 				return;
 			}
+			BloodLayer.Draw(Color.LightSeaGreen,Math.Min(10,Score)*0.1f);
 			MouseLogo.Draw();
 			if(Timer%10<=5&&Score<10)
 				MouseButton.Draw(Color.Red);
 			if (Timer % 10 <= 5 && ZombieDance)
 				MouseButton.Draw(Color.Crimson);
 			Game1.spriteBatch.Begin();
-			Game1.spriteBatch.DrawString(font, "COMBO : " + Combo , new Vector2(300,550), Color.White);//임시
-			Game1.spriteBatch.DrawString(font, String.Format("{0:0.##} {0:0.##}", TempoChecker,NewTempo), new Vector2(200, 200), Color.White);//임시
-			Game1.spriteBatch.DrawString(font, "SCORE : " + Score+"/400", new Vector2(300, 450), Color.White);
+			Color StringColor = Color.White;
+			if (Score >= 10)
+				StringColor = Color.Red;
+
+			Game1.spriteBatch.DrawString(font, "SCORE : " + Score+"/400", new Vector2(300, 450), StringColor);
 			if(Score<300)
-				Game1.spriteBatch.DrawString(font, "Right Click to live", new Vector2(300, 400), Color.White);
+				Game1.spriteBatch.DrawString(font, ButtonInfoString+" to live", new Vector2(300, 400), StringColor);
 			else if(Score<400)
-				Game1.spriteBatch.DrawString(font, "Live to click", new Vector2(300, 400), Color.White);
+				Game1.spriteBatch.DrawString(font, "Live to click", new Vector2(300, 400), StringColor);
 			else
-				Game1.spriteBatch.DrawString(font, "Congratulation!", new Vector2(300, 400), Color.White);
+				Game1.spriteBatch.DrawString(font, "Congratulation!", new Vector2(300, 400), StringColor);
 			if (MoveLock)
-				Game1.spriteBatch.DrawString(font, "* Move Locked", new Vector2(300, 600), Color.White);
-			Game1.spriteBatch.DrawString(font, "Press \"ESC\" Button to leave", new Vector2(300, 500), Color.White);
+				Game1.spriteBatch.DrawString(font, "* Move Locked", new Vector2(300, 600), StringColor);
+			Game1.spriteBatch.DrawString(font, "Press \"ESC\" Button to leave", new Vector2(300, 500), StringColor);
 			Game1.spriteBatch.End();
 	
 
@@ -297,15 +315,40 @@ namespace TestSheet
 			player.Draw();
 			player.DrawAttack();
 
-			for (int i=0;i<enemies.Count;i++)
+
+			Color AnimationColor= Color.DarkRed;
+		
+			for(int i=0;i<AnimationList.Count;i++)
+			{
+				AnimationList[i].Draw(AnimationColor * (float)(AnimationTimerList[i] / 5.0));
+			}
+			for (int i = 0; i < enemies.Count; i++)
 			{
 				enemies[i].Draw();
 			}
-			for(int i=0;i<AnimationList.Count;i++)
+
+		
+
+			if (Score>=10)
 			{
-				AnimationList[i].Draw(Color.Cornsilk * (float)(AnimationTimerList[i] / 5.0));
+				if(Timer%3==0)
+				{
+					Lightr = random.NextDouble() / 10.0;
+				}
+				if(Timer%250==0&&Score<300)
+				{
+					ZombieSoundEffect = Game1.content.Load<SoundEffect>("ZombieSound");
+					SoundEffectInstance s=ZombieSoundEffect.CreateInstance();
+					s.Play();
+				}
+				LightLayer2.Draw(Color.Black, 0.2f + (float)Lightr);
+				LightLayer2.Draw(Color.DarkBlue, 0.3f);
 			}
-			if(GameOver)
+			for (int i = 0; i < AnimationList.Count; i++)
+			{
+				AnimationList[i].Draw(AnimationColor * (float)(AnimationTimerList[i] / 5.0)*0.3f);
+			}
+			if (GameOver)
 			{
 				Game1.spriteBatch.Begin();
 				Game1.spriteBatch.DrawString(font, "Game Over", new Vector2(500, 400), Color.Red);
@@ -324,7 +367,7 @@ namespace TestSheet
 			private Point MovePoint=new Point(0,0);
 			private int Range=160;
 			private int MoveSpeed=4;
-			private int AttackSpeed = 15;
+			private int AttackSpeed = 8;
 			private int AttackTimer = 0;
 			private int AttackIndex = -1;
 			private bool isAttacking=false;
@@ -405,6 +448,12 @@ namespace TestSheet
 				{
 					if (Game1.cursor.didPlayerJustRightClick() || Game1.cursor.didPlayerJustLeftClick() || JustPressedA())
 					{
+						if (Game1.cursor.didPlayerJustLeftClick())
+							ButtonInfoString = "Left Click";
+						else if (Game1.cursor.didPlayerJustRightClick())
+							ButtonInfoString = "Right Click";
+						else if (JustPressedA())
+							ButtonInfoString = "Press \"A\"";
 
 						for(int i=0;i<enemies.Count;i++)
 						{
@@ -417,17 +466,30 @@ namespace TestSheet
 						AnimationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)));
 						AnimationTimerList.Add(10);
 					}
-					MovePoint = DivPoint(player.GetCenter(), Game1.cursor.getPos(),0.8);
+					//MovePoint = DivPoint(player.GetCenter(), Game1.cursor.getPos(),0.8);
+					MovePoint = new Point(0, 0);
 					if(AttackTimer<AttackSpeed-2)
 					{
-						player.MoveTo(Game1.cursor.getPos().X - 40, Game1.cursor.getPos().Y - 40, MoveSpeed * 2);
-						AnimationList.Add(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))));
-						AnimationTimerList.Add(8);
+						if(Score>=10)
+						{
+							if (AttackTimer < 3)
+								player.MoveTo(enemies[AttackIndex].getCenter().X, enemies[AttackIndex].getCenter().Y, AttackTimer * 4);
+							else
+								player.MoveTo(enemies[AttackIndex].getCenter().X, enemies[AttackIndex].getCenter().Y, -AttackTimer*2);
+							
+						}
+
 					}
 					return;
 				}
 				if (Game1.cursor.didPlayerJustRightClick()||Game1.cursor.didPlayerJustLeftClick()||JustPressedA())
 				{
+					if (Game1.cursor.didPlayerJustLeftClick())
+						ButtonInfoString = "Left Click";
+					else if (Game1.cursor.didPlayerJustRightClick())
+						ButtonInfoString = "Right Click";
+					else if (JustPressedA())
+						ButtonInfoString = "Press \"A\"";
 					for (int i = 0; i < enemies.Count; i++)
 					{
 						if (enemies[i].getBound().Contains(Game1.cursor.getPos()) && Distance(getPos(), enemies[i].getPos()) < Range)
@@ -479,56 +541,13 @@ namespace TestSheet
 						{
 							Tempo = 25.7;
 						}
-						if (Combo == 0)
-						{
-							TempoChecker = Timer % Tempo;
-							Combo++;
-						}
+						if(Score<10)					
+							soundEffect = Game1.content.Load<SoundEffect>("EnemyDead");
 						else
-						{
-							NewTempo = Timer % Tempo;
-							if(Tempo - Math.Abs(TempoChecker - NewTempo) <= 5)
-							{
-								NewTempo = Tempo - NewTempo;
-							}
-							double TempoDisposition = Math.Abs(TempoChecker-NewTempo);
-							if(TempoDisposition>5)
-							{
-								Combo = 0;
-								TempoChecker = -1;
-							}
-							else
-							{
-								TempoChecker = (double)(TempoChecker * Combo) / (Combo + 1) + (double)(NewTempo) / (Combo + 1);
-								Combo++;
-							}
-
-						}
-						/*
-						Interval = Timer - ComboTimer;
-						if(Score<300)
-						{
-							if (Interval % 30 > 26 || Interval % 30 < 4)
-							{
-								Combo++;
-							}
-							else
-								Combo = 0;
-						}
-						else if(Score<400)
-						{
-							if (Interval % 26 > 23 || Interval % 26 < 3)
-							{
-								Combo++;
-							}
-							else
-								Combo = 0;
-						}
-						*/
+							soundEffect = Game1.content.Load<SoundEffect>("GunSound");
 						SoundEffectInstance soundEffectInstance = soundEffect.CreateInstance();
-						soundEffectInstance.Volume = BaseVolume;
-						soundEffectInstance.Play();
-						ComboTimer = Timer;
+							soundEffectInstance.Volume = BaseVolume;
+							soundEffectInstance.Play();
 					}
 					if (AttackTimer>0)//투사체 날아가는중
 					{
@@ -540,16 +559,16 @@ namespace TestSheet
 						Rectangle r = enemies[AttackIndex].getBound();
 						enemies.RemoveAt(AttackIndex);
 						int rn = random.Next(3, 5);
-						for (int i=0;i<rn; i++)
-						{
-							int s = random.Next(10, 50);
-							AnimationList.Add(new DrawingLayer("Player2", new Rectangle(r.Center.X-random.Next(-30,30), r.Center.Y- random.Next(-30, 30),s,s)));
-							AnimationTimerList.Add(random.Next(5,15));
-						}
+							for (int i = 0; i < rn; i++)
+							{
+								int s = random.Next(10, 50);
+								AnimationList.Add(new DrawingLayer("Player2", new Rectangle(r.Center.X - random.Next(-30, 30), r.Center.Y - random.Next(-30, 30), s, s)));
+								AnimationTimerList.Add(random.Next(5, 15));
+							}
 						Score++;
 						isAttacking = false;
 						AttackIndex = -1;
-						BoostTimer = 3;
+						BoostTimer = 4;
 						return;
 					}
 				}
@@ -562,7 +581,7 @@ namespace TestSheet
 					int x = ((AttackSpeed-AttackTimer) * enemies[AttackIndex].getPos().X + AttackTimer * getPos().X)/AttackSpeed;
 					int y = ((AttackSpeed - AttackTimer) * enemies[AttackIndex].getPos().Y + AttackTimer * getPos().Y)/AttackSpeed;
 					bullet.setPosition(x + 25, y + 25);
-					bullet.Draw(MasterInfo.PlayerColor);
+					bullet.Draw(MasterInfo.PlayerColor,0f);
 					int x2 = (enemies[AttackIndex].getPos().X + 3 * getPos().X) / 4;
 					int y2 = (enemies[AttackIndex].getPos().Y + 3 * getPos().Y) / 4;
 					direction.setPosition(x2 + 25, y2 + 25);
@@ -623,11 +642,8 @@ namespace TestSheet
 						enemy.Draw(Color.Crimson);
 					return;
 				}
-
-				if (ZombieDance)
-					enemy.Draw(Color.White);
-				else if (Score >= 10)
-					enemy.Draw(Color.White);
+				if (Score >= 10)
+					enemy.Draw(Color.LightSeaGreen);
 				else
 					enemy.Draw(Color.White);
 			}

@@ -68,6 +68,11 @@ namespace TestSheet
 			return Bound.Center;
 		}
 
+		public override string ToString()
+		{
+			return SpriteName;
+		}
+
 		public void setPosition(int x, int y)
 		{
 			MoveTo(x, y);

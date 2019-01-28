@@ -57,14 +57,14 @@ namespace TestSheet
 		public static KeyboardState keyboardState;
 		public static SoundEffect soundEffect = Game1.content.Load<SoundEffect>("EnemyDead");
 		public static SoundEffect ZombieSoundEffect = Game1.content.Load<SoundEffect>("ZombieSound");
-		public static Song song = Game1.content.Load<Song>("12Var");
-		public static List<DrawingLayer> AnimationList=new List<DrawingLayer>();
-		public static List<int> AnimationTimerList = new List<int>();
+		public static Song song = Game1.content.Load<Song>("March3");
+		public static AnimationList animationList = new AnimationList();
 		public static int SoundTrack = 0;
 		public static int FadeTimer = 0;
 		public static float BaseVolume = 1.0f;
 		public static bool GameEnd = false;
 		public static bool PressedQ = false;
+		public static bool Reload = false;
 		public static int BoostTimer = 0;
 		public static bool MoveLock = false;
 		public static int Interval = 0;
@@ -193,19 +193,7 @@ namespace TestSheet
 				enemies[i].MoveUpdate(i);
 			}
 
-			for (int i = 0; i < AnimationTimerList.Count; i++)
-			{
-				if (AnimationTimerList[i] == 0)
-				{
-					AnimationTimerList.RemoveAt(i);
-					AnimationList.RemoveAt(i);
-				}
-				else
-				{
-					AnimationTimerList[i]--;
-				}
-			}
-
+			animationList.TimeUpdate();
 			ZombieTime = 40 - Score/10;
 		
 			if(ZombieTime>0)
@@ -266,6 +254,15 @@ namespace TestSheet
 					soundEffect = Game1.content.Load<SoundEffect>("GunSound");
 				}
 			}
+
+			if (Score % 10 == 9)
+				Reload = true;
+			if(Score%10==0&&Reload==true)
+			{
+				soundEffect = Game1.content.Load<SoundEffect>("Reload");
+				soundEffect.CreateInstance().Play();
+				Reload = false;
+			}
 			OldkeyboardState = Keyboard.GetState();
 
 		}
@@ -317,11 +314,9 @@ namespace TestSheet
 
 
 			Color AnimationColor= Color.DarkRed;
+
+			animationList.FadeAnimationDraw(Color.DarkRed, 0.2);
 		
-			for(int i=0;i<AnimationList.Count;i++)
-			{
-				AnimationList[i].Draw(AnimationColor * (float)(AnimationTimerList[i] / 5.0));
-			}
 			for (int i = 0; i < enemies.Count; i++)
 			{
 				enemies[i].Draw();
@@ -335,19 +330,20 @@ namespace TestSheet
 				{
 					Lightr = random.NextDouble() / 10.0;
 				}
-				if(Timer%250==0&&Score<300)
+				if(Timer%250==0)
 				{
 					ZombieSoundEffect = Game1.content.Load<SoundEffect>("ZombieSound");
 					SoundEffectInstance s=ZombieSoundEffect.CreateInstance();
+					if (Score > 300)
+						s.Volume = 0.5f;
 					s.Play();
 				}
 				LightLayer2.Draw(Color.Black, 0.2f + (float)Lightr);
 				LightLayer2.Draw(Color.DarkBlue, 0.3f);
 			}
-			for (int i = 0; i < AnimationList.Count; i++)
-			{
-				AnimationList[i].Draw(AnimationColor * (float)(AnimationTimerList[i] / 5.0)*0.3f);
-			}
+
+			animationList.FadeAnimationDraw(Color.DarkRed, 0.06f);
+	
 			if (GameOver)
 			{
 				Game1.spriteBatch.Begin();
@@ -388,7 +384,7 @@ namespace TestSheet
 				if(SoundTrack!=0)
 				{
 					SoundTrack = 0;
-					song = Game1.content.Load<Song>("12Var");
+					song = Game1.content.Load<Song>("March3");
 					MediaPlayer.Play(song);
 					MediaPlayer.IsRepeating = true;
 				}
@@ -443,6 +439,7 @@ namespace TestSheet
 					direction.MoveTo(getPos().X+20, getPos().Y+20, 7);
 				}
 				
+				
 
 				if (isAttacking)
 				{
@@ -463,8 +460,8 @@ namespace TestSheet
 							}
 						}
 						MovePoint = Game1.cursor.getPos();
-						AnimationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)));
-						AnimationTimerList.Add(10);
+						animationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)), 10);
+			
 					}
 					//MovePoint = DivPoint(player.GetCenter(), Game1.cursor.getPos(),0.8);
 					MovePoint = new Point(0, 0);
@@ -473,7 +470,7 @@ namespace TestSheet
 						if(Score>=10)
 						{
 							if (AttackTimer < 3)
-								player.MoveTo(enemies[AttackIndex].getCenter().X, enemies[AttackIndex].getCenter().Y, AttackTimer * 4);
+								player.MoveTo(enemies[AttackIndex].getCenter().X, enemies[AttackIndex].getCenter().Y, AttackTimer * 5);
 							else
 								player.MoveTo(enemies[AttackIndex].getCenter().X, enemies[AttackIndex].getCenter().Y, -AttackTimer*2);
 							
@@ -494,11 +491,11 @@ namespace TestSheet
 					{
 						if (enemies[i].getBound().Contains(Game1.cursor.getPos()) && Distance(getPos(), enemies[i].getPos()) < Range)
 						{
-							int ClickDistance= Distance(Game1.cursor.getPos(), enemies[i].getCenter());
+							int ClickDistance = Distance(Game1.cursor.getPos(), enemies[i].getCenter());
 							AttackIndex = i;
-							for (int j=i;j<enemies.Count;j++)
+							for (int j = i; j < enemies.Count; j++)
 							{
-								if(Distance(Game1.cursor.getPos(), enemies[i].getCenter())<ClickDistance)
+								if (Distance(Game1.cursor.getPos(), enemies[i].getCenter()) < ClickDistance)
 								{
 									AttackIndex = j;
 									ClickDistance = Distance(Game1.cursor.getPos(), enemies[i].getCenter());
@@ -512,15 +509,14 @@ namespace TestSheet
 					}
 			
 						MovePoint = Game1.cursor.getPos();
-					AnimationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X-15, MovePoint.Y-15, 30, 30)));
-					AnimationTimerList.Add(10);
+					animationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)), 10);
 				}
 				
 				if (!MoveLock&&(MovePoint.X!=0||MovePoint.Y!=0))
 				{
 					if (BoostTimer > 0)
 						BoostTimer--;
-					player.MoveTo(MovePoint.X - 40, MovePoint.Y - 40, MoveSpeed-BoostTimer);
+					player.MoveTo(MovePoint.X - 40, MovePoint.Y - 40, Math.Max(0,MoveSpeed-BoostTimer));
 					int x2 = (MovePoint.X + 4 * getPos().X) / 5;
 					int y2 = (MovePoint.Y + 4 * getPos().Y) / 5;
 					direction.setPosition(x2 + 25, y2 + 25);
@@ -562,13 +558,12 @@ namespace TestSheet
 							for (int i = 0; i < rn; i++)
 							{
 								int s = random.Next(10, 50);
-								AnimationList.Add(new DrawingLayer("Player2", new Rectangle(r.Center.X - random.Next(-30, 30), r.Center.Y - random.Next(-30, 30), s, s)));
-								AnimationTimerList.Add(random.Next(5, 15));
+								animationList.Add(new DrawingLayer("Player2", new Rectangle(r.Center.X - random.Next(-30, 30), r.Center.Y - random.Next(-30, 30), s, s)), random.Next(5*3, 15*3));
 							}
 						Score++;
 						isAttacking = false;
 						AttackIndex = -1;
-						BoostTimer = 4;
+						BoostTimer = 0;
 						return;
 					}
 				}
@@ -642,9 +637,9 @@ namespace TestSheet
 						enemy.Draw(Color.Crimson);
 					return;
 				}
-				if (Score >= 10)
+				if (Score >= 10 && Score<400)
 					enemy.Draw(Color.LightSeaGreen);
-				else
+				else 
 					enemy.Draw(Color.White);
 			}
 

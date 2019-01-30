@@ -158,7 +158,7 @@ namespace TestSheet
 
 
 		/* 이동 세션*/
-		public void UpdateBound(Rectangle r)
+		public void SetBound(Rectangle r)
 		{
 			Bound = r;
 		}

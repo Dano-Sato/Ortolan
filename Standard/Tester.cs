@@ -12,20 +12,6 @@ namespace TestSheet
 	public class Tester
 	{
 		
-		public static int Distance(Point a, Point b)
-		{
-			double x =a.X - b.X;
-			double y = a.Y - b.Y;
-			return (int)Math.Sqrt(Math.Pow(x, 2) + Math.Pow(y, 2));
-		}
-
-		public static Point DivPoint(Point a, Point b, double r)
-		{
-			double x = a.X * r + b.X * (1 - r);
-			double y = a.Y * r + b.Y * (1 - r);
-			return new Point((int)x, (int)y);
-		}
-
 		public static bool JustPressedA()
 		{
 				return keyboardState.IsKeyDown(Keys.A) && !OldkeyboardState.IsKeyDown(Keys.A);
@@ -45,6 +31,7 @@ namespace TestSheet
 		public static int ZombieTime = 40;
 		public static double Lightr = 0;
 		public static string ButtonInfoString = "Right Click";
+		public static string SongString;
 		public static DrawingLayer LightLayer = new DrawingLayer("Light", new Rectangle(0,0,1200,1200));
 		public static DrawingLayer LightLayer2 = new DrawingLayer("WhiteSpace", new Rectangle(0, 0, 1200, 1200));
 		public static DrawingLayer LightLayer3 = new DrawingLayer("Player", new Rectangle(0, 0, 150, 150));
@@ -57,10 +44,11 @@ namespace TestSheet
 		public static KeyboardState keyboardState;
 		public static SoundEffect soundEffect = Game1.content.Load<SoundEffect>("EnemyDead");
 		public static SoundEffect ZombieSoundEffect = Game1.content.Load<SoundEffect>("ZombieSound");
-		public static Song song = Game1.content.Load<Song>("March3");
+		public static Song song;
 		public static AnimationList animationList = new AnimationList();
+		public static AnimationList DeadBodysAnimationList = new AnimationList();
+		public static List<DrawingLayer> DeadBodys = new List<DrawingLayer>();
 		public static int SoundTrack = 0;
-		public static int FadeTimer = 0;
 		public static float BaseVolume = 1.0f;
 		public static bool GameEnd = false;
 		public static bool PressedQ = false;
@@ -77,8 +65,22 @@ namespace TestSheet
 		{
 			player = new Player();
 			enemies.Add(new Enemy());
+			int r = random.Next(0, 5);
+			if (r == 0)
+				SongString = "March3";
+			else if (r == 1)
+				SongString = "Polonaise3";
+			else if (r == 2)
+				SongString = "Ballade8";
+			else if (r == 3)
+				SongString = "Etude3";
+			else if (r == 4)
+				SongString = "BWV3";
+			song = Game1.content.Load<Song>(SongString);
 			MediaPlayer.Play(song);
 			MediaPlayer.IsRepeating = true;
+
+
 
 		}
 		//Game1.Class 내에 Tester.Update()로 추가될 업데이트문입니다. 다양한 업데이트 처리를 시험할 수 있습니다.
@@ -176,7 +178,7 @@ namespace TestSheet
 		
 			for (int i=0;i<enemies.Count;i++)
 			{
-				if (enemies[i].getBound().Contains(Game1.cursor.getPos()) && Distance(enemies[i].getPos(), player.getPos()) < player.getRange())
+				if (enemies[i].getBound().Contains(Game1.cursor.getPos()) && Standard.Distance(enemies[i].getPos(), player.getPos()) < player.getRange())
 				{
 					Game1.cursor.SetSprite("Sword");
 					break;
@@ -194,6 +196,7 @@ namespace TestSheet
 			}
 
 			animationList.TimeUpdate();
+			DeadBodysAnimationList.TimeUpdate();
 			ZombieTime = 40 - Score/10;
 		
 			if(ZombieTime>0)
@@ -251,7 +254,6 @@ namespace TestSheet
 				if(!isZombieMode)
 				{
 					isZombieMode = true;
-					soundEffect = Game1.content.Load<SoundEffect>("GunSound");
 				}
 			}
 
@@ -262,6 +264,11 @@ namespace TestSheet
 				soundEffect = Game1.content.Load<SoundEffect>("Reload");
 				soundEffect.CreateInstance().Play();
 				Reload = false;
+			}
+			if (DeadBodys.Count > 300)
+			{
+				DeadBodysAnimationList.Add(DeadBodys[0], 30);
+				DeadBodys.RemoveAt(0);
 			}
 			OldkeyboardState = Keyboard.GetState();
 
@@ -280,6 +287,11 @@ namespace TestSheet
 				return;
 			}
 			BloodLayer.Draw(Color.LightSeaGreen,Math.Min(10,Score)*0.1f);
+			for(int i=0;i<DeadBodys.Count;i++)
+			{
+				DeadBodys[i].Draw(Color.LightSeaGreen, Math.Min(10, Score) * 0.1f);
+			}
+			DeadBodysAnimationList.FadeAnimationDraw(Color.LightSeaGreen, 1/30.0);
 			MouseLogo.Draw();
 			if(Timer%10<=5&&Score<10)
 				MouseButton.Draw(Color.Red);
@@ -332,8 +344,8 @@ namespace TestSheet
 				}
 				if(Timer%250==0)
 				{
-					ZombieSoundEffect = Game1.content.Load<SoundEffect>("ZombieSound");
-					SoundEffectInstance s=ZombieSoundEffect.CreateInstance();
+					soundEffect = Game1.content.Load<SoundEffect>("ZombieSound");
+					SoundEffectInstance s=soundEffect.CreateInstance();
 					if (Score > 300)
 						s.Volume = 0.5f;
 					s.Play();
@@ -343,7 +355,7 @@ namespace TestSheet
 			}
 
 			animationList.FadeAnimationDraw(Color.DarkRed, 0.06f);
-	
+
 			if (GameOver)
 			{
 				Game1.spriteBatch.Begin();
@@ -384,7 +396,7 @@ namespace TestSheet
 				if(SoundTrack!=0)
 				{
 					SoundTrack = 0;
-					song = Game1.content.Load<Song>("March3");
+					song = Game1.content.Load<Song>(SongString);
 					MediaPlayer.Play(song);
 					MediaPlayer.IsRepeating = true;
 				}
@@ -423,7 +435,7 @@ namespace TestSheet
 				player.Draw(Color.White);
 				for (int i = 0; i < 7; i++)
 				{
-					wand.setPosition(DivPoint(player.GetBound().Center, direction.GetBound().Center, i / 10.0));
+					wand.setPosition(Standard.DivPoint(player.GetBound().Center, direction.GetBound().Center, i / 10.0));
 					wand.setPosition(wand.GetPosition().X - 2, wand.GetPosition().Y - 2);
 					wand.Draw(Color.Aqua);
 				}
@@ -454,7 +466,7 @@ namespace TestSheet
 
 						for(int i=0;i<enemies.Count;i++)
 						{
-							if (enemies[i].getBound().Contains(Game1.cursor.getPos()) && Distance(getPos(), enemies[i].getPos()) < Range)
+							if (enemies[i].getBound().Contains(Game1.cursor.getPos()) && Standard.Distance(getPos(), enemies[i].getPos()) < Range)
 							{
 								return;
 							}
@@ -463,7 +475,7 @@ namespace TestSheet
 						animationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)), 10);
 			
 					}
-					//MovePoint = DivPoint(player.GetCenter(), Game1.cursor.getPos(),0.8);
+					//MovePoint = Standard.DivPoint(player.GetCenter(), Game1.cursor.getPos(),0.8);
 					MovePoint = new Point(0, 0);
 					if(AttackTimer<AttackSpeed-2)
 					{
@@ -489,16 +501,16 @@ namespace TestSheet
 						ButtonInfoString = "Press \"A\"";
 					for (int i = 0; i < enemies.Count; i++)
 					{
-						if (enemies[i].getBound().Contains(Game1.cursor.getPos()) && Distance(getPos(), enemies[i].getPos()) < Range)
+						if (enemies[i].getBound().Contains(Game1.cursor.getPos()) && Standard.Distance(getPos(), enemies[i].getPos()) < Range)
 						{
-							int ClickDistance = Distance(Game1.cursor.getPos(), enemies[i].getCenter());
+							int ClickDistance = Standard.Distance(Game1.cursor.getPos(), enemies[i].getCenter());
 							AttackIndex = i;
 							for (int j = i; j < enemies.Count; j++)
 							{
-								if (Distance(Game1.cursor.getPos(), enemies[i].getCenter()) < ClickDistance)
+								if (Standard.Distance(Game1.cursor.getPos(), enemies[i].getCenter()) < ClickDistance)
 								{
 									AttackIndex = j;
-									ClickDistance = Distance(Game1.cursor.getPos(), enemies[i].getCenter());
+									ClickDistance = Standard.Distance(Game1.cursor.getPos(), enemies[i].getCenter());
 								}
 							}
 							isAttacking = true;
@@ -558,7 +570,9 @@ namespace TestSheet
 							for (int i = 0; i < rn; i++)
 							{
 								int s = random.Next(10, 50);
-								animationList.Add(new DrawingLayer("Player2", new Rectangle(r.Center.X - random.Next(-30, 30), r.Center.Y - random.Next(-30, 30), s, s)), random.Next(5*3, 15*3));
+								DrawingLayer newStar;
+								animationList.Add(newStar=new DrawingLayer("Player2", new Rectangle(r.Center.X - random.Next(-30, 30), r.Center.Y - random.Next(-30, 30), s, s)), random.Next(5*3, 15*3));
+								DeadBodys.Add(newStar);
 							}
 						Score++;
 						isAttacking = false;
@@ -631,7 +645,7 @@ namespace TestSheet
 			{
 				if (enemy.GetBound().Contains(Game1.cursor.getPos()))
 				{
-					if (Distance(player.getPos(), getPos()) > player.getRange())
+					if (Standard.Distance(player.getPos(), getPos()) > player.getRange())
 						enemy.Draw(Color.Blue);
 					else
 						enemy.Draw(Color.Crimson);
@@ -647,7 +661,7 @@ namespace TestSheet
 			{
 				if(ZombieDance)
 				{
-					if(Distance(getPos(),player.getPos())>160)
+					if(Standard.Distance(getPos(),player.getPos())>160)
 					{
 						enemy.MoveTo(player.getPos().X + random.Next(-300, 300), player.getPos().Y + random.Next(-300, 300), 5);
 					}
@@ -668,7 +682,7 @@ namespace TestSheet
 				}
 
 				enemy.MoveTo(player.getPos().X+random.Next(-300,300), player.getPos().Y+random.Next(-300,300), 5);
-				if((Distance(player.getPos(),getPos()))<=10&&Index!=player.getAttackIndex())
+				if((Standard.Distance(player.getPos(),getPos()))<=10&&Index!=player.getAttackIndex())
 				{
 					GameOver = true;
 				}

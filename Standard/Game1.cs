@@ -22,10 +22,11 @@ namespace TestSheet
 		//Static 삼형제
 		public static SpriteBatch spriteBatch;
 		public static LocalizedContentManager content;
-		public static Cursor cursor;
-
 		public Tester tester;
 
+
+
+		public static bool GameExit = false;
 
 		public Game1()
         {
@@ -58,8 +59,8 @@ namespace TestSheet
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 			Game1.content = new LocalizedContentManager(base.Content.ServiceProvider, base.Content.RootDirectory);
+			Standard.LoadContent();
 			tester = new Tester();
-			cursor = new Cursor();
 			// TODO: use this.Content to load your game content here
 		}
 
@@ -81,10 +82,11 @@ namespace TestSheet
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+			if (GameExit)
+				Exit();
 			// TODO: Add your update logic here
 			tester.Update();
-			cursor.OldStateUpdate();
-		
+			Standard.Update();
             base.Update(gameTime);
         }
 
@@ -97,7 +99,7 @@ namespace TestSheet
             GraphicsDevice.Clear(Color.Aquamarine);
 			// TODO: Add your drawing code here
 			tester.Draw();
-			cursor.Draw();
+			Standard.Draw();
             base.Draw(gameTime);
         }
     }

@@ -189,6 +189,14 @@ namespace TestSheet
 			MoveTo(Bound.X + X_Displacement, Bound.Y + Y_Displacement);
 		}
 
+		public void MoveByVector(Point Vector, double speed)
+		{
+			double N = Standard.Distance(new Point(0,0),Vector);
+			int Dis_X = (int)(Vector.X * speed / N);
+			int Dis_Y = (int)(Vector.Y * speed / N);
+			MoveTo(Bound.X+Dis_X, Bound.Y+Dis_Y );
+		}
+
 
 		/* 애니메이션*/
 		public void Animate(SpritePosition Frame_Start, SpritePosition Frame_End, int FrameRate)
@@ -215,17 +223,17 @@ namespace TestSheet
 		/* 클릭처리*/
 		public bool MouseIsOnThis()
 		{
-			return Bound.Contains(Game1.cursor.getPos());
+			return Bound.Contains(Standard.cursor.getPos());
 		}
 
 		public bool MouseJustLeftClickedThis()
 		{
-			return MouseIsOnThis() && Game1.cursor.didPlayerJustLeftClick();
+			return MouseIsOnThis() && Standard.cursor.didPlayerJustLeftClick();
 		}
 
 		public bool MouseIsLeftClickingThis()
 		{
-			return MouseIsOnThis() && Game1.cursor.IsPlayerLeftClickingNow();
+			return MouseIsOnThis() && Standard.cursor.IsPlayerLeftClickingNow();
 		}
 
 

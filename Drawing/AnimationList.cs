@@ -10,35 +10,35 @@ namespace TestSheet
 {
 	public class AnimationList
 	{
-		private List<DrawingLayer> Animationlist = new List<DrawingLayer>();
-		private List<int> AnimationTimerList = new List<int>();
+		//private List<DrawingLayer> Animationlist = new List<DrawingLayer>();
+		//private List<int> AnimationTimerList = new List<int>();
 
+
+		private List<DrawingLayerWithTimer> Animationlist = new List<DrawingLayerWithTimer>();
 
 		public DrawingLayer this[int i]
 		{
-			get { return Animationlist[i]; }
-			set { Animationlist[i] = value; }
+			get { return Animationlist[i].drawingLayer; }
+			set { Animationlist[i].drawingLayer = value; }
 		}
 
 
 		public void Add(DrawingLayer d, int t)
 		{
-			Animationlist.Add(d);
-			AnimationTimerList.Add(t);
+			Animationlist.Add(new DrawingLayerWithTimer(d,t));
 		}
 
 		public void TimeUpdate()
 		{
-			for (int i = 0; i < AnimationTimerList.Count; i++)
+			for (int i = 0; i < Animationlist.Count; i++)
 			{
-				if (AnimationTimerList[i] == 0)
+				if (Animationlist[i].Timer == 0)
 				{
-					AnimationTimerList.RemoveAt(i);
 					Animationlist.RemoveAt(i);
 				}
 				else
 				{
-					AnimationTimerList[i]--;
+					Animationlist[i].Timer--;
 				}
 			}
 		}
@@ -46,9 +46,9 @@ namespace TestSheet
 		public void FadeAnimationDraw(Color color, double Opacity)
 		{
 
-			for (int i = 0; i < AnimationTimerList.Count; i++)
+			for (int i = 0; i < Animationlist.Count; i++)
 			{
-				Animationlist[i].Draw(color * (float)(AnimationTimerList[i] * Opacity));
+				Animationlist[i].drawingLayer.Draw(color * (float)(Animationlist[i].Timer * Opacity));
 			}
 		}
 

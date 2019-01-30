@@ -55,6 +55,7 @@ namespace TestSheet
 		public static bool SubMenuIsMade = false;
 		public static int GameMode = 0;//ShutGun Mode;
 		public static int ZombieSpeed = 5;
+		public static bool CursorShouldBeSword = false;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -312,16 +313,11 @@ namespace TestSheet
 				}
 			}
 		
-			for (int i=0;i<enemies.Count;i++)
-			{
-				if (enemies[i].getBound().Contains(Standard.cursor.getPos()) && Standard.Distance(enemies[i].getPos(), player.getPos()) < player.getRange())
-				{
-					Standard.cursor.SetSprite("Sword");
-					break;
-				}
+	
+			if(CursorShouldBeSword)
+				Standard.cursor.SetSprite("Sword");
+			else
 				Standard.cursor.SetSprite("Cursor");
-			}
-
 
 			player.MoveUpdate();
 			LightLayer3.setPosition(player.getPos().X-40+random.Next(-3,3), player.getPos().Y-40 + random.Next(-3,3));
@@ -419,12 +415,11 @@ namespace TestSheet
 			if (TestMenu.MouseIsOnFrame())
 			{
 				TestMenu.MoveTo(-110, 300, 20);
-				if(Score<=10&&TestMenu.GetIndex()!=-1)
+				if(Score<10&&TestMenu.GetIndex()!=-1)
 				{
 					if (TestMenu.MenuStringList[TestMenu.GetIndex()] == "EXIT")
 					{
 						TestMenu.MenuList[TestMenu.GetIndex()].drawingLayer.MoveByVector(new Point(random.Next(1, 3), random.Next(1, 3)), random.Next(1,10));
-						//Standard.DrawLight(TestMenu.MenuList[TestMenu.GetIndex()].drawingLayer, Color.Red, 0.3f, Standard.LightMode.Vignette);
 					}
 					if (Standard.cursor.didPlayerJustLeftClick())
 					{
@@ -529,7 +524,8 @@ namespace TestSheet
 			Color AnimationColor= Color.DarkRed;
 
 			animationList.FadeAnimationDraw(Color.DarkRed, 0.2);
-			
+
+			CursorShouldBeSword = false;
 			for (int i = 0; i < enemies.Count; i++)
 			{
 				enemies[i].Draw();
@@ -911,7 +907,10 @@ namespace TestSheet
 					if (Standard.Distance(player.getPos(), getPos()) > player.getRange())
 						enemy.Draw(Color.Blue);
 					else
+					{
 						enemy.Draw(Color.Crimson);
+						CursorShouldBeSword = true;
+					}
 					return;
 				}
 				if (Score >= 10 && Score<400)

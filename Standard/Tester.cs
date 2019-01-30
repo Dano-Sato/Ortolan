@@ -122,6 +122,11 @@ namespace TestSheet
 				return;
 			}
 
+			if(Score<10&&Standard.JustPressed(Keys.S))
+			{
+				Score = 10;
+			}
+
 			if(Score<10&&MainMenuIndex!=-1)
 			{
 				animationList.TimeUpdate();
@@ -160,7 +165,7 @@ namespace TestSheet
 								"Shutgun Mode",
 								"AttackBoost Mode",
 								"Exit" },
-	new Rectangle(300, 200, 400, 320), new Rectangle(0, 0, 500, 50), new Point(80, 20), new Point(0, 70));
+	new Rectangle(300, 200, 400, 250), new Rectangle(0, 0, 500, 50), new Point(80, 20), new Point(0, 70));
 							SubMenuIsMade = true;
 						}
 						SubMenu.Update();
@@ -205,7 +210,8 @@ namespace TestSheet
 							{
 								SubMenu = new EasyMenu(new string[] {
 								"Tip 5 : Pressing \"R\" Button means \"Reset the game\"",
-								"Tip 6 : AttackBoost-Mode gives boost to your cursor's position.",
+								"Tip 6 : AttackBoost-Mode gives you boost to your cursor's position.",
+								"Tip 7 : Pressing \"S\" Button means \"Skip the Masquerade\"",
 								"Go Back",
 								"Exit" },
 	new Rectangle(300, 200, 400, 320), new Rectangle(0, 0, 750, 50), new Point(80, 20), new Point(0, 70));
@@ -229,9 +235,9 @@ namespace TestSheet
 						{
 							SubMenu = new EasyMenu(new string[] {
 								"Easy = For Beginner",
-								"Normal = Recommended!",
-								"Hard = For Expert",
-								"Very Hard = Maybe no one can clear",
+								"MainGame = Recommended!",
+								"Extra = For Extra-Expert",
+								"Extra Hard = Maybe no one can clear",
 								"NIGHTMARE = DON'T PANIC",
 								"Exit" },
 	new Rectangle(300, 200, 400, 320), new Rectangle(0, 0, 500, 50), new Point(80, 20), new Point(0, 70));

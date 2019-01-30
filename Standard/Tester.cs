@@ -21,7 +21,7 @@ namespace TestSheet
 		public static bool ZombieDance = false;
 		public static bool isZombieMode = false;
 		public static int EndTimer = 0;
-		public static int Score = 0;
+		public static int Score = 390;
 		public static int ZombieTime = 40;
 		public static double Lightr = 0;
 		public static string ButtonInfoString = "Right Click";
@@ -72,7 +72,7 @@ namespace TestSheet
 		//Game1.Class 내에 Tester.Update()로 추가될 업데이트문입니다. 다양한 업데이트 처리를 시험할 수 있습니다.
 		public void Update()
 		{
-			if (Standard.IsKeyDown(Keys.R))
+			if (Score<400&&Standard.IsKeyDown(Keys.R))
 			{
 				Score = 0;
 				Standard.FrameTimer = 0;
@@ -326,9 +326,18 @@ namespace TestSheet
 			player.MoveUpdate();
 			LightLayer3.setPosition(player.getPos().X-40+random.Next(-3,3), player.getPos().Y-40 + random.Next(-3,3));
 			player.AttackUpdate();
-			for(int i=0;i<enemies.Count;i++)
+			List<int> RandomInts = new List<int>();
+			for(int i=0;i<15;i++)
 			{
-				enemies[i].MoveUpdate(i);
+				RandomInts.Add(random.Next(-300, 300));
+			}
+			int j = 0 ;
+			for (int i = 0; i < enemies.Count; i++)
+			{
+				if (j >= 14)
+					j = 0;
+				enemies[i].MoveUpdate(i, RandomInts[j],RandomInts[(j+Standard.FrameTimer)%14]);
+				j++;
 			}
 
 			animationList.TimeUpdate();
@@ -911,7 +920,7 @@ namespace TestSheet
 					enemy.Draw(Color.White);
 			}
 
-			public void MoveUpdate(int Index)
+			/*public void MoveUpdate(int Index)
 			{
 				if(ZombieDance)
 				{
@@ -939,6 +948,37 @@ namespace TestSheet
 				if((Standard.Distance(player.getPos(),getPos()))<=10&&Index!=player.getAttackIndex())
 				{
 					GameOver = true;
+				}
+			}*/
+
+			public void MoveUpdate(int Index, int r_1, int r_2)
+			{
+				if (ZombieDance)
+				{
+					if (Standard.Distance(getPos(), player.getPos()) > 160)
+					{
+						enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, 5);
+					}
+					else
+					{
+						enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, -5);
+					}
+					return;
+				}
+
+				if (Score < 10)
+				{
+					if (player.getMovePoint().X != 0 || player.getMovePoint().Y != 0)
+						enemy.MoveTo(player.getMovePoint().X + r_1, player.getMovePoint().Y + r_2, 3);
+					else
+						enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, -Math.Min(Score, 3));
+					return;
+				}
+
+				enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, ZombieSpeed);
+				if ((Standard.Distance(player.getPos(), getPos())) <= 10 && Index != player.getAttackIndex())
+				{
+					//GameOver = true;
 				}
 			}
 		}

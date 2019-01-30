@@ -35,6 +35,7 @@ namespace TestSheet
 
 		public static AnimationList animationList = new AnimationList();
 		public static AnimationList DeadBodysAnimationList = new AnimationList();
+		public static AnimationList AfterImageAnimationList = new AnimationList();
 		public static List<DrawingLayer> DeadBodys = new List<DrawingLayer>();
 		public static int SoundTrack = 0;
 		public static float BaseVolume = 1.0f;
@@ -71,7 +72,20 @@ namespace TestSheet
 		//Game1.Class 내에 Tester.Update()로 추가될 업데이트문입니다. 다양한 업데이트 처리를 시험할 수 있습니다.
 		public void Update()
 		{
-				if (GameEnd)
+			if (Standard.IsKeyDown(Keys.R))
+			{
+				Score = 0;
+				Standard.FrameTimer = 0;
+				ZombieTime = 40;
+				enemies.Clear();
+				enemies.Add(new Enemy());
+				enemies.Add(new Enemy());
+
+				player.reset();
+				GameOver = false;
+				return;
+			}
+			if (GameEnd)
 			{
 				if(EndTimer<1000)
 					EndTimer++;
@@ -159,6 +173,10 @@ namespace TestSheet
 							else
 							{
 								GameMode = SubMenu.GetIndex();
+								if (GameMode == 0)
+									player.SetAttackSpeed(8);
+								else if (GameMode == 1)
+									player.SetAttackSpeed(15);
 							}
 						}
 						break;
@@ -170,8 +188,8 @@ namespace TestSheet
 								"Tip 1 : You can Move&Attack by \"A\" button&Left-Click&Right-Click",
 								"Tip 2 : If Score is over 10, Zombies will attack you.",
 								"Tip 3 : If Zombie reaches your center, You die.",
-								"Tip 4 : Zombies don't like The Piano",
-								"Tip 5 : DON'T PANIC",
+								"Tip 4 : Zombie can't play The Piano",
+								"More Tip",
 								"Exit" },
 	new Rectangle(300, 200, 400, 320), new Rectangle(0, 0, 750, 50), new Point(80, 20), new Point(0, 70));
 							SubMenuIsMade = true;
@@ -183,6 +201,23 @@ namespace TestSheet
 							{
 								MainMenuIndex = -1;
 							}
+							if(SubMenu.MenuStringList[SubMenu.GetIndex()]=="More Tip")
+							{
+								SubMenu = new EasyMenu(new string[] {
+								"Tip 5 : Pressing \"R\" Button means \"Reset the game\"",
+								"Tip 6 : AttackBoost-Mode gives boost to your cursor's position.",
+								"Go Back",
+								"Exit" },
+	new Rectangle(300, 200, 400, 320), new Rectangle(0, 0, 750, 50), new Point(80, 20), new Point(0, 70));
+								SubMenu.Update();
+								return;
+							}
+							if (SubMenu.MenuStringList[SubMenu.GetIndex()] == "Go Back")
+							{
+								SubMenuIsMade = false;
+								return;
+							}
+
 							else
 							{
 							}
@@ -292,6 +327,7 @@ namespace TestSheet
 
 			animationList.TimeUpdate();
 			DeadBodysAnimationList.TimeUpdate();
+			AfterImageAnimationList.TimeUpdate();
 			ZombieTime = 40 - Score/10;
 		
 			if(ZombieTime>0)
@@ -368,15 +404,23 @@ namespace TestSheet
 			if (TestMenu.MouseIsOnFrame())
 			{
 				TestMenu.MoveTo(-110, 300, 20);
-				if(Score<=10&&TestMenu.GetIndex()!=-1&&Standard.cursor.didPlayerJustLeftClick())
+				if(Score<=10&&TestMenu.GetIndex()!=-1)
 				{
-					if(TestMenu.MenuStringList[TestMenu.GetIndex()]=="EXIT")
+					if (TestMenu.MenuStringList[TestMenu.GetIndex()] == "EXIT")
 					{
-						Game1.GameExit = true;
-						return;
+						TestMenu.MenuList[TestMenu.GetIndex()].drawingLayer.MoveByVector(new Point(random.Next(1, 3), random.Next(1, 3)), random.Next(1,10));
+						//Standard.DrawLight(TestMenu.MenuList[TestMenu.GetIndex()].drawingLayer, Color.Red, 0.3f, Standard.LightMode.Vignette);
 					}
-					MainMenuIndex = TestMenu.GetIndex();
-					SubMenuIsMade = false;
+					if (Standard.cursor.didPlayerJustLeftClick())
+					{
+						if (TestMenu.MenuStringList[TestMenu.GetIndex()] == "EXIT")
+						{
+							Game1.GameExit = true;
+							return;
+						}
+						MainMenuIndex = TestMenu.GetIndex();
+						SubMenuIsMade = false;
+					}
 				}
 			}
 			else
@@ -433,6 +477,7 @@ namespace TestSheet
 				Standard.DrawLight(MasterInfo.FullScreen, Color.White, (float)((3000 - EndTimer) / 3000.0), Standard.LightMode.Absolute);//3000프레임동안 점점 하얀색으로 밝아진다.
 
 
+		
 			TestMenu.Draw(Score>=10? false:true);
 			if (Standard.FrameTimer % 20 == 0)
 				MenuLightR = random.Next(0, 5);
@@ -456,6 +501,11 @@ namespace TestSheet
 				Standard.DrawLight(MenuLight, Color.Black, 0.6f, Standard.LightMode.Vignette);
 			}
 			Standard.DrawLight(TestMenu.Frame, Color.Bisque, 0.6f, Standard.LightMode.Vignette);
+			if (Score < 10 && TestMenu.GetIndex() != -1 && TestMenu.MenuStringList[TestMenu.GetIndex()] == "EXIT")
+			{
+				Standard.DrawLight(TestMenu.MenuList[TestMenu.GetIndex()].drawingLayer, Color.Crimson,0.2f, Standard.LightMode.Absolute);
+				Standard.DrawLight(TestMenu.MenuList[TestMenu.GetIndex()].drawingLayer, Color.Red, 0.6f, Standard.LightMode.Vignette);
+			}
 
 			player.Draw();
 			player.DrawAttack();
@@ -464,7 +514,7 @@ namespace TestSheet
 			Color AnimationColor= Color.DarkRed;
 
 			animationList.FadeAnimationDraw(Color.DarkRed, 0.2);
-		
+			
 			for (int i = 0; i < enemies.Count; i++)
 			{
 				enemies[i].Draw();
@@ -493,7 +543,7 @@ namespace TestSheet
 
 			animationList.FadeAnimationDraw(Color.DarkRed, 0.06f);
 
-			if (Score < 10 && MainMenuIndex != -1)
+			if (Score < 10 && MainMenuIndex != -1&&SubMenu!= null&&SubMenu.MenuList.Count > 0)
 			{
 				SubMenu.Draw();
 				switch (MainMenuIndex)
@@ -502,7 +552,8 @@ namespace TestSheet
 						Standard.DrawString("Song List", new Vector2(300,200), Color.Black);
 						break;
 					case 1:
-						Standard.DrawString("Select Mode", new Vector2(300,200), Color.Black);
+						if(SubMenu!=null&&SubMenu.MenuList.Count>0)
+							Standard.DrawString("Mode :" + SubMenu.MenuStringList[GameMode] , new Vector2(300,200), Color.Black);
 						break;
 
 					case 2:
@@ -539,11 +590,13 @@ namespace TestSheet
 				Standard.DrawString("Press \"R\" button to restart", new Vector2(500 + random.Next(-3, 3), 450 + random.Next(-3, 3)), Color.Red);
 			}
 
-			if(Score>=10)
+			AfterImageAnimationList.FadeAnimationDraw(Color.White, 0.2 * 0.2);
+			if (Score>=10)
 			{
 				Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 0.2f + (float)Lightr, Standard.LightMode.Absolute);
 				Standard.DrawLight(MasterInfo.FullScreen, Color.DarkBlue, 0.3f, Standard.LightMode.Absolute);
 			}
+			AfterImageAnimationList.FadeAnimationDraw(Color.Cornsilk, 0.2*0.5);
 			OldStateOfMouseisOnMenu = TestMenu.Frame.MouseIsOnThis();
 		}
 
@@ -564,6 +617,11 @@ namespace TestSheet
 			private int AttackIndex = -1;
 			private bool isAttacking=false;
 
+
+			public void SetAttackSpeed(int s)
+			{
+				AttackSpeed = s;
+			}
 
 			public bool IsAttacking()
 			{
@@ -657,17 +715,28 @@ namespace TestSheet
 						animationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)), 10);
 			
 					}
-					//MovePoint = Standard.DivPoint(player.GetCenter(), Standard.cursor.getPos(),0.8);
-					MovePoint = new Point(0, 0);
-					if(AttackTimer<AttackSpeed-2)
+					if(GameMode==0)
+						MovePoint = new Point(0, 0);
+					else if(GameMode==1)
+						MovePoint = Standard.DivPoint(player.GetCenter(), Standard.cursor.getPos(), 0.8);
+					if (AttackTimer<AttackSpeed-2)
 					{
-						if(Score>=10)
+						if(GameMode==0)//ShutGun Mode
 						{
-							if (AttackTimer < 3)
-								player.MoveTo(enemies[AttackIndex].getCenter().X, enemies[AttackIndex].getCenter().Y, AttackTimer * 5);
-							else
-								player.MoveTo(enemies[AttackIndex].getCenter().X, enemies[AttackIndex].getCenter().Y, -AttackTimer*2);
-							
+							AfterImageAnimationList.Add(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))),7);
+							if (Score >= 10)
+							{
+								if (AttackTimer < 3)
+									player.MoveTo(enemies[AttackIndex].getCenter().X, enemies[AttackIndex].getCenter().Y, AttackTimer * 5);
+								else
+									player.MoveTo(enemies[AttackIndex].getCenter().X, enemies[AttackIndex].getCenter().Y, -AttackTimer * 2);
+
+							}
+						}
+						else if(GameMode==1)
+						{
+							player.MoveTo(Standard.cursor.getPos().X - 40, Standard.cursor.getPos().Y - 40, MoveSpeed * 2);
+							AfterImageAnimationList.Add(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))),8);
 						}
 
 					}

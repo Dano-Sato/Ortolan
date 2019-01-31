@@ -101,20 +101,21 @@ namespace TestSheet
 			for(int i=0;i<strings.Length;i++)
 			{
 				if(i==0)
-					AddMenu(new DrawingLayer("WhiteSpace", MenuRectangle), FirstMenuVector, strings[i]);
+					AddMenu(new DrawingLayer("Light", MenuRectangle), FirstMenuVector, strings[i]);
 				else
-					AddMenu(new DrawingLayer("WhiteSpace", MenuRectangle), MenuInterval, strings[i]);
+					AddMenu(new DrawingLayer("Light", MenuRectangle), MenuInterval, strings[i]);
 			}
 		}
 		private void DrawEachMenuBox(DrawingLayer d, Color EdgeColor, Color InnerColor)
 		{
 			d.Draw(EdgeColor);
-			DrawingLayer Inner = new DrawingLayer("WhiteSpace",new Rectangle(d.GetPosition().X+EdgePixelSize,d.GetPosition().Y+EdgePixelSize,d.GetBound().Width-2*EdgePixelSize,d.GetBound().Height-2*EdgePixelSize));
+			DrawingLayer Inner = new DrawingLayer("Light",new Rectangle(d.GetPosition().X+EdgePixelSize,d.GetPosition().Y+EdgePixelSize,d.GetBound().Width-2*EdgePixelSize,d.GetBound().Height-2*EdgePixelSize));
 			Inner.Draw(InnerColor);
 		}
 		public override void Draw()
 		{
-			DrawEachMenuBox(Frame, Color.White, Color.White);
+			DrawEachMenuBox(Frame, Color.DarkSeaGreen*0.7f, Color.Black*0.8f);
+			DrawEachMenuBox(Frame, Color.DarkOrchid * 0.1f, Color.Black * 0.2f);
 			for (int i = 0; i < MenuList.Count; i++)
 			{
 				DrawEachMenuBox(MenuList[i].drawingLayer, Color.White, Color.Black);

@@ -21,7 +21,7 @@ namespace TestSheet
 		public static bool ZombieDance = false;
 		public static bool isZombieMode = false;
 		public static int EndTimer = 0;
-		public static int Score = 390;
+		public static int Score = 0;
 		public static int ZombieTime = 40;
 		public static double Lightr = 0;
 		public static string ButtonInfoString = "Right Click";
@@ -56,6 +56,7 @@ namespace TestSheet
 		public static int GameMode = 0;//ShutGun Mode;
 		public static int ZombieSpeed = 5;
 		public static bool CursorShouldBeSword = false;
+		public static int UsePianoTimer = 0;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -130,8 +131,13 @@ namespace TestSheet
 
 			if(Score<10&&MainMenuIndex!=-1)
 			{
+				if (Standard.JustPressed(Keys.Escape))
+				{
+					MainMenuIndex = -1;
+				}
+
 				animationList.TimeUpdate();
-				switch (MainMenuIndex)
+					switch (MainMenuIndex)
 				{
 					case 0://Song
 						if(!SubMenuIsMade)
@@ -143,11 +149,11 @@ namespace TestSheet
 								"Etude Op.25-2 ~ Chopin",
 								"Little Fuga: BWV 578 ~ Bach",
 								"Exit" },
-	new Rectangle(300, 200, 400, 320), new Rectangle(0, 0, 500, 50), new Point(80, 20), new Point(0, 70));
+	new Rectangle(270, 170, 580,500), new Rectangle(0, 0, 500, 50), new Point(80, 50), new Point(0, 70));
 							SubMenuIsMade = true;
 						}
 						SubMenu.Update();
-						if(SubMenu.GetIndex()!=-1&&Standard.cursor.didPlayerJustLeftClick())
+						if(SubMenu.GetIndex()!=-1 && (Standard.cursor.didPlayerJustLeftClick() || Standard.JustPressed(Keys.A)))
 						{
 							if(SubMenu.MenuStringList[SubMenu.GetIndex()]=="Exit")
 							{
@@ -166,11 +172,11 @@ namespace TestSheet
 								"Shutgun Mode",
 								"AttackBoost Mode",
 								"Exit" },
-	new Rectangle(300, 200, 400, 250), new Rectangle(0, 0, 500, 50), new Point(80, 20), new Point(0, 70));
+	new Rectangle(300, 200, 400, 240), new Rectangle(0, 0, 320, 50), new Point(80, 20), new Point(0, 70));
 							SubMenuIsMade = true;
 						}
 						SubMenu.Update();
-						if (SubMenu.GetIndex() != -1 && Standard.cursor.didPlayerJustLeftClick())
+						if (SubMenu.GetIndex() != -1 && (Standard.cursor.didPlayerJustLeftClick() || Standard.JustPressed(Keys.A)))
 						{
 							if (SubMenu.MenuStringList[SubMenu.GetIndex()] == "Exit")
 							{
@@ -180,9 +186,15 @@ namespace TestSheet
 							{
 								GameMode = SubMenu.GetIndex();
 								if (GameMode == 0)
+								{
 									player.SetAttackSpeed(8);
+									player.setRange(160);
+								}
 								else if (GameMode == 1)
+								{
 									player.SetAttackSpeed(15);
+									player.setRange(120);
+								}
 							}
 						}
 						break;
@@ -197,11 +209,11 @@ namespace TestSheet
 								"Tip 4 : Zombie can't play The Piano",
 								"More Tip",
 								"Exit" },
-	new Rectangle(300, 200, 400, 320), new Rectangle(0, 0, 750, 50), new Point(80, 20), new Point(0, 70));
+	new Rectangle(300, 200, 830, 450), new Rectangle(0, 0, 750, 50), new Point(80, 20), new Point(0, 70));
 							SubMenuIsMade = true;
 						}
 						SubMenu.Update();
-						if (SubMenu.GetIndex() != -1 && Standard.cursor.didPlayerJustLeftClick())
+						if (SubMenu.GetIndex() != -1 && (Standard.cursor.didPlayerJustLeftClick() || Standard.JustPressed(Keys.A)))
 						{
 							if (SubMenu.MenuStringList[SubMenu.GetIndex()] == "Exit")
 							{
@@ -215,7 +227,7 @@ namespace TestSheet
 								"Tip 7 : Pressing \"S\" Button means \"Skip the Masquerade\"",
 								"Go Back",
 								"Exit" },
-	new Rectangle(300, 200, 400, 320), new Rectangle(0, 0, 750, 50), new Point(80, 20), new Point(0, 70));
+	new Rectangle(300, 200, 900, 380), new Rectangle(0, 0, 750, 50), new Point(80, 20), new Point(0, 70));
 								SubMenu.Update();
 								return;
 							}
@@ -241,11 +253,11 @@ namespace TestSheet
 								"Extra Hard = Maybe no one can clear",
 								"NIGHTMARE = DON'T PANIC",
 								"Exit" },
-	new Rectangle(300, 200, 400, 320), new Rectangle(0, 0, 500, 50), new Point(80, 20), new Point(0, 70));
+	new Rectangle(270, 190, 600, 450), new Rectangle(0, 0, 500, 50), new Point(100, 30), new Point(0, 70));
 							SubMenuIsMade = true;
 						}
 						SubMenu.Update();
-						if (SubMenu.GetIndex() != -1 && Standard.cursor.didPlayerJustLeftClick())
+						if (SubMenu.GetIndex() != -1 && (Standard.cursor.didPlayerJustLeftClick() || Standard.JustPressed(Keys.A)))
 						{
 							if (SubMenu.MenuStringList[SubMenu.GetIndex()] == "Exit")
 							{
@@ -254,6 +266,7 @@ namespace TestSheet
 							else
 							{
 								ZombieSpeed = 3 + SubMenu.GetIndex()*2;
+								player.SetMoveSpeed((9 + ZombieSpeed)/3);
 							}
 						}
 						break;
@@ -261,6 +274,7 @@ namespace TestSheet
 				}
 				return;
 			}
+
 			if (Standard.KeyInputOccurs())
 			{
 				if(Standard.IsKeyDown(Keys.OemTilde))
@@ -311,10 +325,15 @@ namespace TestSheet
 				{
 					MoveLock = !MoveLock;
 				}
+				if (Score>=10&&Standard.JustPressed(Keys.Escape))
+				{
+					Game1.GameExit = true;
+				}
+
 			}
-		
-	
-			if(CursorShouldBeSword)
+
+
+			if (CursorShouldBeSword)
 				Standard.cursor.SetSprite("Sword");
 			else
 				Standard.cursor.SetSprite("Cursor");
@@ -421,7 +440,7 @@ namespace TestSheet
 					{
 						TestMenu.MenuList[TestMenu.GetIndex()].drawingLayer.MoveByVector(new Point(random.Next(1, 3), random.Next(1, 3)), random.Next(1,10));
 					}
-					if (Standard.cursor.didPlayerJustLeftClick())
+					if (Standard.cursor.didPlayerJustLeftClick() || Standard.JustPressed(Keys.A))
 					{
 						if (TestMenu.MenuStringList[TestMenu.GetIndex()] == "EXIT")
 						{
@@ -432,11 +451,15 @@ namespace TestSheet
 						SubMenuIsMade = false;
 					}
 				}
+				UsePianoTimer++;
 			}
 			else
 			{
 				TestMenu.MoveTo(-250, 300, 20);
+				UsePianoTimer = 0;
 			}
+			if (player.getPos().X < -40)
+				player.setPos(-40, player.getPos().Y);
 
 
 		}
@@ -466,7 +489,7 @@ namespace TestSheet
 			if (Score >= 10)
 				StringColor = Color.Red;
 
-			Standard.DrawString("SCORE : " + Score + "/400", new Vector2(300, 450), StringColor);
+			Standard.DrawString("SCORE : " + Score + "/400", new Vector2(340, 440), StringColor);
 			if (Score < 300)
 				Standard.DrawString(ButtonInfoString + " to live", new Vector2(300, 400), StringColor);
 			else if (Score < 400)
@@ -475,8 +498,10 @@ namespace TestSheet
 				Standard.DrawString("Congratulation!", new Vector2(300, 400), StringColor);
 			if (MoveLock)
 				Standard.DrawString("* Move Locked", new Vector2(300, 600), StringColor);
-			Standard.DrawString("Press \"ESC\" Button to leave", new Vector2(300, 500), StringColor);
-	
+			Standard.DrawString("Press \"R\" for reset", new Vector2(550,490), StringColor);
+			Standard.DrawString("Press \"S\" for skip the break time", new Vector2(290, 470), StringColor);
+
+
 
 			LightLayer.Draw();
 			//스코어 올라갈수록 보라색을 띈다.
@@ -500,9 +525,13 @@ namespace TestSheet
 					if(TestMenu.Frame.GetBound().Contains(enemies[i].getCenter()))
 					{
 						enemies[i].enemy.MoveByVector(new Point(1, 0), 20);
-						TestMenu.Frame.MoveByVector(new Point(-1, 0), 45-ZombieSpeed*3);
+						if(ZombieSpeed<9)
+						TestMenu.Frame.MoveByVector(new Point(-1, 0), 37 - ZombieSpeed * 3/*Math.Max(1,25-ZombieSpeed*3+UsePianoTimer*7)*/);
+						else
+								TestMenu.Frame.MoveByVector(new Point(-1, 0), Math.Max(13,25-ZombieSpeed*3+UsePianoTimer*7));
+
+						}
 					}
-				}
 			}
 			if (!TestMenu.MouseIsOnFrame())
 			{
@@ -560,15 +589,15 @@ namespace TestSheet
 				switch (MainMenuIndex)
 				{
 					case 0:
-						Standard.DrawString("Song List", new Vector2(300,200), Color.Black);
+						Standard.DrawString("Song List", new Vector2(290,190), Color.White);
 						break;
 					case 1:
 						if(SubMenu!=null&&SubMenu.MenuList.Count>0)
-							Standard.DrawString("Mode :" + SubMenu.MenuStringList[GameMode] , new Vector2(300,200), Color.Black);
+							Standard.DrawString("Mode :" + SubMenu.MenuStringList[GameMode] , new Vector2(300,200), Color.White);
 						break;
 
 					case 2:
-						Standard.DrawString("Guide", new Vector2(300, 200), Color.Black);
+						Standard.DrawString("Guide", new Vector2(315, 335), Color.White);
 						break;
 
 					case 3:
@@ -581,11 +610,12 @@ namespace TestSheet
 								break;
 							}
 						}
-						Standard.DrawString("Difficulty :" + Difficulty, new Vector2(300, 200), Color.Black);
+						Standard.DrawString("Difficulty :" + Difficulty, new Vector2(300, 200), Color.White);
 
 						break;
 
 				}
+				Standard.DrawLight(SubMenu.Frame.GetBound(), Color.WhiteSmoke, 0.3f, Standard.LightMode.Vignette);
 				return;
 			}
 
@@ -629,6 +659,11 @@ namespace TestSheet
 			private bool isAttacking=false;
 
 
+			public void SetMoveSpeed(int s)
+			{
+				MoveSpeed = s;
+			}
+
 			public void SetAttackSpeed(int s)
 			{
 				AttackSpeed = s;
@@ -663,6 +698,11 @@ namespace TestSheet
 				return player.GetPosition();
 			}
 
+			public void setPos(int x, int y)
+			{
+				player.setPosition(x, y);
+			}
+
 			public Point getMovePoint()
 			{
 				return MovePoint;
@@ -671,6 +711,10 @@ namespace TestSheet
 			public int getRange()
 			{
 				return Range;
+			}
+			public void setRange(int i)
+			{
+				Range = i;
 			}
 
 			public Player()
@@ -977,7 +1021,7 @@ namespace TestSheet
 				enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, ZombieSpeed);
 				if ((Standard.Distance(player.getPos(), getPos())) <= 10 && Index != player.getAttackIndex())
 				{
-					//GameOver = true;
+					GameOver = true;
 				}
 			}
 		}

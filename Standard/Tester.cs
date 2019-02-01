@@ -43,7 +43,7 @@ namespace TestSheet
 		public static bool PressedQ = false;
 		public static bool Reload = false;
 		public static int BoostTimer = 0;
-		public static bool MoveLock = false;
+		public static bool AutoMouse = false;
 		public static int Interval = 0;
 		public static double TempoChecker = 0;
 		public static double NewTempo = 0;
@@ -65,7 +65,7 @@ namespace TestSheet
 			Standard.PlaySong(random.Next(0, 5),true);
 			TestMenu = new EasyMenu(new string[] {
 				"SONG",
-				"MODE",
+				"CHARACTER",
 				"TUTORIAL",
 				"SETTING",
 				"EXIT" },new Rectangle(0,0,300,370),new Rectangle(0,0,200,50),new Point(80,20),new Point(0,70));
@@ -109,7 +109,9 @@ namespace TestSheet
 			}
 			if (GameOver)
 			{
-				if (Standard.IsKeyDown(Keys.R))
+				Rectangle rectangle = new Rectangle(500,450,200,50);
+				bool ClickRButton =(rectangle.Contains(Standard.cursor.getPos()))&&(Standard.cursor.didPlayerJustLeftClick() || Standard.cursor.didPlayerJustRightClick());
+				if (Standard.IsKeyDown(Keys.R)||ClickRButton)
 				{
 					Score = 0;
 					Standard.FrameTimer = 0;
@@ -169,8 +171,8 @@ namespace TestSheet
 						if (!SubMenuIsMade)
 						{
 							SubMenu = new EasyMenu(new string[] {
-								"Shutgun Mode",
-								"AttackBoost Mode",
+								"NK Cell",
+								"Cytotoxic T Cell",
 								"Exit" },
 	new Rectangle(300, 200, 400, 240), new Rectangle(0, 0, 320, 50), new Point(80, 20), new Point(0, 70));
 							SubMenuIsMade = true;
@@ -193,7 +195,7 @@ namespace TestSheet
 								else if (GameMode == 1)
 								{
 									player.SetAttackSpeed(15);
-									player.setRange(120);
+									player.setRange(100);
 								}
 							}
 						}
@@ -224,7 +226,7 @@ namespace TestSheet
 								SubMenu = new EasyMenu(new string[] {
 								"Tip 5 : Pressing \"R\" Button means \"Reset the game\"",
 								"Tip 6 : AttackBoost-Mode gives you boost to your cursor's position.",
-								"Tip 7 : Pressing \"S\" Button means \"Skip the Masquerade\"",
+								"Tip 7 : Pressing \"M\" Button enables Mouse Macro",
 								"Go Back",
 								"Exit" },
 	new Rectangle(300, 200, 900, 380), new Rectangle(0, 0, 750, 50), new Point(80, 20), new Point(0, 70));
@@ -323,7 +325,7 @@ namespace TestSheet
 				}
 				if(Standard.JustPressed(Keys.M))
 				{
-					MoveLock = !MoveLock;
+					AutoMouse = !AutoMouse;
 				}
 				if (Score>=10&&Standard.JustPressed(Keys.Escape))
 				{
@@ -420,7 +422,10 @@ namespace TestSheet
 				Reload = true;
 			if(Score%10==0&&Reload==true)
 			{
-				Standard.PlaySound("Reload");
+				if (GameMode == 0)
+					Standard.PlaySound("Reload");
+				else if (GameMode == 1)
+					Standard.PlaySound("WipeKnife");
 				Reload = false;
 			}
 			if (DeadBodys.Count > 300)
@@ -495,11 +500,11 @@ namespace TestSheet
 			else if (Score < 400)
 				Standard.DrawString("Live to click", new Vector2(300, 400), StringColor);
 			else
-				Standard.DrawString("Congratulation!", new Vector2(300, 400), StringColor);
-			if (MoveLock)
-				Standard.DrawString("* Move Locked", new Vector2(300, 600), StringColor);
-			Standard.DrawString("Press \"R\" for reset", new Vector2(550,490), StringColor);
-			Standard.DrawString("Press \"S\" for skip the break time", new Vector2(290, 470), StringColor);
+				Standard.DrawString("Congratulation!", new Vector2(300, 400), StringColor);		
+			Standard.DrawString("Press \"R\" to reset", new Vector2(550,490), StringColor);
+			Standard.DrawString("Press \"S\" to skip the break time", new Vector2(290, 470), StringColor);
+			Standard.DrawString("in break time only, you can use the menu", new Vector2(450, 280), StringColor);
+
 
 
 
@@ -593,7 +598,29 @@ namespace TestSheet
 						break;
 					case 1:
 						if(SubMenu!=null&&SubMenu.MenuList.Count>0)
-							Standard.DrawString("Mode :" + SubMenu.MenuStringList[GameMode] , new Vector2(300,200), Color.White);
+							Standard.DrawString("Model :" + SubMenu.MenuStringList[GameMode] , new Vector2(300,200), Color.White);
+						if(GameMode==0)
+						{
+							DrawingLayer NKCell = new DrawingLayer("NKCell5", new Rectangle(750,100,350,700));
+							Standard.DrawLight(NKCell, Color.Azure, 0.3f, Standard.LightMode.Vignette);
+							NKCell.Draw();
+						
+							Standard.DrawString("* Has short range", new Vector2(500, 500), Color.Red);
+							Standard.DrawString("* Has firearm recoil", new Vector2(400, 550), Color.Red);
+							Standard.DrawString("* Walker", new Vector2(300, 600), Color.Red);
+							Standard.DrawString("* Natural Killer Cell : Induces osmotic cell lysis", new Vector2(330, 450), Color.Red);
+						}
+						else if(GameMode==1)
+						{
+							DrawingLayer NKCell = new DrawingLayer("CyT3", new Rectangle(750, 100, 350, 700));
+							NKCell.Draw();
+							Standard.DrawLight(NKCell, Color.Azure, 0.3f, Standard.LightMode.Vignette);
+
+							Standard.DrawString("* Has Extremely short range", new Vector2(500, 500), Color.Red);
+							Standard.DrawString("* Has attack-boost", new Vector2(400, 550), Color.Red);
+							Standard.DrawString("* Sprinter", new Vector2(300, 600), Color.Red);
+							Standard.DrawString("* Cytotoxic T Cell : Induces cell apoptosis", new Vector2(330, 450), Color.Red);
+						}
 						break;
 
 					case 2:
@@ -628,7 +655,14 @@ namespace TestSheet
 					enemies[i].enemy.MoveTo(player.getPos().X+random.Next(-30,30), player.getPos().Y + random.Next(-30, 30), random.Next(5,15));
 				}
 				Standard.DrawString("Game Over", new Vector2(500+random.Next(-3,3), 400 + random.Next(-3, 3)), Color.Red);
-				Standard.DrawString("Press \"R\" button to restart", new Vector2(500 + random.Next(-3, 3), 450 + random.Next(-3, 3)), Color.Red);
+				Rectangle rectangle = new Rectangle(500, 450, 200, 50);
+				if(rectangle.Contains(Standard.cursor.getPos()))
+				{
+					Standard.DrawString("Press \"R\" button to restart", new Vector2(500 + random.Next(-3, 3), 450 + random.Next(-3, 3)), Color.Honeydew);
+				}
+				else
+					Standard.DrawString("Press \"R\" button to restart", new Vector2(500 + random.Next(-3, 3), 450 + random.Next(-3, 3)), Color.Red);
+
 			}
 
 			AfterImageAnimationList.FadeAnimationDraw(Color.White, 0.2 * 0.2);
@@ -745,12 +779,33 @@ namespace TestSheet
 				{
 					direction.MoveTo(getPos().X+20, getPos().Y+20, 7);
 				}
-				
-				
+
+			
 
 				if (isAttacking)
 				{
-					if (Standard.cursor.didPlayerJustRightClick() || Standard.cursor.didPlayerJustLeftClick() || Standard.JustPressed(Keys.A))
+					if (AttackTimer < AttackSpeed - 2)
+					{
+						if (GameMode == 0)//ShutGun Mode
+						{
+							AfterImageAnimationList.Add(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))), 7);
+							if (Score >= 10)
+							{
+								if (AttackTimer < 3)
+									player.MoveTo(enemies[AttackIndex].getCenter().X, enemies[AttackIndex].getCenter().Y, AttackTimer * 5);
+								else
+									player.MoveTo(enemies[AttackIndex].getCenter().X, enemies[AttackIndex].getCenter().Y, -AttackTimer * (MoveSpeed/2));
+
+							}
+						}
+						else if (GameMode == 1)
+						{
+							player.MoveTo(Standard.cursor.getPos().X - 40, Standard.cursor.getPos().Y - 40, MoveSpeed * 2);
+							AfterImageAnimationList.Add(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))), 8);
+						}
+
+					}
+					if (AutoMouse||Standard.cursor.didPlayerJustRightClick() || Standard.cursor.didPlayerJustLeftClick() || Standard.JustPressed(Keys.A) )
 					{
 						if (Standard.cursor.didPlayerJustLeftClick())
 							ButtonInfoString = "Left Click";
@@ -774,30 +829,10 @@ namespace TestSheet
 						MovePoint = new Point(0, 0);
 					else if(GameMode==1)
 						MovePoint = Standard.DivPoint(player.GetCenter(), Standard.cursor.getPos(), 0.8);
-					if (AttackTimer<AttackSpeed-2)
-					{
-						if(GameMode==0)//ShutGun Mode
-						{
-							AfterImageAnimationList.Add(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))),7);
-							if (Score >= 10)
-							{
-								if (AttackTimer < 3)
-									player.MoveTo(enemies[AttackIndex].getCenter().X, enemies[AttackIndex].getCenter().Y, AttackTimer * 5);
-								else
-									player.MoveTo(enemies[AttackIndex].getCenter().X, enemies[AttackIndex].getCenter().Y, -AttackTimer * 2);
-
-							}
-						}
-						else if(GameMode==1)
-						{
-							player.MoveTo(Standard.cursor.getPos().X - 40, Standard.cursor.getPos().Y - 40, MoveSpeed * 2);
-							AfterImageAnimationList.Add(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))),8);
-						}
-
-					}
+				
 					return;
 				}
-				if (Standard.cursor.didPlayerJustRightClick()||Standard.cursor.didPlayerJustLeftClick()|| Standard.JustPressed(Keys.A))
+				if (AutoMouse || Standard.cursor.didPlayerJustRightClick() || Standard.cursor.didPlayerJustLeftClick() || Standard.JustPressed(Keys.A))
 				{
 					if (Standard.cursor.didPlayerJustLeftClick())
 						ButtonInfoString = "Left Click";
@@ -830,7 +865,7 @@ namespace TestSheet
 					animationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)), 10);
 				}
 				
-				if (!MoveLock&&(MovePoint.X!=0||MovePoint.Y!=0))
+				if (MovePoint.X!=0||MovePoint.Y!=0)
 				{
 					if (BoostTimer > 0)
 						BoostTimer--;
@@ -857,9 +892,14 @@ namespace TestSheet
 						}
 						if (Score < 10)
 							Standard.PlaySound("EnemyDead");
-						else
+						else if(GameMode==0)
 							Standard.PlaySound("GunSound");
+						else if(GameMode==1)
+						{
+							Standard.PlaySound("KnifeSound",0.4f);
+							Standard.PlaySound("GunSound",0.3f);
 						}
+					}
 					if (AttackTimer>0)//투사체 날아가는중
 					{
 						AttackTimer--;

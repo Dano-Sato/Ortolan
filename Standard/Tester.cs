@@ -57,6 +57,7 @@ namespace TestSheet
 		public static int ZombieSpeed = 5;
 		public static bool CursorShouldBeSword = false;
 		public static int UsePianoTimer = 0;
+		public static int Difficulty = 1;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -191,11 +192,17 @@ namespace TestSheet
 								{
 									player.SetAttackSpeed(8);
 									player.setRange(160);
+									ZombieSpeed = 3 + Difficulty * 2;
+									player.SetMoveSpeed((10 + ZombieSpeed) / 3);
+									AutoMouse = false;
 								}
 								else if (GameMode == 1)
 								{
 									player.SetAttackSpeed(15);
-									player.setRange(100);
+									player.setRange(80);
+									ZombieSpeed = 6 + Difficulty * 2;
+									player.SetMoveSpeed((7 + ZombieSpeed) / 3);
+									AutoMouse = true;
 								}
 							}
 						}
@@ -207,8 +214,8 @@ namespace TestSheet
 							SubMenu = new EasyMenu(new string[] {
 								"Tip 1 : You can Move&Attack by \"A\" button&Left-Click&Right-Click",
 								"Tip 2 : If Score is over 10, Zombies will attack you.",
-								"Tip 3 : If Zombie reaches your center, You die.",
-								"Tip 4 : Zombie can't play The Piano",
+								"Tip 3 : If Zombie reaches your center before you attack it, You die.",
+								"Tip 4 : Zombie can't play The Piano.",
 								"More Tip",
 								"Exit" },
 	new Rectangle(300, 200, 830, 450), new Rectangle(0, 0, 750, 50), new Point(80, 20), new Point(0, 70));
@@ -224,9 +231,9 @@ namespace TestSheet
 							if(SubMenu.MenuStringList[SubMenu.GetIndex()]=="More Tip")
 							{
 								SubMenu = new EasyMenu(new string[] {
-								"Tip 5 : Pressing \"R\" Button means \"Reset the game\"",
-								"Tip 6 : AttackBoost-Mode gives you boost to your cursor's position.",
-								"Tip 7 : Pressing \"M\" Button enables Mouse Macro",
+								"Tip 5 : When the zombie presents in blue, it is out of your range.",
+								"Tip 6 : CyT's attack-boost gives you boost to your cursor's position.",
+								"Tip 7 : Pressing \"M\" Button enables Mouse Macro.",
 								"Go Back",
 								"Exit" },
 	new Rectangle(300, 200, 900, 380), new Rectangle(0, 0, 750, 50), new Point(80, 20), new Point(0, 70));
@@ -267,8 +274,17 @@ namespace TestSheet
 							}
 							else
 							{
-								ZombieSpeed = 3 + SubMenu.GetIndex()*2;
-								player.SetMoveSpeed((9 + ZombieSpeed)/3);
+								Difficulty = SubMenu.GetIndex();
+								if(GameMode==0)
+								{
+									ZombieSpeed = 3 + Difficulty * 2;
+									player.SetMoveSpeed((10 + ZombieSpeed) / 3);
+								}
+								else if(GameMode==1)
+								{
+									ZombieSpeed = 6 + Difficulty * 2;
+									player.SetMoveSpeed((7 + ZombieSpeed) / 3);
+								}
 							}
 						}
 						break;
@@ -326,6 +342,14 @@ namespace TestSheet
 				if(Standard.JustPressed(Keys.M))
 				{
 					AutoMouse = !AutoMouse;
+				}
+				if(Standard.JustPressed(Keys.C))
+				{
+					for(int i=0;i<DeadBodys.Count;i++)
+					{
+						DeadBodysAnimationList.Add(DeadBodys[i], 10);
+					}
+					DeadBodys.Clear();
 				}
 				if (Score>=10&&Standard.JustPressed(Keys.Escape))
 				{
@@ -504,7 +528,25 @@ namespace TestSheet
 			Standard.DrawString("Press \"R\" to reset", new Vector2(550,490), StringColor);
 			Standard.DrawString("Press \"S\" to skip the break time", new Vector2(290, 470), StringColor);
 			Standard.DrawString("in break time only, you can use the menu", new Vector2(450, 280), StringColor);
+			if (AutoMouse)
+			{
+				Color AutoMouseStringColor;
+				if (Score < 10)
+				{
+					AutoMouseStringColor = Color.White;
+				}
+				else
+				{
+					AutoMouseStringColor = Color.LightSeaGreen;
+				}
+				if (GameMode == 0)
+				{
+					Standard.DrawString("* Using Mouse auto", new Vector2(100, 700), AutoMouseStringColor);
+					Standard.DrawString("* Press \"M\" to disable mouse auto", new Vector2(100, 750), AutoMouseStringColor);
+					Standard.DrawString("* Using Mouse auto is not recommended for NK cell", new Vector2(500, 650), AutoMouseStringColor);
+				}
 
+			}
 
 
 
@@ -569,7 +611,7 @@ namespace TestSheet
 
 			if (Score>=10)
 			{
-				if(Standard.FrameTimer%3==0)
+				if(Standard.FrameTimer%10==0)
 				{
 					Lightr = random.NextDouble() / 10.0;
 				}
@@ -628,16 +670,16 @@ namespace TestSheet
 						break;
 
 					case 3:
-						string Difficulty = "";
+						string DifficultyString = "";
 						for (int i = 0; i < SubMenu.MenuList.Count; i++)
 						{
-							if (ZombieSpeed == 3 + i * 2)
+							if (Difficulty==i)
 							{
-								Difficulty = SubMenu.MenuStringList[i];
+								DifficultyString = SubMenu.MenuStringList[i];
 								break;
 							}
 						}
-						Standard.DrawString("Difficulty :" + Difficulty, new Vector2(300, 200), Color.White);
+						Standard.DrawString("Difficulty :" + DifficultyString, new Vector2(300, 200), Color.White);
 
 						break;
 
@@ -786,7 +828,7 @@ namespace TestSheet
 				{
 					if (AttackTimer < AttackSpeed - 2)
 					{
-						if (GameMode == 0)//ShutGun Mode
+						if (GameMode == 0)//ShotGun Mode
 						{
 							AfterImageAnimationList.Add(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))), 7);
 							if (Score >= 10)
@@ -798,13 +840,17 @@ namespace TestSheet
 
 							}
 						}
-						else if (GameMode == 1)
+						else if (GameMode == 1)//AttackBoost mode
 						{
 							player.MoveTo(Standard.cursor.getPos().X - 40, Standard.cursor.getPos().Y - 40, MoveSpeed * 2);
 							AfterImageAnimationList.Add(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))), 8);
 						}
-
 					}
+					if (GameMode == 0)
+						MovePoint = new Point(0, 0);
+					else if (GameMode == 1)
+						MovePoint = Standard.DivPoint(player.GetCenter(), Standard.cursor.getPos(), 0.8);
+
 					if (AutoMouse||Standard.cursor.didPlayerJustRightClick() || Standard.cursor.didPlayerJustLeftClick() || Standard.JustPressed(Keys.A) )
 					{
 						if (Standard.cursor.didPlayerJustLeftClick())
@@ -825,10 +871,6 @@ namespace TestSheet
 						animationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)), 10);
 			
 					}
-					if(GameMode==0)
-						MovePoint = new Point(0, 0);
-					else if(GameMode==1)
-						MovePoint = Standard.DivPoint(player.GetCenter(), Standard.cursor.getPos(), 0.8);
 				
 					return;
 				}
@@ -1002,37 +1044,6 @@ namespace TestSheet
 				else 
 					enemy.Draw(Color.White);
 			}
-
-			/*public void MoveUpdate(int Index)
-			{
-				if(ZombieDance)
-				{
-					if(Standard.Distance(getPos(),player.getPos())>160)
-					{
-						enemy.MoveTo(player.getPos().X + random.Next(-300, 300), player.getPos().Y + random.Next(-300, 300), 5);
-					}
-					else
-					{
-						enemy.MoveTo(player.getPos().X + random.Next(-300, 300), player.getPos().Y + random.Next(-300, 300), -5);
-					}
-					return;
-				}
-
-				if(Score<10)
-				{
-					if(player.getMovePoint().X!=0||player.getMovePoint().Y!=0)
-						enemy.MoveTo(player.getMovePoint().X + random.Next(-150, 150), player.getMovePoint().Y + random.Next(-150, 150), 3);
-					else
-						enemy.MoveTo(player.getPos().X + random.Next(-300, 300), player.getPos().Y + random.Next(-300, 300), -Math.Min(Score,3));
-					return;
-				}
-
-				enemy.MoveTo(player.getPos().X+random.Next(-300,300), player.getPos().Y+random.Next(-300,300), ZombieSpeed);
-				if((Standard.Distance(player.getPos(),getPos()))<=10&&Index!=player.getAttackIndex())
-				{
-					GameOver = true;
-				}
-			}*/
 
 			public void MoveUpdate(int Index, int r_1, int r_2)
 			{

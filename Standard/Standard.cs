@@ -87,7 +87,7 @@ namespace TestSheet
 
 
 		// * Make your own song Name List;
-		public enum SongNameList {March,Polonaise,Ballade,Etude,BWV,Tchai };
+		public enum SongNameList {March, Etude, Polonaise, Ballade, BWV, Tchai };
 
 		public static void SoundInit()
 		{
@@ -96,11 +96,11 @@ namespace TestSheet
 			//AddSong("SongName1");
 			//AddSong("SongName2");
 			//AddSong("SongName3");
-			AddSong("March3");			//0
-			AddSong("Polonaise3");		//1
-			AddSong("Ballade8");		//2
-			AddSong("Etude3");			//3
-			AddSong("BWV3");			//4
+			AddSong("March3");          //0          
+			AddSong("Etude3");          //1
+			AddSong("Polonaise3");      //2
+			AddSong("Ballade8");        //3			
+			AddSong("BWV3");            //4
 			AddSong("Tchai3");			//5
 		}
 
@@ -244,6 +244,8 @@ namespace TestSheet
 			Game1.spriteBatch.DrawString(Standardfont, s, vector2, color);
 			Game1.spriteBatch.End();
 		}
+
+		public static Random Random=new Random();
 
 
 	}

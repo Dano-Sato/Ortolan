@@ -14,7 +14,7 @@ namespace TestSheet
 		
 	
 
-		public static Random random=new Random();
+		//public static Random random=new Random();
 		public static Player player;
 		public static List<Enemy> enemies=new List<Enemy>();
 		public static bool GameOver=false;
@@ -58,16 +58,19 @@ namespace TestSheet
 		public static bool CursorShouldBeSword = false;
 		public static int UsePianoTimer = 0;
 		public static int Difficulty = 1;
+		public static int SongCount = 5;
+		public static int KillerZombieIndex = 0;
+		public static int ScoreStack = 0;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
 			player = new Player();
 			enemies.Add(new Enemy());
-			Standard.PlaySong(random.Next(0, 5),true);
+			Standard.PlaySong(Standard.Random.Next(0, SongCount),true);
 			TestMenu = new EasyMenu(new string[] {
 				"SONG",
 				"CHARACTER",
-				"TUTORIAL",
+				"TIPS",
 				"SETTING",
 				"EXIT" },new Rectangle(0,0,300,370),new Rectangle(0,0,200,50),new Point(80,20),new Point(0,70));
 
@@ -75,6 +78,24 @@ namespace TestSheet
 		//Game1.Class 내에 Tester.Update()로 추가될 업데이트문입니다. 다양한 업데이트 처리를 시험할 수 있습니다.
 		public void Update()
 		{
+			if(ScoreStack>0)
+			{
+				ScoreStack--;
+				Score++;
+			}
+
+			//속도 설정. 오토마우스를 켜면 대체로 적의 속도가 증가한다.
+			if(AutoMouse)
+			{
+				if (GameMode == 0)
+					ZombieSpeed = 9 + Difficulty * 3;
+				else if (GameMode == 1)
+					ZombieSpeed = 6 + Difficulty * 2;
+			}
+			else
+			{
+				ZombieSpeed = 3 + Difficulty * 2;
+			}
 			if (Score<400&&Standard.IsKeyDown(Keys.R))
 			{
 				Score = 0;
@@ -130,6 +151,7 @@ namespace TestSheet
 			if(Score<10&&Standard.JustPressed(Keys.S))
 			{
 				Score = 10;
+				MainMenuIndex = -1;
 			}
 
 			if(Score<10&&MainMenuIndex!=-1)
@@ -138,7 +160,11 @@ namespace TestSheet
 				{
 					MainMenuIndex = -1;
 				}
-
+				if(!SubMenu.MouseIsOnFrame()&&(Standard.cursor.didPlayerJustLeftClick()||Standard.cursor.didPlayerJustRightClick()))
+				{
+					MainMenuIndex = -1;
+				}
+			
 				animationList.TimeUpdate();
 					switch (MainMenuIndex)
 				{
@@ -146,11 +172,11 @@ namespace TestSheet
 						if(!SubMenuIsMade)
 						{
 							SubMenu = new EasyMenu(new string[] {
-								"The Nutcracker: March ~ Tchaikovsky",
-								"Polonaise Op.44 ~ Chopin",
-								"Ballade No.1~ Chopin",
-								"Etude Op.25-2 ~ Chopin",
-								"Little Fuga: BWV 578 ~ Bach",
+								"1. The Nutcracker: March ~ Tchaikovsky",
+								"2. Etude Op.25-2 ~ Chopin",
+								"3. Polonaise Op.44 ~ Chopin",
+								"4. Ballade No.1~ Chopin",
+								"5. Little Fuga: BWV 578 ~ Bach",
 								"Exit" },
 	new Rectangle(270, 170, 580,500), new Rectangle(0, 0, 500, 50), new Point(80, 50), new Point(0, 70));
 							SubMenuIsMade = true;
@@ -199,7 +225,7 @@ namespace TestSheet
 								else if (GameMode == 1)
 								{
 									player.SetAttackSpeed(15);
-									player.setRange(80);
+									player.setRange(90);
 									ZombieSpeed = 6 + Difficulty * 2;
 									player.SetMoveSpeed((7 + ZombieSpeed) / 3);
 									AutoMouse = true;
@@ -233,7 +259,7 @@ namespace TestSheet
 								SubMenu = new EasyMenu(new string[] {
 								"Tip 5 : When the zombie presents in blue, it is out of your range.",
 								"Tip 6 : CyT's attack-boost gives you boost to your cursor's position.",
-								"Tip 7 : Pressing \"M\" Button enables Mouse Macro.",
+								"Tip 7 : Pressing \"M\" Button enables/disables Mouse Macro.",
 								"Go Back",
 								"Exit" },
 	new Rectangle(300, 200, 900, 380), new Rectangle(0, 0, 750, 50), new Point(80, 20), new Point(0, 70));
@@ -365,19 +391,26 @@ namespace TestSheet
 				Standard.cursor.SetSprite("Cursor");
 
 			player.MoveUpdate();
-			LightLayer3.setPosition(player.getPos().X-40+random.Next(-3,3), player.getPos().Y-40 + random.Next(-3,3));
+			LightLayer3.setPosition(player.getPos().X-40+Standard.Random.Next(-3,3), player.getPos().Y-40 + Standard.Random.Next(-3,3));
 			player.AttackUpdate();
 			List<int> RandomInts = new List<int>();
 			for(int i=0;i<15;i++)
 			{
-				RandomInts.Add(random.Next(-300, 300));
+				RandomInts.Add(Standard.Random.Next(-300, 300));
 			}
 			int j = 0 ;
 			for (int i = 0; i < enemies.Count; i++)
 			{
 				if (j >= 14)
 					j = 0;
-				enemies[i].MoveUpdate(i, RandomInts[j],RandomInts[(j+Standard.FrameTimer)%14]);
+				if(i==KillerZombieIndex)
+				{
+					ZombieSpeed += 2;
+					enemies[i].MoveUpdate(i, RandomInts[j], RandomInts[(j + Standard.FrameTimer) % 14]);
+					ZombieSpeed -= 2;
+				}			
+				else
+					enemies[i].MoveUpdate(i, RandomInts[j], RandomInts[(j + Standard.FrameTimer) % 14]);
 				j++;
 			}
 
@@ -408,7 +441,7 @@ namespace TestSheet
 			if (ZombieDance && EndTimer == 0)
 				GameEnd = true;
 		
-
+			
 			if (Score <= 280)
 				MediaPlayer.Volume = BaseVolume;
 			else if(Score<=300)
@@ -432,6 +465,7 @@ namespace TestSheet
 			{
 				MediaPlayer.Volume = Math.Min(BaseVolume, MediaPlayer.Volume + BaseVolume * 0.003f);
 			}
+			
 
 			if (Score == 10)
 			{
@@ -467,7 +501,7 @@ namespace TestSheet
 				{
 					if (TestMenu.MenuStringList[TestMenu.GetIndex()] == "EXIT")
 					{
-						TestMenu.MenuList[TestMenu.GetIndex()].drawingLayer.MoveByVector(new Point(random.Next(1, 3), random.Next(1, 3)), random.Next(1,10));
+						TestMenu.MenuList[TestMenu.GetIndex()].drawingLayer.MoveByVector(new Point(Standard.Random.Next(1, 3), Standard.Random.Next(1, 3)), Standard.Random.Next(1,10));
 					}
 					if (Standard.cursor.didPlayerJustLeftClick() || Standard.JustPressed(Keys.A))
 					{
@@ -510,17 +544,25 @@ namespace TestSheet
 			}
 			DeadBodysAnimationList.FadeAnimationDraw(Color.LightSeaGreen, 1/30.0);
 			MouseLogo.Draw();
-			if(Standard.FrameTimer%10<=5&&Score<10)
-				MouseButton.Draw(Color.Red);
-			if (Standard.FrameTimer % 10 <= 5 && ZombieDance)
-				MouseButton.Draw(Color.Crimson);
+			if(!AutoMouse)
+			{
+				if (Standard.FrameTimer % 10 <= 5 && Score < 10)
+					MouseButton.Draw(Color.Red);
+				if (Standard.FrameTimer % 10 <= 5 && ZombieDance)
+					MouseButton.Draw(Color.Crimson);
+			}
 			Color StringColor = Color.White;
 			if (Score >= 10)
 				StringColor = Color.Red;
 
 			Standard.DrawString("SCORE : " + Score + "/400", new Vector2(340, 440), StringColor);
 			if (Score < 300)
-				Standard.DrawString(ButtonInfoString + " to live", new Vector2(300, 400), StringColor);
+			{
+				if(!AutoMouse)
+					Standard.DrawString(ButtonInfoString + " to live", new Vector2(300, 400), StringColor);
+				else
+					Standard.DrawString("You don't have to click", new Vector2(300, 400), StringColor);
+			}
 			else if (Score < 400)
 				Standard.DrawString("Live to click", new Vector2(300, 400), StringColor);
 			else
@@ -528,26 +570,24 @@ namespace TestSheet
 			Standard.DrawString("Press \"R\" to reset", new Vector2(550,490), StringColor);
 			Standard.DrawString("Press \"S\" to skip the break time", new Vector2(290, 470), StringColor);
 			Standard.DrawString("in break time only, you can use the menu", new Vector2(450, 280), StringColor);
-			if (AutoMouse)
-			{
-				Color AutoMouseStringColor;
-				if (Score < 10)
-				{
-					AutoMouseStringColor = Color.White;
-				}
-				else
-				{
-					AutoMouseStringColor = Color.LightSeaGreen;
-				}
-				if (GameMode == 0)
-				{
-					Standard.DrawString("* Using Mouse auto", new Vector2(100, 700), AutoMouseStringColor);
-					Standard.DrawString("* Press \"M\" to disable mouse auto", new Vector2(100, 750), AutoMouseStringColor);
-					Standard.DrawString("* Using Mouse auto is not recommended for NK cell", new Vector2(500, 650), AutoMouseStringColor);
-				}
 
+			if (Score < 10)
+			{
+				if(Standard.FrameTimer%50<25)
+					Standard.DrawString("Here's Menu!", new Vector2(60, 500), Color.White);
+				else
+					Standard.DrawString("Here's Menu!", new Vector2(60, 500), Color.Gainsboro);
+			}
+			else
+			{
+				Standard.DrawString("Here's Piano!", new Vector2(60, 500), Color.LightSeaGreen);
 			}
 
+			if(AutoMouse)
+			{
+				Standard.DrawString("* Using mouse auto", new Vector2(230, 700), Color.White);
+				Standard.DrawString("* Press \"M\" Button to disable mouse auto", new Vector2(230, 750), Color.White);
+			}
 
 
 			LightLayer.Draw();
@@ -562,7 +602,7 @@ namespace TestSheet
 		
 			TestMenu.Draw(Score>=10? false:true);
 			if (Standard.FrameTimer % 20 == 0)
-				MenuLightR = random.Next(0, 5);
+				MenuLightR = Standard.Random.Next(0, 5);
 			
 			if(TestMenu.MouseIsOnFrame())
 			{
@@ -605,15 +645,17 @@ namespace TestSheet
 			for (int i = 0; i < enemies.Count; i++)
 			{
 				enemies[i].Draw();
+				if (i == KillerZombieIndex)
+					enemies[i].enemy.Draw(Color.Black,0.7f);
 			}
 
-		
+
 
 			if (Score>=10)
 			{
 				if(Standard.FrameTimer%10==0)
 				{
-					Lightr = random.NextDouble() / 10.0;
+					Lightr = Standard.Random.NextDouble() / 10.0;
 				}
 				if(Standard.FrameTimer%250==0)
 				{
@@ -694,16 +736,16 @@ namespace TestSheet
 			{
 				for(int i=0;i<enemies.Count;i++)
 				{
-					enemies[i].enemy.MoveTo(player.getPos().X+random.Next(-30,30), player.getPos().Y + random.Next(-30, 30), random.Next(5,15));
+					enemies[i].enemy.MoveTo(player.getPos().X+Standard.Random.Next(-30,30), player.getPos().Y + Standard.Random.Next(-30, 30), Standard.Random.Next(5,15));
 				}
-				Standard.DrawString("Game Over", new Vector2(500+random.Next(-3,3), 400 + random.Next(-3, 3)), Color.Red);
+				Standard.DrawString("Game Over", new Vector2(500+Standard.Random.Next(-3,3), 400 + Standard.Random.Next(-3, 3)), Color.Red);
 				Rectangle rectangle = new Rectangle(500, 450, 200, 50);
 				if(rectangle.Contains(Standard.cursor.getPos()))
 				{
-					Standard.DrawString("Press \"R\" button to restart", new Vector2(500 + random.Next(-3, 3), 450 + random.Next(-3, 3)), Color.Honeydew);
+					Standard.DrawString("Press \"R\" button to restart", new Vector2(500 + Standard.Random.Next(-3, 3), 450 + Standard.Random.Next(-3, 3)), Color.Honeydew);
 				}
 				else
-					Standard.DrawString("Press \"R\" button to restart", new Vector2(500 + random.Next(-3, 3), 450 + random.Next(-3, 3)), Color.Red);
+					Standard.DrawString("Press \"R\" button to restart", new Vector2(500 + Standard.Random.Next(-3, 3), 450 + Standard.Random.Next(-3, 3)), Color.Red);
 
 			}
 
@@ -760,8 +802,14 @@ namespace TestSheet
 				if(SoundTrack!=0)
 				{
 					SoundTrack = 0;
-					Standard.PlaySong(random.Next(0,5),true);			
+					Standard.PlaySong(Standard.Random.Next(0,SongCount),true);			
 				}
+				for (int i = 0; i < DeadBodys.Count; i++)
+				{
+					DeadBodysAnimationList.Add(DeadBodys[i], 10);
+				}
+				DeadBodys.Clear();
+				KillerZombieIndex = Standard.Random.Next(0, 3);
 			}
 
 			public int getAttackIndex()
@@ -951,15 +999,17 @@ namespace TestSheet
 					{
 						Rectangle r = enemies[AttackIndex].getBound();
 						enemies.RemoveAt(AttackIndex);
-						int rn = random.Next(3, 5);
+						int rn = Standard.Random.Next(3, 5);
 							for (int i = 0; i < rn; i++)
 							{
-								int s = random.Next(10, 50);
+								int s = Standard.Random.Next(10, 50);
 								DrawingLayer newStar;
-								animationList.Add(newStar=new DrawingLayer("Player2", new Rectangle(r.Center.X - random.Next(-30, 30), r.Center.Y - random.Next(-30, 30), s, s)), random.Next(5*3, 15*3));
+								animationList.Add(newStar=new DrawingLayer("Player2", new Rectangle(r.Center.X - Standard.Random.Next(-30, 30), r.Center.Y - Standard.Random.Next(-30, 30), s, s)), Standard.Random.Next(5*3, 15*3));
 								DeadBodys.Add(newStar);
 							}
-						Score++;
+						ScoreStack++;
+						if (KillerZombieIndex == AttackIndex)
+							ScoreStack++;
 						isAttacking = false;
 						AttackIndex = -1;
 						BoostTimer = 0;
@@ -1009,20 +1059,20 @@ namespace TestSheet
 			{
 				if(Score<10)
 				{
-					enemy = new DrawingLayer("Player", new Rectangle(random.Next(0, 800), random.Next(0, 800), 80, 80));
+					enemy = new DrawingLayer("Player", new Rectangle(Standard.Random.Next(0, 800), Standard.Random.Next(0, 800), 80, 80));
 					return;
 				}
 				int x=0;
 				int y=0;
 			
-				if (random.Next(0, 2) == 0)
-					x = random.Next(15, 80);
+				if (Standard.Random.Next(0, 2) == 0)
+					x = Standard.Random.Next(15, 80);
 				else
-					x  = random.Next(800, 880);
-				if (random.Next(0, 2) == 0)
-					y = random.Next(15, 80);
+					x  = Standard.Random.Next(800, 880);
+				if (Standard.Random.Next(0, 2) == 0)
+					y = Standard.Random.Next(15, 80);
 				else
-					y = random.Next(720, 800);
+					y = Standard.Random.Next(720, 800);
 				enemy = new DrawingLayer("Player", new Rectangle(x, y, 80, 80));
 			}
 

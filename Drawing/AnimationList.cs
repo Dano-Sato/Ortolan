@@ -15,6 +15,12 @@ namespace TestSheet
 
 
 		private List<DrawingLayerWithTimer> Animationlist = new List<DrawingLayerWithTimer>();
+		private double DefaultOpacityCoefficient;
+
+		public AnimationList(double OpacityC)
+		{
+			DefaultOpacityCoefficient = OpacityC;
+		}
 
 		public DrawingLayer this[int i]
 		{
@@ -49,6 +55,15 @@ namespace TestSheet
 			for (int i = 0; i < Animationlist.Count; i++)
 			{
 				Animationlist[i].drawingLayer.Draw(color * (float)(Animationlist[i].Timer * Opacity));
+			}
+		}
+
+		public void FadeAnimationDraw(Color color)
+		{
+
+			for (int i = 0; i < Animationlist.Count; i++)
+			{
+				Animationlist[i].drawingLayer.Draw(color * (float)(Animationlist[i].Timer * DefaultOpacityCoefficient));
 			}
 		}
 

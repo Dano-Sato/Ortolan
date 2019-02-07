@@ -40,9 +40,11 @@ namespace TestSheet
 			cursor.OldStateUpdate();
 			OldkeyboardState = Keyboard.GetState();
 			FrameTimer++;
+			FadeAnimationUpdate();
 		}
 		public static void Draw()
 		{
+			FadeAnimationDraw();
 			cursor.Draw();
 		}
 
@@ -233,6 +235,52 @@ namespace TestSheet
 		}
 
 
+		/*페이드 애니메이션 처리*/
+
+		private static Dictionary<Color, AnimationList> FadeAnimationList = new Dictionary<Color, AnimationList>();
+
+		public static void FadeAnimation(DrawingLayer d, int t)
+		{
+			if(FadeAnimationList.ContainsKey(Color.White))
+			{
+				FadeAnimationList[Color.White].Add(d,t);
+			}
+			else
+			{
+				FadeAnimationList.Add(Color.White, new AnimationList(1.0/t));
+				FadeAnimationList[Color.White].Add(d, t);
+			}
+		}
+
+		public static void FadeAnimation(DrawingLayer d, int t,Color color)
+		{
+			if (FadeAnimationList.ContainsKey(color))
+			{
+				FadeAnimationList[color].Add(d, t);
+			}
+			else
+			{
+				FadeAnimationList.Add(color, new AnimationList(1.0 / t));
+				FadeAnimationList[color].Add(d, t);
+			}
+		}
+
+		public static void FadeAnimationUpdate()
+		{
+			foreach(KeyValuePair<Color,AnimationList> kv in FadeAnimationList)
+			{
+				kv.Value.TimeUpdate();
+			}
+		}
+
+		public static void FadeAnimationDraw()
+		{
+			foreach (KeyValuePair<Color, AnimationList> kv in FadeAnimationList)
+			{
+				kv.Value.FadeAnimationDraw(kv.Key);
+			}
+		}
+
 
 		/*기타*/
 
@@ -245,7 +293,16 @@ namespace TestSheet
 			Game1.spriteBatch.End();
 		}
 
-		public static Random Random=new Random();
+		private static Random random=new Random();
+		public static int Random(int x, int y)
+		{
+			return random.Next(Math.Min(x, y), Math.Max(x, y));
+		}
+
+		public static double Random()
+		{
+			return random.NextDouble();
+		}
 
 
 	}

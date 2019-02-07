@@ -33,9 +33,9 @@ namespace TestSheet
 		public static DrawingLayer RealMonoLogo = new DrawingLayer("RealMono", MasterInfo.PreferredScreen);
 		public static DrawingLayer BloodLayer= new DrawingLayer("Blood", MasterInfo.FullScreen);
 
-		public static AnimationList animationList = new AnimationList();
-		public static AnimationList DeadBodysAnimationList = new AnimationList();
-		public static AnimationList AfterImageAnimationList = new AnimationList();
+		//public static AnimationList animationList = new AnimationList();
+		//public static AnimationList DeadBodysAnimationList = new AnimationList();
+		//public static AnimationList AfterImageAnimationList = new AnimationList();
 		public static List<DrawingLayer> DeadBodys = new List<DrawingLayer>();
 		public static int SoundTrack = 0;
 		public static float BaseVolume = 1.0f;
@@ -66,7 +66,7 @@ namespace TestSheet
 		{
 			player = new Player();
 			enemies.Add(new Enemy());
-			Standard.PlaySong(Standard.Random.Next(0, SongCount),true);
+			Standard.PlaySong(Standard.Random(0, SongCount),true);
 			TestMenu = new EasyMenu(new string[] {
 				"SONG",
 				"CHARACTER",
@@ -165,7 +165,7 @@ namespace TestSheet
 					MainMenuIndex = -1;
 				}
 			
-				animationList.TimeUpdate();
+				//animationList.TimeUpdate();
 					switch (MainMenuIndex)
 				{
 					case 0://Song
@@ -373,7 +373,8 @@ namespace TestSheet
 				{
 					for(int i=0;i<DeadBodys.Count;i++)
 					{
-						DeadBodysAnimationList.Add(DeadBodys[i], 10);
+						Standard.FadeAnimation(DeadBodys[i],30, Color.LightSeaGreen);
+						//DeadBodysAnimationList.Add(DeadBodys[i], 10);
 					}
 					DeadBodys.Clear();
 				}
@@ -391,12 +392,12 @@ namespace TestSheet
 				Standard.cursor.SetSprite("Cursor");
 
 			player.MoveUpdate();
-			LightLayer3.setPosition(player.getPos().X-40+Standard.Random.Next(-3,3), player.getPos().Y-40 + Standard.Random.Next(-3,3));
+			LightLayer3.setPosition(player.getPos().X-40+Standard.Random(-3,3), player.getPos().Y-40 + Standard.Random(-3,3));
 			player.AttackUpdate();
 			List<int> RandomInts = new List<int>();
 			for(int i=0;i<15;i++)
 			{
-				RandomInts.Add(Standard.Random.Next(-300, 300));
+				RandomInts.Add(Standard.Random(-300, 300));
 			}
 			int j = 0 ;
 			for (int i = 0; i < enemies.Count; i++)
@@ -414,9 +415,9 @@ namespace TestSheet
 				j++;
 			}
 
-			animationList.TimeUpdate();
-			DeadBodysAnimationList.TimeUpdate();
-			AfterImageAnimationList.TimeUpdate();
+			//animationList.TimeUpdate();
+			//DeadBodysAnimationList.TimeUpdate();
+			//AfterImageAnimationList.TimeUpdate();
 			ZombieTime = 40 - Score/10;
 		
 			if(ZombieTime>0)
@@ -488,7 +489,8 @@ namespace TestSheet
 			}
 			if (DeadBodys.Count > 300)
 			{
-				DeadBodysAnimationList.Add(DeadBodys[0], 30);
+				Standard.FadeAnimation(DeadBodys[0], 30, Color.LightSeaGreen);
+				//DeadBodysAnimationList.Add(DeadBodys[0], 30);
 				DeadBodys.RemoveAt(0);
 			}
 
@@ -501,7 +503,7 @@ namespace TestSheet
 				{
 					if (TestMenu.MenuStringList[TestMenu.GetIndex()] == "EXIT")
 					{
-						TestMenu.MenuList[TestMenu.GetIndex()].drawingLayer.MoveByVector(new Point(Standard.Random.Next(1, 3), Standard.Random.Next(1, 3)), Standard.Random.Next(1,10));
+						TestMenu.MenuList[TestMenu.GetIndex()].drawingLayer.MoveByVector(new Point(Standard.Random(1, 3), Standard.Random(1, 3)), Standard.Random(1,10));
 					}
 					if (Standard.cursor.didPlayerJustLeftClick() || Standard.JustPressed(Keys.A))
 					{
@@ -542,7 +544,7 @@ namespace TestSheet
 			{
 				DeadBodys[i].Draw(Color.LightSeaGreen, Math.Min(10, Score) * 0.1f);
 			}
-			DeadBodysAnimationList.FadeAnimationDraw(Color.LightSeaGreen, 1/30.0);
+			//DeadBodysAnimationList.FadeAnimationDraw(Color.LightSeaGreen, 1/30.0);
 			MouseLogo.Draw();
 			if(!AutoMouse)
 			{
@@ -602,7 +604,7 @@ namespace TestSheet
 		
 			TestMenu.Draw(Score>=10? false:true);
 			if (Standard.FrameTimer % 20 == 0)
-				MenuLightR = Standard.Random.Next(0, 5);
+				MenuLightR = Standard.Random(0, 5);
 			
 			if(TestMenu.MouseIsOnFrame())
 			{
@@ -639,7 +641,7 @@ namespace TestSheet
 
 			Color AnimationColor= Color.DarkRed;
 
-			animationList.FadeAnimationDraw(Color.DarkRed, 0.2);
+			//animationList.FadeAnimationDraw(Color.DarkRed, 0.2);
 
 			CursorShouldBeSword = false;
 			for (int i = 0; i < enemies.Count; i++)
@@ -655,7 +657,7 @@ namespace TestSheet
 			{
 				if(Standard.FrameTimer%10==0)
 				{
-					Lightr = Standard.Random.NextDouble() / 10.0;
+					Lightr = Standard.Random() / 10.0;
 				}
 				if(Standard.FrameTimer%250==0)
 				{
@@ -670,7 +672,7 @@ namespace TestSheet
 				}
 			}
 
-			animationList.FadeAnimationDraw(Color.DarkRed, 0.06f);
+			//animationList.FadeAnimationDraw(Color.DarkRed, 0.06f);
 
 			if (Score < 10 && MainMenuIndex != -1&&SubMenu!= null&&SubMenu.MenuList.Count > 0)
 			{
@@ -736,26 +738,26 @@ namespace TestSheet
 			{
 				for(int i=0;i<enemies.Count;i++)
 				{
-					enemies[i].enemy.MoveTo(player.getPos().X+Standard.Random.Next(-30,30), player.getPos().Y + Standard.Random.Next(-30, 30), Standard.Random.Next(5,15));
+					enemies[i].enemy.MoveTo(player.getPos().X+Standard.Random(-30,30), player.getPos().Y + Standard.Random(-30, 30), Standard.Random(5,15));
 				}
-				Standard.DrawString("Game Over", new Vector2(500+Standard.Random.Next(-3,3), 400 + Standard.Random.Next(-3, 3)), Color.Red);
+				Standard.DrawString("Game Over", new Vector2(500+Standard.Random(-3,3), 400 + Standard.Random(-3, 3)), Color.Red);
 				Rectangle rectangle = new Rectangle(500, 450, 200, 50);
 				if(rectangle.Contains(Standard.cursor.getPos()))
 				{
-					Standard.DrawString("Press \"R\" button to restart", new Vector2(500 + Standard.Random.Next(-3, 3), 450 + Standard.Random.Next(-3, 3)), Color.Honeydew);
+					Standard.DrawString("Press \"R\" button to restart", new Vector2(500 + Standard.Random(-3, 3), 450 + Standard.Random(-3, 3)), Color.Honeydew);
 				}
 				else
-					Standard.DrawString("Press \"R\" button to restart", new Vector2(500 + Standard.Random.Next(-3, 3), 450 + Standard.Random.Next(-3, 3)), Color.Red);
+					Standard.DrawString("Press \"R\" button to restart", new Vector2(500 + Standard.Random(-3, 3), 450 + Standard.Random(-3, 3)), Color.Red);
 
 			}
 
-			AfterImageAnimationList.FadeAnimationDraw(Color.White, 0.2 * 0.2);
+			//AfterImageAnimationList.FadeAnimationDraw(Color.White, 0.2 * 0.2);
 			if (Score>=10)
 			{
 				Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 0.2f + (float)Lightr, Standard.LightMode.Absolute);
 				Standard.DrawLight(MasterInfo.FullScreen, Color.DarkBlue, 0.3f, Standard.LightMode.Absolute);
 			}
-			AfterImageAnimationList.FadeAnimationDraw(Color.Cornsilk, 0.2*0.5);
+			//AfterImageAnimationList.FadeAnimationDraw(Color.Cornsilk, 0.2*0.5);
 			OldStateOfMouseisOnMenu = TestMenu.Frame.MouseIsOnThis();
 		}
 
@@ -802,14 +804,15 @@ namespace TestSheet
 				if(SoundTrack!=0)
 				{
 					SoundTrack = 0;
-					Standard.PlaySong(Standard.Random.Next(0,SongCount),true);			
+					Standard.PlaySong(Standard.Random(0,SongCount),true);			
 				}
 				for (int i = 0; i < DeadBodys.Count; i++)
 				{
-					DeadBodysAnimationList.Add(DeadBodys[i], 10);
+					Standard.FadeAnimation(DeadBodys[i], 30,Color.LightSeaGreen);
+					//DeadBodysAnimationList.Add(DeadBodys[i], 10);
 				}
 				DeadBodys.Clear();
-				KillerZombieIndex = Standard.Random.Next(0, 3);
+				KillerZombieIndex = 0;
 			}
 
 			public int getAttackIndex()
@@ -878,7 +881,8 @@ namespace TestSheet
 					{
 						if (GameMode == 0)//ShotGun Mode
 						{
-							AfterImageAnimationList.Add(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))), 7);
+							Standard.FadeAnimation(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))), 7, Color.Cornsilk);
+							//AfterImageAnimationList.Add(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))), 7);
 							if (Score >= 10)
 							{
 								if (AttackTimer < 3)
@@ -891,7 +895,8 @@ namespace TestSheet
 						else if (GameMode == 1)//AttackBoost mode
 						{
 							player.MoveTo(Standard.cursor.getPos().X - 40, Standard.cursor.getPos().Y - 40, MoveSpeed * 2);
-							AfterImageAnimationList.Add(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))), 8);
+							Standard.FadeAnimation(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))), 8, Color.Cornsilk);
+							//AfterImageAnimationList.Add(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))), 8);
 						}
 					}
 					if (GameMode == 0)
@@ -916,7 +921,8 @@ namespace TestSheet
 							}
 						}
 						MovePoint = Standard.cursor.getPos();
-						animationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)), 10);
+						Standard.FadeAnimation(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)), 10, Color.DarkRed);
+						//animationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)), 10);
 			
 					}
 				
@@ -952,9 +958,10 @@ namespace TestSheet
 					}
 			
 						MovePoint = Standard.cursor.getPos();
-					animationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)), 10);
+					Standard.FadeAnimation(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)), 10, Color.DarkRed);
+					//animationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)), 10);
 				}
-				
+
 				if (MovePoint.X!=0||MovePoint.Y!=0)
 				{
 					if (BoostTimer > 0)
@@ -999,12 +1006,13 @@ namespace TestSheet
 					{
 						Rectangle r = enemies[AttackIndex].getBound();
 						enemies.RemoveAt(AttackIndex);
-						int rn = Standard.Random.Next(3, 5);
+						int rn = Standard.Random(3, 5);
 							for (int i = 0; i < rn; i++)
 							{
-								int s = Standard.Random.Next(10, 50);
+								int s = Standard.Random(10, 50);
 								DrawingLayer newStar;
-								animationList.Add(newStar=new DrawingLayer("Player2", new Rectangle(r.Center.X - Standard.Random.Next(-30, 30), r.Center.Y - Standard.Random.Next(-30, 30), s, s)), Standard.Random.Next(5*3, 15*3));
+								Standard.FadeAnimation(newStar = new DrawingLayer("Player2", new Rectangle(r.Center.X - Standard.Random(-30, 30), r.Center.Y - Standard.Random(-30, 30), s, s)), Standard.Random(5 * 3, 15 * 3), Color.DarkRed);
+								//animationList.Add(newStar=new DrawingLayer("Player2", new Rectangle(r.Center.X - Standard.Random(-30, 30), r.Center.Y - Standard.Random(-30, 30), s, s)), Standard.Random(5*3, 15*3));
 								DeadBodys.Add(newStar);
 							}
 						ScoreStack++;
@@ -1059,20 +1067,20 @@ namespace TestSheet
 			{
 				if(Score<10)
 				{
-					enemy = new DrawingLayer("Player", new Rectangle(Standard.Random.Next(0, 800), Standard.Random.Next(0, 800), 80, 80));
+					enemy = new DrawingLayer("Player", new Rectangle(Standard.Random(0, 800), Standard.Random(0, 800), 80, 80));
 					return;
 				}
 				int x=0;
 				int y=0;
 			
-				if (Standard.Random.Next(0, 2) == 0)
-					x = Standard.Random.Next(15, 80);
+				if (Standard.Random(0, 2) == 0)
+					x = Standard.Random(15, 80);
 				else
-					x  = Standard.Random.Next(800, 880);
-				if (Standard.Random.Next(0, 2) == 0)
-					y = Standard.Random.Next(15, 80);
+					x  = Standard.Random(800, 880);
+				if (Standard.Random(0, 2) == 0)
+					y = Standard.Random(15, 80);
 				else
-					y = Standard.Random.Next(720, 800);
+					y = Standard.Random(720, 800);
 				enemy = new DrawingLayer("Player", new Rectangle(x, y, 80, 80));
 			}
 

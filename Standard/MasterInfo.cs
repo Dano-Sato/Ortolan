@@ -17,7 +17,6 @@ namespace TestSheet
 		public static readonly Rectangle FullScreen = new Rectangle(0, 0, 1200, 1200);
 		public static readonly int GridSize = 30;
 		public static readonly Color PlayerColor = Color.Orange;
-		public static readonly int EasterCombo = 15;
 		public MasterInfo()
 		{
 

@@ -12,89 +12,9 @@ namespace TestSheet
 	public class Tester
 	{
 		
-	
 
-		//public static Random random=new Random();
-		public static Player player;
-		public static List<Enemy> enemies=new List<Enemy>();
-		public static bool GameOver=false;
-		public static bool ZombieDance = false;
-		public static bool isZombieMode = false;
-		public static int EndTimer = 0;
-		public static int Score = 0;
-		public static int ZombieTime = 40;
-		public static double Lightr = 0;
-		public static string ButtonInfoString = "Right Click";
-		public static string SongString;
-		public static DrawingLayer LightLayer = new DrawingLayer("Light", MasterInfo.FullScreen);
-		public static DrawingLayer LightLayer3 = new DrawingLayer("Player", new Rectangle(0, 0, 150, 150));
-		public static DrawingLayer MouseLogo = new DrawingLayer("Mouse", new Rectangle(270, 400, 30, 30));
-		public static DrawingLayer MouseButton = new DrawingLayer("Mouse3", new Rectangle(270, 400, 30, 30));
-		public static DrawingLayer RealMonoLogo = new DrawingLayer("RealMono", MasterInfo.PreferredScreen);
-		public static DrawingLayer BloodLayer= new DrawingLayer("Blood", MasterInfo.FullScreen);
-
-		//public static AnimationList animationList = new AnimationList();
-		//public static AnimationList DeadBodysAnimationList = new AnimationList();
-		//public static AnimationList AfterImageAnimationList = new AnimationList();
-		public static List<DrawingLayer> DeadBodys = new List<DrawingLayer>();
-		public static int SoundTrack = 0;
-		public static float BaseVolume = 1.0f;
-		public static bool GameEnd = false;
-		public static bool PressedQ = false;
-		public static bool Reload = false;
-		public static int BoostTimer = 0;
-		public static bool AutoMouse = false;
-		public static int Interval = 0;
-		public static double TempoChecker = 0;
-		public static double NewTempo = 0;
-		public static double Tempo = 30;
-		public static Color ZombieColor = Color.White;
-		public EasyMenu TestMenu;
-		public static int MainMenuIndex = -1;
-		public EasyMenu SubMenu=new EasyMenu(new string[] { },new Rectangle(0,0,0,0),new Rectangle(0,0,0,0),new Point(0,0),new Point(0,0));
-		public static bool SubMenuIsMade = false;
-		public static int GameMode = 0;//ShutGun Mode;
-		public static int ZombieSpeed = 5;
-		public static bool CursorShouldBeSword = false;
-		public static int UsePianoTimer = 0;
-		public static int Difficulty = 1;
-		public static int SongCount = 5;
-		public static int KillerZombieIndex = 0;
-		public static int ScoreStack = 0;
-		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
-		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
+		public static void SetZombieSpeed()
 		{
-			player = new Player();
-			enemies.Add(new Enemy());
-			Standard.PlaySong(Standard.Random(0, SongCount),true);
-			TestMenu = new EasyMenu(new string[] {
-				"SONG",
-				"CHARACTER",
-				"TIPS",
-				"SETTING",
-				"EXIT" },new Rectangle(0,0,300,370),new Rectangle(0,0,200,50),new Point(80,20),new Point(0,70));
-
-		}
-		//Game1.Class 내에 Tester.Update()로 추가될 업데이트문입니다. 다양한 업데이트 처리를 시험할 수 있습니다.
-		public void Update()
-		{
-			if(ScoreStack>0)
-			{
-				ScoreStack--;
-				Score++;
-			}
-
-			if (Score < 100)
-				KillerZombieIndex = 0;
-			else if (Score < 200)
-				KillerZombieIndex = 1;
-			else if (Score < 300)
-				KillerZombieIndex = 2;
-			else if (Score < 400)
-				KillerZombieIndex = 5;
-
-
-			//속도 설정. 오토마우스를 켜면 대체로 적의 속도가 증가한다.
 			if (AutoMouse)
 			{
 				if (GameMode == 0)
@@ -106,36 +26,137 @@ namespace TestSheet
 			{
 				ZombieSpeed = 3 + Difficulty * 2;
 			}
+		}
+
+		public static void SetPlayer()
+		{
+			if (GameMode == 0)
+			{
+				player.SetAttackSpeed(8);
+				player.setRange(160);
+				player.SetMoveSpeed((8 + ZombieSpeed) / 3);
+				AutoMouse = false;
+			}
+			else if (GameMode == 1)
+			{
+				player.SetAttackSpeed(15);
+				player.setRange(130);
+				player.SetMoveSpeed((7 + ZombieSpeed) / 3);
+				AutoMouse = true;
+			}
+		}
+
+		public static void SetKillerZombie()
+		{ 
+			if (Score < 100)
+				KillerZombieIndex = 0;
+			else if (Score < 200)
+				KillerZombieIndex = 1;
+			else if (Score < 300)
+				KillerZombieIndex = 2;
+			else if (Score < 400)
+				KillerZombieIndex = 5;
+		}
+
+		public static void UpdateScore()
+		{
+			if (ScoreStack > 0)
+			{
+				ScoreStack--;
+				Score++;
+			}
+		}
+
+		public static void ResetGame()
+		{
+			Score = 0;
+			Standard.FrameTimer = 0;
+			ZombieTime = 40;
+			enemies.Clear();
+			enemies.Add(new Enemy());
+			enemies.Add(new Enemy());
+
+			player.reset();
+			GameOver = false;
+			GameEnd = false;
+			ZombieDance = false;
+		}
+		
+
+
+		public static Player player;
+		public static List<Enemy> enemies=new List<Enemy>();
+		public static bool GameOver=false;
+		public static bool ZombieDance = false;
+		public static int EndTimer = 0;
+		public static int Score = 0;
+		public static int ZombieTime = 40;
+		public static double Lightr = 0;
+		public static string ButtonInfoString = "Right Click";
+		public static DrawingLayer Halo = new DrawingLayer("Player", new Rectangle(0, 0, 150, 150));
+		public static DrawingLayer MouseLogo = new DrawingLayer("Mouse", new Rectangle(270, 400, 30, 30));
+		public static DrawingLayer MouseButton = new DrawingLayer("Mouse3", new Rectangle(270, 400, 30, 30));
+		public static DrawingLayer RealMonoLogo = new DrawingLayer("RealMono", MasterInfo.PreferredScreen);
+		public static DrawingLayer BloodLayer= new DrawingLayer("Blood", MasterInfo.FullScreen);
+		public static List<DrawingLayer> DeadBodys = new List<DrawingLayer>();
+		public static bool IsPlayingEndSong = false;
+		public static float BaseVolume = 1.0f;
+		public static bool GameEnd = false;
+		public static bool Reload = false;
+		public static int BoostTimer = 0;
+		public static bool AutoMouse = false;
+		public static Color ZombieColor = Color.White;
+		public EasyMenu MainMenu;
+		public static int MainMenuIndex = -1;
+		public EasyMenu SubMenu=new EasyMenu();
+		public static bool SubMenuIsMade = false;
+		public static int GameMode = 0;//ShutGun Mode;
+		public static int ZombieSpeed = 5;
+		public static bool CursorShouldBeSword = false;
+		public static int UsePianoTimer = 0;
+		public static int Difficulty = 1;
+		public static int SongCount = 5;
+		public static int KillerZombieIndex = 0;
+		public static int ScoreStack = 0;
+		public static double Fear = 0;
+		public static Viewport Viewport = new Viewport();
+		public static Point PlayerDispositionVector;
+		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
+		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
+		{
+			player = new Player();
+			enemies.Add(new Enemy());
+			Standard.PlaySong(Standard.Random(0, SongCount),true);
+			MainMenu = new EasyMenu(new string[] {
+				"SONG",
+				"CHARACTER",
+				"TIPS",
+				"SETTING",
+				"EXIT" },new Rectangle(0,0,300,370),new Rectangle(0,0,200,50),new Point(80,20),new Point(0,70));
+
+		}
+		//Game1.Class 내에 Tester.Update()로 추가될 업데이트문입니다. 다양한 업데이트 처리를 시험할 수 있습니다.
+		public void Update()
+		{
+
+			UpdateScore();
+			SetKillerZombie();
+			SetZombieSpeed();
+			SetPlayer();
+
 			if (Score<400&&Standard.IsKeyDown(Keys.R))
 			{
-				Score = 0;
-				Standard.FrameTimer = 0;
-				ZombieTime = 40;
-				enemies.Clear();
-				enemies.Add(new Enemy());
-				enemies.Add(new Enemy());
-
-				player.reset();
-				GameOver = false;
+				ResetGame();
 				return;
 			}
 			if (GameEnd)
 			{
+				
 				if(EndTimer<1000)
 					EndTimer++;
 				if(EndTimer==1000)
 				{
-					Score = 0;
-					Standard.FrameTimer = 0;
-					ZombieTime = 40;
-					enemies.Clear();
-					enemies.Add(new Enemy());
-					enemies.Add(new Enemy());
-
-					player.reset();
-					GameOver = false;
-					GameEnd = false;
-					ZombieDance = false;
+					ResetGame();
 				}
 				return;
 			}
@@ -145,15 +166,7 @@ namespace TestSheet
 				bool ClickRButton =(rectangle.Contains(Standard.cursor.getPos()))&&(Standard.cursor.didPlayerJustLeftClick() || Standard.cursor.didPlayerJustRightClick());
 				if (Standard.IsKeyDown(Keys.R)||ClickRButton)
 				{
-					Score = 0;
-					Standard.FrameTimer = 0;
-					ZombieTime = 40;
-					enemies.Clear();
-					enemies.Add(new Enemy());
-					enemies.Add(new Enemy());
-
-					player.reset();
-					GameOver = false;
+					ResetGame();
 				}
 				return;
 			}
@@ -164,7 +177,7 @@ namespace TestSheet
 				MainMenuIndex = -1;
 			}
 
-			if(Score<10&&MainMenuIndex!=-1)
+			if(Score<10&&MainMenuIndex!=-1)//메인메뉴에서 클릭할 시, 서브메뉴를 불러온다.
 			{
 				if (Standard.JustPressed(Keys.Escape))
 				{
@@ -174,9 +187,7 @@ namespace TestSheet
 				{
 					MainMenuIndex = -1;
 				}
-			
-				//animationList.TimeUpdate();
-					switch (MainMenuIndex)
+				switch (MainMenuIndex)
 				{
 					case 0://Song
 						if(!SubMenuIsMade)
@@ -224,22 +235,6 @@ namespace TestSheet
 							else
 							{
 								GameMode = SubMenu.GetIndex();
-								if (GameMode == 0)
-								{
-									player.SetAttackSpeed(8);
-									player.setRange(160);
-									ZombieSpeed = 3 + Difficulty * 2;
-									player.SetMoveSpeed((8 + ZombieSpeed) / 3);
-									AutoMouse = false;
-								}
-								else if (GameMode == 1)
-								{
-									player.SetAttackSpeed(15);
-									player.setRange(130);
-									ZombieSpeed = 6 + Difficulty * 2;
-									player.SetMoveSpeed((7 + ZombieSpeed) / 3);
-									AutoMouse = true;
-								}
 							}
 						}
 						break;
@@ -311,16 +306,6 @@ namespace TestSheet
 							else
 							{
 								Difficulty = SubMenu.GetIndex();
-								if(GameMode==0)
-								{
-									ZombieSpeed = 3 + Difficulty * 2;
-									player.SetMoveSpeed((8 + ZombieSpeed) / 3);
-								}
-								else if(GameMode==1)
-								{
-									ZombieSpeed = 6 + Difficulty * 2;
-									player.SetMoveSpeed((7 + ZombieSpeed) / 3);
-								}
 							}
 						}
 						break;
@@ -384,7 +369,6 @@ namespace TestSheet
 					for(int i=0;i<DeadBodys.Count;i++)
 					{
 						Standard.FadeAnimation(DeadBodys[i],30, Color.LightSeaGreen);
-						//DeadBodysAnimationList.Add(DeadBodys[i], 10);
 					}
 					DeadBodys.Clear();
 				}
@@ -402,8 +386,10 @@ namespace TestSheet
 				Standard.cursor.SetSprite("Cursor");
 
 			player.MoveUpdate();
-			LightLayer3.setPosition(player.getPos().X-40+Standard.Random(-3,3), player.getPos().Y-40 + Standard.Random(-3,3));
+			Halo.setPosition(player.getPos().X-40+Standard.Random(-3,3), player.getPos().Y-40 + Standard.Random(-3,3));
 			player.AttackUpdate();
+
+			//좀비들의 이동 처리.
 			List<int> RandomInts = new List<int>();
 			for(int i=0;i<15;i++)
 			{
@@ -425,10 +411,7 @@ namespace TestSheet
 				j++;
 			}
 
-			//animationList.TimeUpdate();
-			//DeadBodysAnimationList.TimeUpdate();
-			//AfterImageAnimationList.TimeUpdate();
-			ZombieTime = 40 - Score/10;
+			ZombieTime = 40 - Score/10;//좀비 생성 시간은 스코어가 높을수록 빨라진다.
 		
 			if(ZombieTime>0)
 			{
@@ -439,7 +422,7 @@ namespace TestSheet
 						enemies.RemoveAt(0);
 				}
 			}
-			else if(!ZombieDance)
+			else if(!ZombieDance)//좀비가 0프레임당 생성된다=게임을 깼다는 뜻. 게임을 깬 상태로 전환한다.
 			{
 				ZombieDance = true;
 				MouseLogo.setSprite("Cake");
@@ -459,9 +442,9 @@ namespace TestSheet
 			{
 				MediaPlayer.Volume = BaseVolume*(float)((300-Score)/20.0);
 			}
-			else if(Score<=306&&SoundTrack==0)
+			else if(Score<=306&&!IsPlayingEndSong)
 			{
-				SoundTrack = 1;
+				IsPlayingEndSong=true;
 				Standard.PlaySong((int)Standard.SongNameList.Tchai, false);
 			}
 			else if(Score<=330)
@@ -481,10 +464,6 @@ namespace TestSheet
 			if (Score == 10)
 			{
 				ZombieColor = Color.LightSeaGreen;
-				if(!isZombieMode)
-				{
-					isZombieMode = true;
-				}
 			}
 
 			if (Score % 10 == 9)
@@ -500,29 +479,28 @@ namespace TestSheet
 			if (DeadBodys.Count > 300)
 			{
 				Standard.FadeAnimation(DeadBodys[0], 30, Color.LightSeaGreen);
-				//DeadBodysAnimationList.Add(DeadBodys[0], 30);
 				DeadBodys.RemoveAt(0);
 			}
 
 
-			TestMenu.Update();
-			if (TestMenu.MouseIsOnFrame())
+			MainMenu.Update();
+			if (MainMenu.MouseIsOnFrame())
 			{
-				TestMenu.MoveTo(-110, 300, 20);
-				if(Score<10&&TestMenu.GetIndex()!=-1)
+				MainMenu.MoveTo(-110, 300, 20);
+				if(Score<10&&MainMenu.GetIndex()!=-1)
 				{
-					if (TestMenu.MenuStringList[TestMenu.GetIndex()] == "EXIT")
+					if (MainMenu.MenuStringList[MainMenu.GetIndex()] == "EXIT")
 					{
-						TestMenu.MenuList[TestMenu.GetIndex()].drawingLayer.MoveByVector(new Point(Standard.Random(1, 3), Standard.Random(1, 3)), Standard.Random(1,10));
+						MainMenu.MenuList[MainMenu.GetIndex()].drawingLayer.MoveByVector(new Point(Standard.Random(1, 3), Standard.Random(1, 3)), Standard.Random(1,10));
 					}
 					if (Standard.cursor.didPlayerJustLeftClick() || Standard.JustPressed(Keys.A))
 					{
-						if (TestMenu.MenuStringList[TestMenu.GetIndex()] == "EXIT")
+						if (MainMenu.MenuStringList[MainMenu.GetIndex()] == "EXIT")
 						{
 							Game1.GameExit = true;
 							return;
 						}
-						MainMenuIndex = TestMenu.GetIndex();
+						MainMenuIndex = MainMenu.GetIndex();
 						SubMenuIsMade = false;
 					}
 				}
@@ -530,11 +508,13 @@ namespace TestSheet
 			}
 			else
 			{
-				TestMenu.MoveTo(-250, 300, 20);
+				MainMenu.MoveTo(-250, 300, 20);
 				UsePianoTimer = 0;
 			}
 			if (player.getPos().X < -40)
 				player.setPos(-40, player.getPos().Y);
+
+			Viewport = new Viewport(0, 0,1300,1300);
 
 
 		}
@@ -542,6 +522,7 @@ namespace TestSheet
 		//Game1.Class 내에 Tester.Draw()로 추가될 드로우 액션문입니다. 다양한 드로잉을 시험할 수 있습니다.
 		public void Draw()
 		{
+			
 			if(GameEnd)
 			{
 				Standard.DrawLight(MasterInfo.FullScreen, Color.White, 1.0f, Standard.LightMode.Absolute);
@@ -554,7 +535,6 @@ namespace TestSheet
 			{
 				DeadBodys[i].Draw(Color.LightSeaGreen, Math.Min(10, Score) * 0.1f);
 			}
-			//DeadBodysAnimationList.FadeAnimationDraw(Color.LightSeaGreen, 1/30.0);
 			MouseLogo.Draw();
 			if(!AutoMouse)
 			{
@@ -602,49 +582,49 @@ namespace TestSheet
 			}
 
 
-			Standard.FadeAnimationDraw(Color.LightSeaGreen);
+			Standard.FadeAnimationDraw(Color.LightSeaGreen);//별이 사라지는 페이드애니메이션(컬러는 LighteaGreen으로 지정)은 아래 라이트레이어 전에 발생해야 보기 좋으므로 별도로 처리함.
 
-			LightLayer.Draw();
+			Standard.DrawLight(MasterInfo.FullScreen, Color.White, 1f, Standard.LightMode.Vignette);
 			//스코어 올라갈수록 보라색을 띈다.
 			Standard.DrawLight(MasterInfo.FullScreen, Color.Purple, 0.3f * Math.Min(1.2f, (float)(Score / 100.0)), Standard.LightMode.Absolute);
 			if (Score > 200)
-				LightLayer3.Draw(Color.AntiqueWhite * 0.15f * Math.Min(5f, (float)((Score - 150.0)/50)));
+				Halo.Draw(Color.AntiqueWhite * 0.15f * Math.Min(5f, (float)((Score - 150.0)/50)));
 			if (ZombieDance)
 				Standard.DrawLight(MasterInfo.FullScreen, Color.White, (float)((3000 - EndTimer) / 3000.0), Standard.LightMode.Absolute);//3000프레임동안 점점 하얀색으로 밝아진다.
 
 
 		
-			TestMenu.Draw(Score>=10? false:true);
+			MainMenu.Draw(Score>=10? false:true);
 			if (Standard.FrameTimer % 20 == 0)
 				MenuLightR = Standard.Random(0, 5);
 			
-			if(TestMenu.MouseIsOnFrame())
+			if(MainMenu.MouseIsOnFrame())
 			{
 				if (Score >= 10)
 				for (int i=0;i<enemies.Count;i++)
 				{
-					if(TestMenu.Frame.GetBound().Contains(enemies[i].getCenter()))
+					if(MainMenu.Frame.GetBound().Contains(enemies[i].getCenter()))
 					{
 						enemies[i].enemy.MoveByVector(new Point(1, 0), 20);
 						if(ZombieSpeed<9)
-						TestMenu.Frame.MoveByVector(new Point(-1, 0), 37 - ZombieSpeed * 3/*Math.Max(1,25-ZombieSpeed*3+UsePianoTimer*7)*/);
+						MainMenu.Frame.MoveByVector(new Point(-1, 0), 37 - ZombieSpeed * 3/*Math.Max(1,25-ZombieSpeed*3+UsePianoTimer*7)*/);
 						else
-								TestMenu.Frame.MoveByVector(new Point(-1, 0), Math.Max(13,25-ZombieSpeed*3+UsePianoTimer*7));
+								MainMenu.Frame.MoveByVector(new Point(-1, 0), Math.Max(13,25-ZombieSpeed*3+UsePianoTimer*7));
 
 						}
 					}
 			}
-			if (!TestMenu.MouseIsOnFrame())
+			if (!MainMenu.MouseIsOnFrame())
 			{
-				Rectangle MenuLight = new Rectangle(TestMenu.GetPosition(), new Point(300, 80));
-				MenuLight.Location = Standard.Add(TestMenu.GetPosition(), new Point(0, MenuLightR * 72));
+				Rectangle MenuLight = new Rectangle(MainMenu.GetPosition(), new Point(300, 80));
+				MenuLight.Location = Standard.Add(MainMenu.GetPosition(), new Point(0, MenuLightR * 72));
 				Standard.DrawLight(MenuLight, Color.Black, 0.6f, Standard.LightMode.Vignette);
 			}
-			Standard.DrawLight(TestMenu.Frame, Color.Bisque, 0.6f, Standard.LightMode.Vignette);
-			if (Score < 10 && TestMenu.GetIndex() != -1 && TestMenu.MenuStringList[TestMenu.GetIndex()] == "EXIT")
+			Standard.DrawLight(MainMenu.Frame, Color.Bisque, 0.6f, Standard.LightMode.Vignette);
+			if (Score < 10 && MainMenu.GetIndex() != -1 && MainMenu.MenuStringList[MainMenu.GetIndex()] == "EXIT")
 			{
-				Standard.DrawLight(TestMenu.MenuList[TestMenu.GetIndex()].drawingLayer, Color.Crimson,0.2f, Standard.LightMode.Absolute);
-				Standard.DrawLight(TestMenu.MenuList[TestMenu.GetIndex()].drawingLayer, Color.Red, 0.6f, Standard.LightMode.Vignette);
+				Standard.DrawLight(MainMenu.MenuList[MainMenu.GetIndex()].drawingLayer, Color.Crimson,0.2f, Standard.LightMode.Absolute);
+				Standard.DrawLight(MainMenu.MenuList[MainMenu.GetIndex()].drawingLayer, Color.Red, 0.6f, Standard.LightMode.Vignette);
 			}
 
 			player.Draw();
@@ -652,9 +632,6 @@ namespace TestSheet
 
 
 			Color AnimationColor= Color.DarkRed;
-
-			//animationList.FadeAnimationDraw(Color.DarkRed, 0.2);
-
 			CursorShouldBeSword = false;
 			for (int i = 0; i < enemies.Count; i++)
 			{
@@ -686,8 +663,7 @@ namespace TestSheet
 				}
 			}
 
-			//animationList.FadeAnimationDraw(Color.DarkRed, 0.06f);
-
+			
 			if (Score < 10 && MainMenuIndex != -1&&SubMenu!= null&&SubMenu.MenuList.Count > 0)
 			{
 				SubMenu.Draw();
@@ -765,14 +741,13 @@ namespace TestSheet
 
 			}
 
-			//AfterImageAnimationList.FadeAnimationDraw(Color.White, 0.2 * 0.2);
 			if (Score>=10)
 			{
 				Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 0.2f + (float)Lightr, Standard.LightMode.Absolute);
 				Standard.DrawLight(MasterInfo.FullScreen, Color.DarkBlue, 0.3f, Standard.LightMode.Absolute);
 			}
 			//AfterImageAnimationList.FadeAnimationDraw(Color.Cornsilk, 0.2*0.5);
-			OldStateOfMouseisOnMenu = TestMenu.Frame.MouseIsOnThis();
+			OldStateOfMouseisOnMenu = MainMenu.Frame.MouseIsOnThis();
 		}
 
 		public int MenuLightR = 0;
@@ -815,15 +790,14 @@ namespace TestSheet
 				AttackTimer = 0;
 				AttackIndex = -1;
 				isAttacking = false;
-				if(SoundTrack!=0)
+				if(IsPlayingEndSong)
 				{
-					SoundTrack = 0;
+					IsPlayingEndSong=false;
 					Standard.PlaySong(Standard.Random(0,SongCount),true);			
 				}
 				for (int i = 0; i < DeadBodys.Count; i++)
 				{
 					Standard.FadeAnimation(DeadBodys[i], 30,Color.LightSeaGreen);
-					//DeadBodysAnimationList.Add(DeadBodys[i], 10);
 				}
 				DeadBodys.Clear();
 				KillerZombieIndex = 0;
@@ -861,7 +835,7 @@ namespace TestSheet
 			public Player()
 			{
 				player = new DrawingLayer("Player",new Rectangle(400,400,80,80));
-				bullet = new DrawingLayer("Player2", new Rectangle(0, 0, 20, 20));
+				bullet = new DrawingLayer("Player2", new Rectangle(0, 0, 80, 80));
 				direction = new DrawingLayer("Player2", new Rectangle(0, 0, 20, 20));
 				wand = new DrawingLayer("WhiteSpace", new Rectangle(0, 0, 5, 5));
 			}
@@ -896,7 +870,6 @@ namespace TestSheet
 						if (GameMode == 0)//ShotGun Mode
 						{
 							Standard.FadeAnimation(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))), 7, Color.Cornsilk);
-							//AfterImageAnimationList.Add(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))), 7);
 							if (Score >= 10)
 							{
 								if (AttackTimer < 3)
@@ -910,7 +883,6 @@ namespace TestSheet
 						{
 							player.MoveTo(Standard.cursor.getPos().X - 40, Standard.cursor.getPos().Y - 40, MoveSpeed * 2);
 							Standard.FadeAnimation(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))), 8, Color.Cornsilk);
-							//AfterImageAnimationList.Add(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))), 8);
 						}
 					}
 					if (GameMode == 0)
@@ -936,8 +908,6 @@ namespace TestSheet
 						}
 						MovePoint = Standard.cursor.getPos();
 						Standard.FadeAnimation(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)), 10, Color.DarkRed);
-						//animationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)), 10);
-			
 					}
 				
 					return;
@@ -973,7 +943,6 @@ namespace TestSheet
 			
 						MovePoint = Standard.cursor.getPos();
 					Standard.FadeAnimation(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)), 10, Color.DarkRed);
-					//animationList.Add(new DrawingLayer("Click", new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30)), 10);
 				}
 
 				if (MovePoint.X!=0||MovePoint.Y!=0)
@@ -993,14 +962,6 @@ namespace TestSheet
 				{
 					if(AttackTimer==AttackSpeed)
 					{
-						if(Score<307)
-						{
-							Tempo = 30;
-						}
-						else
-						{
-							Tempo = 25.7;
-						}
 						if (Score < 10)
 							Standard.PlaySound("EnemyDead");
 						else if(GameMode==0)
@@ -1026,7 +987,6 @@ namespace TestSheet
 								int s = Standard.Random(10, 50);
 								DrawingLayer newStar;
 								Standard.FadeAnimation(newStar = new DrawingLayer("Player2", new Rectangle(r.Center.X - Standard.Random(-30, 30), r.Center.Y - Standard.Random(-30, 30), s, s)), Standard.Random(5 * 3, 15 * 3), Color.DarkRed);
-								//animationList.Add(newStar=new DrawingLayer("Player2", new Rectangle(r.Center.X - Standard.Random(-30, 30), r.Center.Y - Standard.Random(-30, 30), s, s)), Standard.Random(5*3, 15*3));
 								DeadBodys.Add(newStar);
 							}
 						ScoreStack++;
@@ -1047,14 +1007,26 @@ namespace TestSheet
 					int x = ((AttackSpeed-AttackTimer) * enemies[AttackIndex].getPos().X + AttackTimer * getPos().X)/AttackSpeed;
 					int y = ((AttackSpeed - AttackTimer) * enemies[AttackIndex].getPos().Y + AttackTimer * getPos().Y)/AttackSpeed;
 					bullet.setPosition(x + 25, y + 25);
-					bullet.Draw(MasterInfo.PlayerColor,0f);
-					int KillActionTimer = (int)(AttackTimer * 2);
-					if(Standard.FrameTimer%20<6)
-						Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X-35, Standard.cursor.getPos().Y - 35,70,70)),KillActionTimer,Color.Pink);
-					else if(Standard.FrameTimer%20<12)
-						Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X - 35, Standard.cursor.getPos().Y - 35, 70, 70)), KillActionTimer, Color.PaleVioletRed);
-					else
-						Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X - 35, Standard.cursor.getPos().Y - 35, 70, 70)), KillActionTimer, Color.SkyBlue);
+					bullet.SetBound(new Rectangle(x + 25, y + 25, AttackTimer * 10, AttackTimer * 10));
+					bullet.SetCenter(new Point(x+40, y+40));
+					bullet.Draw(MasterInfo.PlayerColor,1f);
+					Standard.FadeAnimation(bullet, 10,Color.LightGoldenrodYellow);
+					int KillActionTimer = AttackTimer * 2;
+					if (GameMode == 0)
+						KillActionTimer += 5;
+					if(Standard.FrameTimer%2==0||GameMode==0)
+					{
+						if (Standard.FrameTimer % 20 < 6)
+							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X - 35, Standard.cursor.getPos().Y - 35, 70, 70)), KillActionTimer, Color.Pink);
+						else if (Standard.FrameTimer % 20 < 12)
+							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X - 35, Standard.cursor.getPos().Y - 35, 70, 70)), KillActionTimer, Color.PaleVioletRed);
+						else
+							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X - 35, Standard.cursor.getPos().Y - 35, 70, 70)), KillActionTimer, Color.SkyBlue);
+					}
+
+					Standard.FadeAnimationDraw(Color.Pink);
+					Standard.FadeAnimationDraw(Color.PaleVioletRed);
+					Standard.FadeAnimationDraw(Color.SkyBlue);
 
 					int x2 = (enemies[AttackIndex].getPos().X + 3 * getPos().X) / 4;
 					int y2 = (enemies[AttackIndex].getPos().Y + 3 * getPos().Y) / 4;

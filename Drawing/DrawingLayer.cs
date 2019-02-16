@@ -16,7 +16,6 @@ namespace TestSheet
 	public class DrawingLayer
 	{
 		private Rectangle Bound;//화면에서 그림이 그려지는 영역을 표시합니다.
-		private string SpriteName;
 		private Texture2D spriteTexture;
 		private Rectangle SourceRect;//스프라이트시트에서 소스영역의 크기를 나타냄. X,Y는 안씁니다.
 
@@ -29,17 +28,17 @@ namespace TestSheet
 
 		public DrawingLayer(string s, Rectangle boundRect)//애니메이션이 없는 경우의 생성자. 
 		{
-			SpriteName = s;
 			spriteTexture = Game1.content.Load<Texture2D>(s);
 			Bound = boundRect;
 		}
 
-		public DrawingLayer(string s, Rectangle boundRect, int SourceW, int SourceH, SpritePosition spriteSize)
+		public DrawingLayer(string s, Rectangle boundRect, SpritePosition spriteSize)
 		{
 			//스프라이트시트의 기본 상수들을 지정합니다.
-			SpriteName = s;
 			spriteTexture = Game1.content.Load<Texture2D>(s);
 			SpriteSize = new SpritePosition(spriteSize.X, spriteSize.Y);
+			int SourceW = spriteTexture.Bounds.Width / (SpriteSize.X + 1);
+			int SourceH = spriteTexture.Bounds.Height / (SpriteSize.Y + 1);
 			SourceRect = new Rectangle(0, 0, SourceW, SourceH);
 
 			//그림이 그려질 화면 영역을 지정합니다.
@@ -49,7 +48,7 @@ namespace TestSheet
 
 		public string GetSpriteName()
 		{
-			return SpriteName;
+			return spriteTexture.ToString();
 		}
 
 		public Rectangle GetBound()
@@ -70,7 +69,7 @@ namespace TestSheet
 
 		public override string ToString()
 		{
-			return SpriteName;
+			return spriteTexture.ToString();
 		}
 
 		public void setPosition(int x, int y)
@@ -95,17 +94,17 @@ namespace TestSheet
 		}
 		public void setSprite(string s)//스프라이트를 바꿉니다.
 		{
-			if (s.Equals(SpriteName))
+			if (s.Equals(spriteTexture.ToString()))
 				return;
-			SpriteName = s;
 			spriteTexture = Game1.content.Load<Texture2D>(s);
 		}
-		public void setSprite(string s, int SourceW, int SourceH)//스프라이트를 바꾸면서 동시에 소스영역도 바꿉니다.
+		public void setSprite(string s, SpritePosition spriteSize)//스프라이트를 바꾸면서 동시에 소스영역도 바꿉니다.
 		{
-			if (s.Equals(SpriteName))
+			if (s.Equals(spriteTexture.ToString()))
 				return;
-			SpriteName = s;
 			spriteTexture = Game1.content.Load<Texture2D>(s);
+			int SourceW = spriteTexture.Bounds.Width / (SpriteSize.X + 1);
+			int SourceH = spriteTexture.Bounds.Height / (SpriteSize.Y + 1);
 			SourceRect = new Rectangle(0, 0, SourceW, SourceH);
 		}
 		public int getTimer()
@@ -161,6 +160,12 @@ namespace TestSheet
 		public void SetBound(Rectangle r)
 		{
 			Bound = r;
+		}
+
+		public void SetCenter(Point p)
+		{
+			Bound.X = p.X-Bound.Width/2;
+			Bound.Y = p.Y - Bound.Height/ 2;
 		}
 
 		public void MoveTo(Point p)

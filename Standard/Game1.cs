@@ -24,9 +24,10 @@ namespace TestSheet
 		public static LocalizedContentManager content;
 		public Tester tester;
 
-
-
 		public static bool GameExit = false;
+
+		public static int WindowWidth;
+		public static int WindowHeight;
 
 		public Game1()
         {
@@ -45,9 +46,10 @@ namespace TestSheet
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
-
-            base.Initialize();
+			// TODO: Add your initialization logic here
+			WindowWidth = Window.ClientBounds.Width;
+			WindowHeight = Window.ClientBounds.Height;
+			base.Initialize();
         }
 
         /// <summary>
@@ -87,7 +89,8 @@ namespace TestSheet
 			// TODO: Add your update logic here
 			tester.Update();
 			Standard.Update();
-            base.Update(gameTime);
+			GraphicsDevice.Viewport = Tester.Viewport;
+			base.Update(gameTime);
         }
 
         /// <summary>

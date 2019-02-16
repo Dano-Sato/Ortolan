@@ -95,6 +95,11 @@ namespace TestSheet
 		private Color FrameColor = Color.White;
 		private Color MenuColor = Color.Black;
 		private Color EdgeColor = Color.White;
+
+		public EasyMenu() : this(new string[] { },new Rectangle(0,0,0,0),new Rectangle(0,0,0,0),new Point(0,0),new Point(0,0))
+		{
+
+		}
 		public EasyMenu(string[] strings,Rectangle FrameRectangle, Rectangle MenuRectangle, Point FirstMenuVector, Point MenuInterval)
 		{
 			SetFrame(new DrawingLayer("WhiteSpace",FrameRectangle));

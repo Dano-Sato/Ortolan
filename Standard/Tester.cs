@@ -84,8 +84,18 @@ namespace TestSheet
 				Score++;
 			}
 
+			if (Score < 100)
+				KillerZombieIndex = 0;
+			else if (Score < 200)
+				KillerZombieIndex = 1;
+			else if (Score < 300)
+				KillerZombieIndex = 2;
+			else if (Score < 400)
+				KillerZombieIndex = 5;
+
+
 			//속도 설정. 오토마우스를 켜면 대체로 적의 속도가 증가한다.
-			if(AutoMouse)
+			if (AutoMouse)
 			{
 				if (GameMode == 0)
 					ZombieSpeed = 9 + Difficulty * 3;
@@ -219,13 +229,13 @@ namespace TestSheet
 									player.SetAttackSpeed(8);
 									player.setRange(160);
 									ZombieSpeed = 3 + Difficulty * 2;
-									player.SetMoveSpeed((10 + ZombieSpeed) / 3);
+									player.SetMoveSpeed((8 + ZombieSpeed) / 3);
 									AutoMouse = false;
 								}
 								else if (GameMode == 1)
 								{
 									player.SetAttackSpeed(15);
-									player.setRange(90);
+									player.setRange(130);
 									ZombieSpeed = 6 + Difficulty * 2;
 									player.SetMoveSpeed((7 + ZombieSpeed) / 3);
 									AutoMouse = true;
@@ -304,7 +314,7 @@ namespace TestSheet
 								if(GameMode==0)
 								{
 									ZombieSpeed = 3 + Difficulty * 2;
-									player.SetMoveSpeed((10 + ZombieSpeed) / 3);
+									player.SetMoveSpeed((8 + ZombieSpeed) / 3);
 								}
 								else if(GameMode==1)
 								{
@@ -404,7 +414,7 @@ namespace TestSheet
 			{
 				if (j >= 14)
 					j = 0;
-				if(i==KillerZombieIndex)
+				if(i<=KillerZombieIndex)
 				{
 					ZombieSpeed += 2;
 					enemies[i].MoveUpdate(i, RandomInts[j], RandomInts[(j + Standard.FrameTimer) % 14]);
@@ -592,6 +602,8 @@ namespace TestSheet
 			}
 
 
+			Standard.FadeAnimationDraw(Color.LightSeaGreen);
+
 			LightLayer.Draw();
 			//스코어 올라갈수록 보라색을 띈다.
 			Standard.DrawLight(MasterInfo.FullScreen, Color.Purple, 0.3f * Math.Min(1.2f, (float)(Score / 100.0)), Standard.LightMode.Absolute);
@@ -647,8 +659,10 @@ namespace TestSheet
 			for (int i = 0; i < enemies.Count; i++)
 			{
 				enemies[i].Draw();
-				if (i == KillerZombieIndex)
-					enemies[i].enemy.Draw(Color.Black,0.7f);
+				if (i <= KillerZombieIndex)
+					Standard.DrawAddon(enemies[i].enemy, Color.White, 1f, "KillerZombie4");
+				else
+					Standard.DrawAddon(enemies[i].enemy, Color.White, 1f, "NormalZombie");
 			}
 
 
@@ -1016,7 +1030,7 @@ namespace TestSheet
 								DeadBodys.Add(newStar);
 							}
 						ScoreStack++;
-						if (KillerZombieIndex == AttackIndex)
+						if (KillerZombieIndex >= AttackIndex)
 							ScoreStack++;
 						isAttacking = false;
 						AttackIndex = -1;
@@ -1034,6 +1048,14 @@ namespace TestSheet
 					int y = ((AttackSpeed - AttackTimer) * enemies[AttackIndex].getPos().Y + AttackTimer * getPos().Y)/AttackSpeed;
 					bullet.setPosition(x + 25, y + 25);
 					bullet.Draw(MasterInfo.PlayerColor,0f);
+					int KillActionTimer = (int)(AttackTimer * 2);
+					if(Standard.FrameTimer%20<6)
+						Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X-35, Standard.cursor.getPos().Y - 35,70,70)),KillActionTimer,Color.Pink);
+					else if(Standard.FrameTimer%20<12)
+						Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X - 35, Standard.cursor.getPos().Y - 35, 70, 70)), KillActionTimer, Color.PaleVioletRed);
+					else
+						Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X - 35, Standard.cursor.getPos().Y - 35, 70, 70)), KillActionTimer, Color.SkyBlue);
+
 					int x2 = (enemies[AttackIndex].getPos().X + 3 * getPos().X) / 4;
 					int y2 = (enemies[AttackIndex].getPos().Y + 3 * getPos().Y) / 4;
 					direction.setPosition(x2 + 25, y2 + 25);
@@ -1133,6 +1155,9 @@ namespace TestSheet
 					GameOver = true;
 				}
 			}
+
+
+			
 		}
 	}
 }

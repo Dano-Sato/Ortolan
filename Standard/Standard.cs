@@ -30,6 +30,7 @@ namespace TestSheet
 		public static void LoadContent()
 		{
 			SoundInit();
+			FadeAnimationInit();
 			Standardfont = Game1.content.Load<SpriteFont>("StandardFont");
 			cursor = new Cursor();
 		}
@@ -207,6 +208,12 @@ namespace TestSheet
 			}
 		}
 
+		public static void DrawAddon(DrawingLayer d, Color color, float opacity, string LayerName)
+		{
+			DrawingLayer AddonLayer = new DrawingLayer(LayerName, d.GetBound());
+			AddonLayer.Draw(color, opacity);
+		}
+
 
 
 
@@ -238,6 +245,13 @@ namespace TestSheet
 		/*페이드 애니메이션 처리*/
 
 		private static Dictionary<Color, AnimationList> FadeAnimationList = new Dictionary<Color, AnimationList>();
+		private static List<Color> FadeAnimation_ColorException=new List<Color>();
+
+		private static void FadeAnimationInit()
+		{
+			//제외할 컬러들을 선택한다.
+			FadeAnimation_ColorException.Add(Color.LightSeaGreen);
+		}
 
 		public static void FadeAnimation(DrawingLayer d, int t)
 		{
@@ -277,7 +291,17 @@ namespace TestSheet
 		{
 			foreach (KeyValuePair<Color, AnimationList> kv in FadeAnimationList)
 			{
-				kv.Value.FadeAnimationDraw(kv.Key);
+				if(!FadeAnimation_ColorException.Contains(kv.Key))
+					kv.Value.FadeAnimationDraw(kv.Key);
+			}
+		}
+
+
+		public static void FadeAnimationDraw(Color color)
+		{
+			if(FadeAnimationList.ContainsKey(color))
+			{
+				FadeAnimationList[color].FadeAnimationDraw(color);
 			}
 		}
 

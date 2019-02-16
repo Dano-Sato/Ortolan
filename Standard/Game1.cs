@@ -87,9 +87,10 @@ namespace TestSheet
 			if (GameExit)
 				Exit();
 			// TODO: Add your update logic here
-			tester.Update();
-			Standard.Update();
 			GraphicsDevice.Viewport = Tester.Viewport;
+			tester.Update();		
+			Standard.Update();
+			Tester.OldViewport = Tester.Viewport;
 			base.Update(gameTime);
         }
 
@@ -99,7 +100,8 @@ namespace TestSheet
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.Aquamarine);
+            GraphicsDevice.Clear(Color.Black);
+			Standard.DrawLight(MasterInfo.FullScreen, Color.Aquamarine, 1f, Standard.LightMode.Absolute);
 			// TODO: Add your drawing code here
 			tester.Draw();
 			Standard.Draw();

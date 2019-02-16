@@ -120,7 +120,9 @@ namespace TestSheet
 		public static int ScoreStack = 0;
 		public static double Fear = 0;
 		public static Viewport Viewport = new Viewport();
-		public static Point PlayerDispositionVector;
+		public static Viewport OldViewport = new Viewport();
+		public static Point OldPlayerPos;
+		public static Point OldPlayerDisplacementVector;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -164,10 +166,10 @@ namespace TestSheet
 			{
 				Rectangle rectangle = new Rectangle(500,450,200,50);
 				bool ClickRButton =(rectangle.Contains(Standard.cursor.getPos()))&&(Standard.cursor.didPlayerJustLeftClick() || Standard.cursor.didPlayerJustRightClick());
-				if (Standard.IsKeyDown(Keys.R)||ClickRButton)
-				{
-					ResetGame();
-				}
+				Standard.FadeAnimation(new DrawingLayer("YouDied", new Rectangle(200, 350, 400,200)), 40, Color.DarkRed);
+				Standard.FadeAnimation(new DrawingLayer("Tip", new Rectangle(400, 500, 400, 200)), 70, Color.DarkRed);
+
+				ResetGame();
 				return;
 			}
 
@@ -514,8 +516,16 @@ namespace TestSheet
 			if (player.getPos().X < -40)
 				player.setPos(-40, player.getPos().Y);
 
-			Viewport = new Viewport(0, 0,1300,1300);
 
+			Point PlayerDisPlacementVector = Standard.Deduct(player.getPos(), OldPlayerPos);
+			Point ViewportDisplacement = Standard.Deduct(PlayerDisPlacementVector, OldPlayerDisplacementVector);
+			Viewport = new Viewport(-player.getPos().X+400, -player.getPos().Y+ 400, 1300, 1300);
+
+			OldPlayerPos = player.getPos();
+			OldPlayerDisplacementVector = PlayerDisPlacementVector;
+
+			if(GameMode==0)
+				Viewport = new Viewport(-player.getPos().X/2 + ViewportDisplacement.X + 400/2, -player.getPos().Y/2 + ViewportDisplacement.Y + 400/2, 1300, 1300);
 
 		}
 
@@ -574,14 +584,6 @@ namespace TestSheet
 			{
 				Standard.DrawString("Here's Piano!", new Vector2(60, 500), Color.LightSeaGreen);
 			}
-
-			if(AutoMouse)
-			{
-				Standard.DrawString("* Using mouse auto", new Vector2(230, 700), Color.White);
-				Standard.DrawString("* Press \"M\" Button to disable mouse auto", new Vector2(230, 750), Color.White);
-			}
-
-
 			Standard.FadeAnimationDraw(Color.LightSeaGreen);//별이 사라지는 페이드애니메이션(컬러는 LighteaGreen으로 지정)은 아래 라이트레이어 전에 발생해야 보기 좋으므로 별도로 처리함.
 
 			Standard.DrawLight(MasterInfo.FullScreen, Color.White, 1f, Standard.LightMode.Vignette);

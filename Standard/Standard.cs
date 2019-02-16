@@ -226,6 +226,11 @@ namespace TestSheet
 		{
 			return new Point(a.X + b.X, a.Y + b.Y);
 		}
+
+		public static Point Deduct(Point a, Point b)
+		{
+			return new Point(a.X - b.X, a.Y - b.Y);
+		}
 		//포인트 간 거리 측정
 		public static int Distance(Point a, Point b)
 		{

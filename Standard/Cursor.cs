@@ -30,7 +30,6 @@ namespace TestSheet
 		{
 			TestTexture = Game1.content.Load<Texture2D>(s);
 		}
-
 		public Point getPos()
 		{
 			return mousePos;
@@ -39,7 +38,8 @@ namespace TestSheet
 		public void OldStateUpdate()//클릭 처리 마지막에 행사되어야 OldMouseState가 보존된다.
 		{
 			OldMouseState = Mouse.GetState();
-			mousePos = new Point(OldMouseState.X, OldMouseState.Y);
+			Point ViewportDisplacement = new Point(Tester.Viewport.X - Tester.OldViewport.X, Tester.Viewport.Y - Tester.OldViewport.Y);
+			mousePos = new Point(OldMouseState.X-Tester.Viewport.X/2, OldMouseState.Y - Tester.Viewport.Y/2);
 		}
 		public void Draw()
 		{

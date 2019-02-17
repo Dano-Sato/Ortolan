@@ -26,9 +26,7 @@ namespace TestSheet
 
 		public static bool GameExit = false;
 
-		public static int WindowWidth;
-		public static int WindowHeight;
-
+	
 		public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -47,8 +45,6 @@ namespace TestSheet
         protected override void Initialize()
         {
 			// TODO: Add your initialization logic here
-			WindowWidth = Window.ClientBounds.Width;
-			WindowHeight = Window.ClientBounds.Height;
 			base.Initialize();
         }
 
@@ -87,10 +83,9 @@ namespace TestSheet
 			if (GameExit)
 				Exit();
 			// TODO: Add your update logic here
-			GraphicsDevice.Viewport = Tester.Viewport;
 			tester.Update();		
 			Standard.Update();
-			Tester.OldViewport = Tester.Viewport;
+			GraphicsDevice.Viewport = Standard.Viewport;
 			base.Update(gameTime);
         }
 

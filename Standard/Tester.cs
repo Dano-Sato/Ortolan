@@ -119,8 +119,6 @@ namespace TestSheet
 		public static int KillerZombieIndex = 0;
 		public static int ScoreStack = 0;
 		public static double Fear = 0;
-		public static Viewport Viewport = new Viewport();
-		public static Viewport OldViewport = new Viewport();
 		public static Point OldPlayerPos;
 		public static Point OldPlayerDisplacementVector;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
@@ -138,6 +136,7 @@ namespace TestSheet
 
 		}
 		//Game1.Class 내에 Tester.Update()로 추가될 업데이트문입니다. 다양한 업데이트 처리를 시험할 수 있습니다.
+		//그림으로 그려지기 이전 각종 변수들의 처리를 담당합니다.
 		public void Update()
 		{
 
@@ -167,7 +166,7 @@ namespace TestSheet
 				Rectangle rectangle = new Rectangle(500,450,200,50);
 				bool ClickRButton =(rectangle.Contains(Standard.cursor.getPos()))&&(Standard.cursor.didPlayerJustLeftClick() || Standard.cursor.didPlayerJustRightClick());
 				Standard.FadeAnimation(new DrawingLayer("YouDied", new Rectangle(200, 350, 400,200)), 40, Color.DarkRed);
-				Standard.FadeAnimation(new DrawingLayer("Tip", new Rectangle(400, 500, 400, 200)), 70, Color.DarkRed);
+				Standard.FadeAnimation(new DrawingLayer("Tip", new Rectangle(400, 500, 400, 200)), 90, Color.DarkRed);
 
 				ResetGame();
 				return;
@@ -178,6 +177,9 @@ namespace TestSheet
 				Score = 10;
 				MainMenuIndex = -1;
 			}
+
+
+			/*서브메뉴 생성 처리*/
 
 			if(Score<10&&MainMenuIndex!=-1)//메인메뉴에서 클릭할 시, 서브메뉴를 불러온다.
 			{
@@ -316,6 +318,9 @@ namespace TestSheet
 				return;
 			}
 
+
+			/*키보드 입력 처리*/
+
 			if (Standard.KeyInputOccurs())
 			{
 				if(Standard.IsKeyDown(Keys.OemTilde))
@@ -391,7 +396,8 @@ namespace TestSheet
 			Halo.setPosition(player.getPos().X-40+Standard.Random(-3,3), player.getPos().Y-40 + Standard.Random(-3,3));
 			player.AttackUpdate();
 
-			//좀비들의 이동 처리.
+			/*좀비들의 이동 처리.*/
+
 			List<int> RandomInts = new List<int>();
 			for(int i=0;i<15;i++)
 			{
@@ -412,6 +418,9 @@ namespace TestSheet
 					enemies[i].MoveUpdate(i, RandomInts[j], RandomInts[(j + Standard.FrameTimer) % 14]);
 				j++;
 			}
+
+
+			/*좀비 생성 작업*/
 
 			ZombieTime = 40 - Score/10;//좀비 생성 시간은 스코어가 높을수록 빨라진다.
 		
@@ -438,6 +447,8 @@ namespace TestSheet
 				GameEnd = true;
 		
 			
+			/*스코어가 300으로 도달할때쯤, 음악을 교체할 준비를 한다.*/
+
 			if (Score <= 280)
 				MediaPlayer.Volume = BaseVolume;
 			else if(Score<=300)
@@ -485,13 +496,14 @@ namespace TestSheet
 			}
 
 
+			/*메인메뉴 클릭 처리*/
 			MainMenu.Update();
 			if (MainMenu.MouseIsOnFrame())
 			{
 				MainMenu.MoveTo(-110, 300, 20);
 				if(Score<10&&MainMenu.GetIndex()!=-1)
 				{
-					if (MainMenu.MenuStringList[MainMenu.GetIndex()] == "EXIT")
+					if (MainMenu.MenuStringList[MainMenu.GetIndex()] == "EXIT")//Exit 위에 마우스가 올라가면 메뉴가 덜덜 떤다.ㅋ
 					{
 						MainMenu.MenuList[MainMenu.GetIndex()].drawingLayer.MoveByVector(new Point(Standard.Random(1, 3), Standard.Random(1, 3)), Standard.Random(1,10));
 					}
@@ -517,15 +529,20 @@ namespace TestSheet
 				player.setPos(-40, player.getPos().Y);
 
 
+
+			/*뷰포트 처리*/
+
 			Point PlayerDisPlacementVector = Standard.Deduct(player.getPos(), OldPlayerPos);
 			Point ViewportDisplacement = Standard.Deduct(PlayerDisPlacementVector, OldPlayerDisplacementVector);
-			Viewport = new Viewport(-player.getPos().X+400, -player.getPos().Y+ 400, 1300, 1300);
+			Standard.Viewport = new Viewport(-player.getPos().X+400, -player.getPos().Y+ 400, 1300, 1300);
 
 			OldPlayerPos = player.getPos();
 			OldPlayerDisplacementVector = PlayerDisPlacementVector;
 
 			if(GameMode==0)
-				Viewport = new Viewport(-player.getPos().X/2 + ViewportDisplacement.X + 400/2, -player.getPos().Y/2 + ViewportDisplacement.Y + 400/2, 1300, 1300);
+				Standard.Viewport = new Viewport(-player.getPos().X/2 + ViewportDisplacement.X + 400/2, -player.getPos().Y/2 + ViewportDisplacement.Y + 400/2, 1300, 1300);
+			if(MainMenuIndex!=-1)
+				Standard.Viewport = new Viewport(0,0, 1300, 1300);
 
 		}
 
@@ -1034,7 +1051,6 @@ namespace TestSheet
 					int y2 = (enemies[AttackIndex].getPos().Y + 3 * getPos().Y) / 4;
 					direction.setPosition(x2 + 25, y2 + 25);
 					direction.Draw(Color.White);
-
 				}
 			}
 		}

@@ -38,8 +38,7 @@ namespace TestSheet
 		public void OldStateUpdate()//클릭 처리 마지막에 행사되어야 OldMouseState가 보존된다.
 		{
 			OldMouseState = Mouse.GetState();
-			Point ViewportDisplacement = new Point(Tester.Viewport.X - Tester.OldViewport.X, Tester.Viewport.Y - Tester.OldViewport.Y);
-			mousePos = new Point(OldMouseState.X-Tester.Viewport.X/2, OldMouseState.Y - Tester.Viewport.Y/2);
+			mousePos = new Point(OldMouseState.X-Standard.Viewport.X/2, OldMouseState.Y - Standard.Viewport.Y/2);
 		}
 		public void Draw()
 		{

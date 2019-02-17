@@ -139,23 +139,20 @@ namespace TestSheet
 		//그림으로 그려지기 이전 각종 변수들의 처리를 담당합니다.
 		public void Update()
 		{
+			/*기타*/
 
 			UpdateScore();
 			SetKillerZombie();
 			SetZombieSpeed();
 			SetPlayer();
 
-			if (Score<400&&Standard.IsKeyDown(Keys.R))
-			{
-				ResetGame();
-				return;
-			}
+
 			if (GameEnd)
 			{
-				
-				if(EndTimer<1000)
+
+				if (EndTimer < 1000)
 					EndTimer++;
-				if(EndTimer==1000)
+				if (EndTimer == 1000)
 				{
 					ResetGame();
 				}
@@ -163,34 +160,35 @@ namespace TestSheet
 			}
 			if (GameOver)
 			{
-				Rectangle rectangle = new Rectangle(500,450,200,50);
-				bool ClickRButton =(rectangle.Contains(Standard.cursor.getPos()))&&(Standard.cursor.didPlayerJustLeftClick() || Standard.cursor.didPlayerJustRightClick());
-				Standard.FadeAnimation(new DrawingLayer("YouDied", new Rectangle(200, 350, 400,200)), 40, Color.DarkRed);
+				Rectangle rectangle = new Rectangle(500, 450, 200, 50);
+				bool ClickRButton = (rectangle.Contains(Standard.cursor.getPos())) && (Standard.cursor.didPlayerJustLeftClick() || Standard.cursor.didPlayerJustRightClick());
+				Standard.FadeAnimation(new DrawingLayer("YouDied", new Rectangle(200, 350, 400, 200)), 40, Color.DarkRed);
 				Standard.FadeAnimation(new DrawingLayer("Tip", new Rectangle(400, 500, 400, 200)), 90, Color.DarkRed);
 
 				ResetGame();
 				return;
 			}
+			if (CursorShouldBeSword)
+				Standard.cursor.SetSprite("Sword");
+			else
+				Standard.cursor.SetSprite("Cursor");
 
-			if(Score<10&&Standard.JustPressed(Keys.S))
-			{
-				Score = 10;
-				MainMenuIndex = -1;
-			}
-
+			player.MoveUpdate();
+			Halo.setPosition(player.getPos().X - 40 + Standard.Random(-3, 3), player.getPos().Y - 40 + Standard.Random(-3, 3));
+			player.AttackUpdate();
 
 			/*서브메뉴 생성 처리*/
 
-			if(Score<10&&MainMenuIndex!=-1)//메인메뉴에서 클릭할 시, 서브메뉴를 불러온다.
+			if (MainMenuIndex!=-1)//메인메뉴에서 클릭할 시, 서브메뉴를 불러온다.원랜 스코어 10이하일때만 작동하게 했는데 지금 실험중이다. Score<10&&
 			{
 				if (Standard.JustPressed(Keys.Escape))
 				{
 					MainMenuIndex = -1;
 				}
-				if(!SubMenu.MouseIsOnFrame()&&(Standard.cursor.didPlayerJustLeftClick()||Standard.cursor.didPlayerJustRightClick()))
+				/*if(!SubMenu.MouseIsOnFrame()&&(Standard.cursor.didPlayerJustLeftClick()||Standard.cursor.didPlayerJustRightClick()))
 				{
 					MainMenuIndex = -1;
-				}
+				}*/
 				switch (MainMenuIndex)
 				{
 					case 0://Song
@@ -315,7 +313,7 @@ namespace TestSheet
 						break;
 
 				}
-				return;
+				//return;
 			}
 
 
@@ -371,7 +369,7 @@ namespace TestSheet
 				{
 					AutoMouse = !AutoMouse;
 				}
-				if(Standard.JustPressed(Keys.C))
+				if(Standard.JustPressed(Keys.C))//핏자국 청소
 				{
 					for(int i=0;i<DeadBodys.Count;i++)
 					{
@@ -379,22 +377,18 @@ namespace TestSheet
 					}
 					DeadBodys.Clear();
 				}
-				if (Score>=10&&Standard.JustPressed(Keys.Escape))
+				if (Score < 400 && Standard.IsKeyDown(Keys.R))//게임 리셋
 				{
-					Game1.GameExit = true;
+					ResetGame();
+					return;
+				}
+
+				if (Score < 10 && Standard.JustPressed(Keys.S))//빠른 시작
+				{
+					Score = 10;
 				}
 
 			}
-
-
-			if (CursorShouldBeSword)
-				Standard.cursor.SetSprite("Sword");
-			else
-				Standard.cursor.SetSprite("Cursor");
-
-			player.MoveUpdate();
-			Halo.setPosition(player.getPos().X-40+Standard.Random(-3,3), player.getPos().Y-40 + Standard.Random(-3,3));
-			player.AttackUpdate();
 
 			/*좀비들의 이동 처리.*/
 
@@ -501,7 +495,7 @@ namespace TestSheet
 			if (MainMenu.MouseIsOnFrame())
 			{
 				MainMenu.MoveTo(-110, 300, 20);
-				if(Score<10&&MainMenu.GetIndex()!=-1)
+				if(MainMenu.GetIndex()!=-1)//실험중.Score<10&&이라는조건뺌
 				{
 					if (MainMenu.MenuStringList[MainMenu.GetIndex()] == "EXIT")//Exit 위에 마우스가 올라가면 메뉴가 덜덜 떤다.ㅋ
 					{
@@ -528,7 +522,56 @@ namespace TestSheet
 			if (player.getPos().X < -40)
 				player.setPos(-40, player.getPos().Y);
 
+			//메인 메뉴 위로는 좀비들이 오지 못한다.
+			if (MainMenu.MouseIsOnFrame())
+			{
+				if (Score >= 10)
+					for (int i = 0; i < enemies.Count; i++)
+					{
+						if (MainMenu.Frame.GetBound().Contains(enemies[i].getCenter()))
+						{
+							enemies[i].enemy.MoveByVector(new Point(1, 0), 20);
+							if (ZombieSpeed < 9)
+								MainMenu.Frame.MoveByVector(new Point(-1, 0), 37 - ZombieSpeed * 3/*Math.Max(1,25-ZombieSpeed*3+UsePianoTimer*7)*/);
+							else
+								MainMenu.Frame.MoveByVector(new Point(-1, 0), Math.Max(13, 25 - ZombieSpeed * 3 + UsePianoTimer * 7));
+						}
+					}
+			}
 
+			//서브메뉴와 좀비 처리
+			if (Score >= 10&&MainMenuIndex!=-1)
+			{
+				//서브메뉴는 좌우로 요동친다.
+				if (Standard.FrameTimer % 10 < 5)
+					SubMenu.Frame.MoveByVector(new Point(-1, 0), 20);
+				else
+					SubMenu.Frame.MoveByVector(new Point(1, 0), 20);
+
+				for (int i = 0; i < enemies.Count; i++)//에너미를 왼쪽으로 보낸다.
+				{
+					if (SubMenu.Frame.GetBound().Contains(enemies[i].getCenter()))
+					{
+						enemies[i].enemy.MoveByVector(new Point(-1, 0), 20);
+
+
+					}
+				}
+				if (SubMenu.Frame.GetBound().Contains(player.GetCenter()))//플레이어가 닿으면?
+				{
+					int PlayerAndSubMenuFrameDistance = Math.Min(Math.Abs(player.GetCenter().Y - SubMenu.Frame.GetPosition().Y), Math.Abs(player.GetCenter().Y - SubMenu.Frame.GetPosition().Y - SubMenu.Frame.GetBound().Height));
+					if (player.getPos().Y>SubMenu.Frame.GetCenter().Y)
+					{
+						player.MoveByVector(new Point(0, -1), SubMenu.Frame.GetBound().Height+20-PlayerAndSubMenuFrameDistance);
+					}
+					else
+						player.MoveByVector(new Point(0, 1), SubMenu.Frame.GetBound().Height+20- PlayerAndSubMenuFrameDistance);
+
+				}
+
+
+
+			}
 
 			/*뷰포트 처리*/
 
@@ -543,6 +586,13 @@ namespace TestSheet
 				Standard.Viewport = new Viewport(-player.getPos().X/2 + ViewportDisplacement.X + 400/2, -player.getPos().Y/2 + ViewportDisplacement.Y + 400/2, 1300, 1300);
 			if(MainMenuIndex!=-1)
 				Standard.Viewport = new Viewport(0,0, 1300, 1300);
+
+
+
+		
+
+
+
 
 		}
 
@@ -588,8 +638,7 @@ namespace TestSheet
 				Standard.DrawString("Congratulation!", new Vector2(300, 400), StringColor);		
 			Standard.DrawString("Press \"R\" to reset", new Vector2(550,490), StringColor);
 			Standard.DrawString("Press \"S\" to skip the break time", new Vector2(290, 470), StringColor);
-			Standard.DrawString("in break time only, you can use the menu", new Vector2(450, 280), StringColor);
-
+		
 			if (Score < 10)
 			{
 				if(Standard.FrameTimer%50<25)
@@ -616,23 +665,6 @@ namespace TestSheet
 			MainMenu.Draw(Score>=10? false:true);
 			if (Standard.FrameTimer % 20 == 0)
 				MenuLightR = Standard.Random(0, 5);
-			
-			if(MainMenu.MouseIsOnFrame())
-			{
-				if (Score >= 10)
-				for (int i=0;i<enemies.Count;i++)
-				{
-					if(MainMenu.Frame.GetBound().Contains(enemies[i].getCenter()))
-					{
-						enemies[i].enemy.MoveByVector(new Point(1, 0), 20);
-						if(ZombieSpeed<9)
-						MainMenu.Frame.MoveByVector(new Point(-1, 0), 37 - ZombieSpeed * 3/*Math.Max(1,25-ZombieSpeed*3+UsePianoTimer*7)*/);
-						else
-								MainMenu.Frame.MoveByVector(new Point(-1, 0), Math.Max(13,25-ZombieSpeed*3+UsePianoTimer*7));
-
-						}
-					}
-			}
 			if (!MainMenu.MouseIsOnFrame())
 			{
 				Rectangle MenuLight = new Rectangle(MainMenu.GetPosition(), new Point(300, 80));
@@ -683,7 +715,7 @@ namespace TestSheet
 			}
 
 			
-			if (Score < 10 && MainMenuIndex != -1&&SubMenu!= null&&SubMenu.MenuList.Count > 0)
+			if (MainMenuIndex != -1&&SubMenu!= null&&SubMenu.MenuList.Count > 0)//실험중. Score < 10 && 파트 뺌
 			{
 				SubMenu.Draw();
 				switch (MainMenuIndex)
@@ -738,7 +770,7 @@ namespace TestSheet
 
 				}
 				Standard.DrawLight(SubMenu.Frame.GetBound(), Color.WhiteSmoke, 0.3f, Standard.LightMode.Vignette);
-				return;
+				//return;
 			}
 
 
@@ -765,8 +797,7 @@ namespace TestSheet
 				Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 0.2f + (float)Lightr, Standard.LightMode.Absolute);
 				Standard.DrawLight(MasterInfo.FullScreen, Color.DarkBlue, 0.3f, Standard.LightMode.Absolute);
 			}
-			//AfterImageAnimationList.FadeAnimationDraw(Color.Cornsilk, 0.2*0.5);
-			OldStateOfMouseisOnMenu = MainMenu.Frame.MouseIsOnThis();
+				OldStateOfMouseisOnMenu = MainMenu.Frame.MouseIsOnThis();
 		}
 
 		public int MenuLightR = 0;
@@ -800,6 +831,16 @@ namespace TestSheet
 			public bool IsAttacking()
 			{
 				return isAttacking;
+			}
+
+			public Point GetCenter()
+			{
+				return player.GetCenter();
+			}
+
+			public void MoveByVector(Point p,double speed)
+			{
+				player.MoveByVector(p, speed);
 			}
 
 			public void reset()

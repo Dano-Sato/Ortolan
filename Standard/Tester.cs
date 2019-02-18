@@ -91,7 +91,7 @@ namespace TestSheet
 		public static int EndTimer = 0;
 		public static int Score = 0;
 		public static int ZombieTime = 40;
-		public static double Lightr = 0;
+		public static double Lightr = 0;//화면이 좀 깜빡거리도록 하기 위해 넣은 변수
 		public static string ButtonInfoString = "Right Click";
 		public static DrawingLayer Halo = new DrawingLayer("Player", new Rectangle(0, 0, 150, 150));
 		public static DrawingLayer MouseLogo = new DrawingLayer("Mouse", new Rectangle(270, 400, 30, 30));
@@ -119,6 +119,7 @@ namespace TestSheet
 		public static int KillerZombieIndex = 0;
 		public static int ScoreStack = 0;
 		public static double Fear = 0;
+		public static int Sight = 400;
 		public static Point OldPlayerPos;
 		public static Point OldPlayerDisplacementVector;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
@@ -176,6 +177,27 @@ namespace TestSheet
 			player.MoveUpdate();
 			Halo.setPosition(player.getPos().X - 40 + Standard.Random(-3, 3), player.getPos().Y - 40 + Standard.Random(-3, 3));
 			player.AttackUpdate();
+
+			if (Score == 10)
+			{
+				ZombieColor = Color.LightSeaGreen;
+			}
+
+			if (Score % 10 == 9)
+				Reload = true;
+			if (Score % 10 == 0 && Reload == true)
+			{
+				if (GameMode == 0)
+					Standard.PlaySound("Reload");
+				else if (GameMode == 1)
+					Standard.PlaySound("WipeKnife");
+				Reload = false;
+			}
+			if (DeadBodys.Count > 300)
+			{
+				Standard.FadeAnimation(DeadBodys[0], 30, Color.LightSeaGreen);
+				DeadBodys.RemoveAt(0);
+			}
 
 			/*서브메뉴 생성 처리*/
 
@@ -468,27 +490,6 @@ namespace TestSheet
 			}
 			
 
-			if (Score == 10)
-			{
-				ZombieColor = Color.LightSeaGreen;
-			}
-
-			if (Score % 10 == 9)
-				Reload = true;
-			if(Score%10==0&&Reload==true)
-			{
-				if (GameMode == 0)
-					Standard.PlaySound("Reload");
-				else if (GameMode == 1)
-					Standard.PlaySound("WipeKnife");
-				Reload = false;
-			}
-			if (DeadBodys.Count > 300)
-			{
-				Standard.FadeAnimation(DeadBodys[0], 30, Color.LightSeaGreen);
-				DeadBodys.RemoveAt(0);
-			}
-
 
 			/*메인메뉴 클릭 처리*/
 			MainMenu.Update();
@@ -557,7 +558,7 @@ namespace TestSheet
 
 					}
 				}
-				if (SubMenu.Frame.GetBound().Contains(player.GetCenter()))//플레이어가 닿으면?
+				if (SubMenu.Frame.GetBound().Contains(player.GetCenter()))//플레이어가 닿으면? 텔포를 시킨다.
 				{
 					int PlayerAndSubMenuFrameDistance = Math.Min(Math.Abs(player.GetCenter().Y - SubMenu.Frame.GetPosition().Y), Math.Abs(player.GetCenter().Y - SubMenu.Frame.GetPosition().Y - SubMenu.Frame.GetBound().Height));
 					if (player.getPos().Y>SubMenu.Frame.GetCenter().Y)
@@ -584,12 +585,24 @@ namespace TestSheet
 
 			if(GameMode==0)
 				Standard.Viewport = new Viewport(-player.getPos().X/2 + ViewportDisplacement.X + 400/2, -player.getPos().Y/2 + ViewportDisplacement.Y + 400/2, 1300, 1300);
-			if(MainMenuIndex!=-1)
-				Standard.Viewport = new Viewport(0,0, 1300, 1300);
+			else
+				Standard.Viewport = new Viewport(-player.getPos().X + ViewportDisplacement.X/2+ 400, -player.getPos().Y + ViewportDisplacement.Y/2+ 400, 1300, 1300);
+
+			if (MainMenuIndex!=-1)
+			{
+				if (GameMode==0)
+					Standard.Viewport = new Viewport(ViewportDisplacement.X, ViewportDisplacement.Y, 1300, 1300);
+				else
+					Standard.Viewport = new Viewport(ViewportDisplacement.X/2, ViewportDisplacement.Y/2, 1300, 1300);
+
+				if (Math.Abs(ViewportDisplacement.Y) > 100)
+					Standard.Viewport = new Viewport(ViewportDisplacement.X, ViewportDisplacement.Y / 20, 1300, 1300);
+				
+			}
 
 
 
-		
+
 
 
 

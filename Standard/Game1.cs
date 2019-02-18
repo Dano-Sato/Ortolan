@@ -100,7 +100,8 @@ namespace TestSheet
 			// TODO: Add your drawing code here
 			tester.Draw();
 			Standard.Draw();
-            base.Draw(gameTime);
+			Standard.DrawString("Bigfont", Tester.Score.ToString(), new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), Color.White);
+			base.Draw(gameTime);
         }
     }
 }

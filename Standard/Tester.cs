@@ -70,6 +70,7 @@ namespace TestSheet
 		public static void ResetGame()
 		{
 			Score = 0;
+			Fear = 0;
 			Standard.FrameTimer = 0;
 			ZombieTime = 40;
 			enemies.Clear();
@@ -119,7 +120,6 @@ namespace TestSheet
 		public static int KillerZombieIndex = 0;
 		public static int ScoreStack = 0;
 		public static double Fear = 0;
-		public static int Sight = 400;
 		public static Point OldPlayerPos;
 		public static Point OldPlayerDisplacementVector;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
@@ -615,6 +615,7 @@ namespace TestSheet
 			
 			if(GameEnd)
 			{
+				Standard.Viewport = new Viewport(0, 0, 1300, 1300);
 				Standard.DrawLight(MasterInfo.FullScreen, Color.White, 1.0f, Standard.LightMode.Absolute);
 				RealMonoLogo.Draw(Color.White,Math.Min((float)(EndTimer/300.0),1.0f));
 				Standard.DrawString("Thank you for playing!", new Vector2(500, 500), Color.Aquamarine);
@@ -665,6 +666,8 @@ namespace TestSheet
 			}
 			Standard.FadeAnimationDraw(Color.LightSeaGreen);//별이 사라지는 페이드애니메이션(컬러는 LighteaGreen으로 지정)은 아래 라이트레이어 전에 발생해야 보기 좋으므로 별도로 처리함.
 
+			/*풀스크린 라이트 레이어 처리*/
+
 			Standard.DrawLight(MasterInfo.FullScreen, Color.White, 1f, Standard.LightMode.Vignette);
 			//스코어 올라갈수록 보라색을 띈다.
 			Standard.DrawLight(MasterInfo.FullScreen, Color.Purple, 0.3f * Math.Min(1.2f, (float)(Score / 100.0)), Standard.LightMode.Absolute);
@@ -672,8 +675,7 @@ namespace TestSheet
 				Halo.Draw(Color.AntiqueWhite * 0.15f * Math.Min(5f, (float)((Score - 150.0)/50)));
 			if (ZombieDance)
 				Standard.DrawLight(MasterInfo.FullScreen, Color.White, (float)((3000 - EndTimer) / 3000.0), Standard.LightMode.Absolute);//3000프레임동안 점점 하얀색으로 밝아진다.
-
-
+		
 		
 			MainMenu.Draw(Score>=10? false:true);
 			if (Standard.FrameTimer % 20 == 0)
@@ -811,6 +813,27 @@ namespace TestSheet
 				Standard.DrawLight(MasterInfo.FullScreen, Color.DarkBlue, 0.3f, Standard.LightMode.Absolute);
 			}
 				OldStateOfMouseisOnMenu = MainMenu.Frame.MouseIsOnThis();
+
+
+			/*시야 처리*/
+			if (Score >= 10&&Score<400)
+			{
+				for (int i = 0; i < enemies.Count; i++)
+				{
+					int r = Standard.Distance(enemies[i].getCenter(), player.GetCenter());
+					Fear = Math.Min(Fear + 400.0/Math.Pow(Math.Max(r,9),2),200);
+				}
+				if (player.IsAttacking())
+					Fear = Math.Max(0, Fear - Math.Max(1,enemies.Count/10));
+				int Sight = Math.Max(800-(int)(Fear*4),player.getRange()+50);
+				Standard.DrawLight(new Rectangle(0, 0, Math.Max(player.GetCenter().X - Sight, 0), 1300), Color.Black, 1f, Standard.LightMode.Absolute);
+				Standard.DrawLight(new Rectangle(0, 0, 1300, Math.Max(player.GetCenter().Y - Sight, 0)), Color.Black, 1f, Standard.LightMode.Absolute);
+				Standard.DrawLight(new Rectangle(player.GetCenter().X + Sight, 0, 1300, 1300), Color.Black, 1f, Standard.LightMode.Absolute);
+				Standard.DrawLight(new Rectangle(0, player.GetCenter().Y + Sight, 1300, 1300), Color.Black, 1f, Standard.LightMode.Absolute);
+				DrawingLayer PlayerSight = new DrawingLayer("Sight3", new Rectangle(player.GetCenter().X - Sight, player.GetCenter().Y - Sight, Sight * 2, Sight * 2));
+				PlayerSight.Draw();
+			}
+
 		}
 
 		public int MenuLightR = 0;
@@ -907,7 +930,7 @@ namespace TestSheet
 
 			public Player()
 			{
-				player = new DrawingLayer("Player",new Rectangle(400,400,80,80));
+				player = new DrawingLayer("Player_V2",new Rectangle(400,400,80,80));
 				bullet = new DrawingLayer("Player2", new Rectangle(0, 0, 80, 80));
 				direction = new DrawingLayer("Player2", new Rectangle(0, 0, 20, 20));
 				wand = new DrawingLayer("WhiteSpace", new Rectangle(0, 0, 5, 5));
@@ -1133,7 +1156,7 @@ namespace TestSheet
 			{
 				if(Score<10)
 				{
-					enemy = new DrawingLayer("Player", new Rectangle(Standard.Random(0, 800), Standard.Random(0, 800), 80, 80));
+					enemy = new DrawingLayer("Player_V2", new Rectangle(Standard.Random(0, 800), Standard.Random(0, 800), 80, 80));
 					return;
 				}
 				int x=0;
@@ -1147,7 +1170,7 @@ namespace TestSheet
 					y = Standard.Random(15, 80);
 				else
 					y = Standard.Random(720, 800);
-				enemy = new DrawingLayer("Player", new Rectangle(x, y, 80, 80));
+				enemy = new DrawingLayer("Player_V2", new Rectangle(x, y, 80, 80));
 			}
 
 			public void Draw()

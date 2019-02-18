@@ -323,13 +323,23 @@ namespace TestSheet
 		/*기타*/
 
 		//StandardFont.spritefont를 필요로 합니다.
-		public static SpriteFont Standardfont; 
+		private static SpriteFont Standardfont;
+		private static SpriteFont Temporaryfont;
 		public static void DrawString(string s, Vector2 vector2,Color color)
 		{
 			Game1.spriteBatch.Begin();
 			Game1.spriteBatch.DrawString(Standardfont, s, vector2, color);
 			Game1.spriteBatch.End();
 		}
+
+		public static void DrawString(string FontName,string s, Vector2 vector2, Color color)
+		{
+			Temporaryfont = Game1.content.Load<SpriteFont>(FontName);
+			Game1.spriteBatch.Begin();
+			Game1.spriteBatch.DrawString(Temporaryfont, s, vector2, color);
+			Game1.spriteBatch.End();
+		}
+
 
 		private static Random random=new Random();
 		public static int Random(int x, int y)

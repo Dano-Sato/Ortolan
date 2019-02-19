@@ -49,6 +49,11 @@ namespace TestSheet
 			cursor.Draw();
 		}
 
+		/*뷰포트 활용을 위해서는 Game1.Update()에서
+		GraphicsDevice.Viewport = Standard.Viewport;
+		를 선언해 주셔야 합니다.*/
+
+
 
 
 		/*입력 파트*/

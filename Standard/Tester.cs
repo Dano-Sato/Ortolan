@@ -93,7 +93,7 @@ namespace TestSheet
 		public static int Score = 0;
 		public static int ZombieTime = 40;
 		public static double Lightr = 0;//화면이 좀 깜빡거리도록 하기 위해 넣은 변수
-		public static string ButtonInfoString = "Right Click";
+		public static string ButtonInfoString = "Right-Click";
 		public static DrawingLayer Halo = new DrawingLayer("Player", new Rectangle(0, 0, 150, 150));
 		public static DrawingLayer MouseLogo = new DrawingLayer("Mouse", new Rectangle(270, 400, 30, 30));
 		public static DrawingLayer MouseButton = new DrawingLayer("Mouse3", new Rectangle(270, 400, 30, 30));
@@ -122,6 +122,8 @@ namespace TestSheet
 		public static double Fear = 0;
 		public static Point OldPlayerPos;
 		public static Point OldPlayerDisplacementVector;
+
+		public static int FreezeTimer = -1;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -159,15 +161,32 @@ namespace TestSheet
 				}
 				return;
 			}
-			if (GameOver)
+			if (GameOver&&FreezeTimer==-1)
 			{
-				Rectangle rectangle = new Rectangle(500, 450, 200, 50);
-				bool ClickRButton = (rectangle.Contains(Standard.cursor.getPos())) && (Standard.cursor.didPlayerJustLeftClick() || Standard.cursor.didPlayerJustRightClick());
-				Standard.FadeAnimation(new DrawingLayer("YouDied", new Rectangle(200, 350, 400, 200)), 40, Color.DarkRed);
-				Standard.FadeAnimation(new DrawingLayer("Tip", new Rectangle(400, 500, 400, 200)), 90, Color.DarkRed);
-
-				ResetGame();
+				FreezeTimer = 200;
+				Standard.ClearFadeAnimation();
+				Standard.PlaySound("ZombieSound4");
 				return;
+			}
+			if(FreezeTimer>0)
+			{
+				Standard.ClearFadeAnimation();
+				if (FreezeTimer==200)
+					Standard.PlaySound("KnifeSound", 0.3f);
+				if(FreezeTimer==140)
+					Standard.PlaySound("KnifeSound", 0.5f);
+				if (FreezeTimer == 90)
+					Standard.PlaySound("KnifeSound",0.5f);
+				FreezeTimer--;
+				Fear += 10;
+				return;
+			}
+			if(FreezeTimer==0)
+			{
+				FreezeTimer = -1;
+				Standard.FadeAnimation(new DrawingLayer("YouDied", new Rectangle(200, 350, 400, 200)), 90, Color.DarkRed);
+				Standard.FadeAnimation(new DrawingLayer("Tip", new Rectangle(400, 500, 400, 200)), 150, Color.DarkRed);
+				ResetGame();
 			}
 			if (CursorShouldBeSword)
 				Standard.cursor.SetSprite("Sword");
@@ -454,7 +473,7 @@ namespace TestSheet
 				ZombieDance = true;
 				MouseLogo.setSprite("Cake");
 				MouseButton.setSprite("Cake2");
-				EndTimer = 3000;
+				EndTimer = 4000;
 			}
 
 			if (ZombieDance&&EndTimer>0)
@@ -602,7 +621,10 @@ namespace TestSheet
 
 
 
-
+			if(Standard.Random()<0.05)
+			{
+				Standard.FadeAnimation(new DrawingLayer("Rhythm2", new Rectangle(Standard.Random(0, 100), Standard.Random(200,600), 40, 80)), 15, Color.Black);
+			}
 
 
 
@@ -638,7 +660,12 @@ namespace TestSheet
 			if (Score >= 10)
 				StringColor = Color.Red;
 
-			Standard.DrawString("SCORE : " + Score + "/400", new Vector2(340, 440), StringColor);
+			if(!Standard.IsPrimeNumber(Score))
+				Standard.DrawString("SCORE : " + Score + "/400", new Vector2(340, 440), StringColor);
+			else
+				Standard.DrawString("BigFont","SCORE : " + Score + "/400", new Vector2(340, 420), StringColor);
+
+
 			if (Score < 300)
 			{
 				if(!AutoMouse)
@@ -650,7 +677,9 @@ namespace TestSheet
 				Standard.DrawString("Live to click", new Vector2(300, 400), StringColor);
 			else
 				Standard.DrawString("Congratulation!", new Vector2(300, 400), StringColor);		
+
 			Standard.DrawString("Press \"R\" to reset", new Vector2(550,490), StringColor);
+			if(Score<10)
 			Standard.DrawString("Press \"S\" to skip the break time", new Vector2(290, 470), StringColor);
 		
 			if (Score < 10)
@@ -716,15 +745,15 @@ namespace TestSheet
 				{
 					Lightr = Standard.Random() / 10.0;
 				}
-				if(Standard.FrameTimer%250==0)
+				if(Standard.FrameTimer%150==0 && FreezeTimer < 0)
 				{
 					if(Score>300)
 					{
-						Standard.PlaySound("ZombieSound", 0.5f);
+						Standard.PlaySound("BackgroundZombieSound");
 					}
 					else
 					{
-						Standard.PlaySound("ZombieSound");
+						Standard.PlaySound("BackgroundZombieSound", 0.8f);
 					}
 				}
 			}
@@ -807,13 +836,35 @@ namespace TestSheet
 
 			}
 
-			if (Score>=10)
+			if (Score>=10&&Score<400)
 			{
 				Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 0.2f + (float)Lightr, Standard.LightMode.Absolute);
 				Standard.DrawLight(MasterInfo.FullScreen, Color.DarkBlue, 0.3f, Standard.LightMode.Absolute);
 			}
 				OldStateOfMouseisOnMenu = MainMenu.Frame.MouseIsOnThis();
 
+			if(Score%30==23|| Score % 30 == 24)
+			{
+				for (int i = 0; i < enemies.Count; i++)
+				{
+					enemies[i].enemy.setSprite("Player_Broken2");
+				}
+			}
+			if(Score%30==25)
+			{
+				for (int i = 0; i < enemies.Count; i++)
+				{
+					enemies[i].enemy.setSprite("Player_V2");
+				}
+			}
+			if(Score%100==87)
+			{
+
+				for (int i = 0; i < enemies.Count; i++)
+				{
+					enemies[i].enemy.setSprite("Tip");
+				}
+			}
 
 			/*시야 처리*/
 			if (Score >= 10&&Score<400)
@@ -826,6 +877,14 @@ namespace TestSheet
 				if (player.IsAttacking())
 					Fear = Math.Max(0, Fear - Math.Max(1,enemies.Count/10));
 				int Sight = Math.Max(800-(int)(Fear*4),player.getRange()+50);
+				if (FreezeTimer > 0)
+				{
+					Sight = 800 - (int)(Fear * 4);
+					if (FreezeTimer < 170)
+						Sight = 0;
+
+				}
+
 				Standard.DrawLight(new Rectangle(0, 0, Math.Max(player.GetCenter().X - Sight, 0), 1300), Color.Black, 1f, Standard.LightMode.Absolute);
 				Standard.DrawLight(new Rectangle(0, 0, 1300, Math.Max(player.GetCenter().Y - Sight, 0)), Color.Black, 1f, Standard.LightMode.Absolute);
 				Standard.DrawLight(new Rectangle(player.GetCenter().X + Sight, 0, 1300, 1300), Color.Black, 1f, Standard.LightMode.Absolute);
@@ -833,6 +892,11 @@ namespace TestSheet
 				DrawingLayer PlayerSight = new DrawingLayer("Sight3", new Rectangle(player.GetCenter().X - Sight, player.GetCenter().Y - Sight, Sight * 2, Sight * 2));
 				PlayerSight.Draw();
 			}
+
+			if(FreezeTimer>0)
+				Standard.ClearFadeAnimation();
+
+		
 
 		}
 
@@ -989,9 +1053,9 @@ namespace TestSheet
 					if (AutoMouse||Standard.cursor.didPlayerJustRightClick() || Standard.cursor.didPlayerJustLeftClick() || Standard.JustPressed(Keys.A) )
 					{
 						if (Standard.cursor.didPlayerJustLeftClick())
-							ButtonInfoString = "Left Click";
+							ButtonInfoString = "Left-Click";
 						else if (Standard.cursor.didPlayerJustRightClick())
-							ButtonInfoString = "Right Click";
+							ButtonInfoString = "Right-Click";
 						else if (Standard.JustPressed(Keys.A))
 							ButtonInfoString = "Press \"A\"";
 
@@ -1011,9 +1075,9 @@ namespace TestSheet
 				if (AutoMouse || Standard.cursor.didPlayerJustRightClick() || Standard.cursor.didPlayerJustLeftClick() || Standard.JustPressed(Keys.A))
 				{
 					if (Standard.cursor.didPlayerJustLeftClick())
-						ButtonInfoString = "Left Click";
+						ButtonInfoString = "Left-Click";
 					else if (Standard.cursor.didPlayerJustRightClick())
-						ButtonInfoString = "Right Click";
+						ButtonInfoString = "Right-Click";
 					else if (Standard.JustPressed(Keys.A))
 						ButtonInfoString = "Press \"A\"";
 					for (int i = 0; i < enemies.Count; i++)
@@ -1217,6 +1281,17 @@ namespace TestSheet
 				}
 
 				enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, ZombieSpeed);
+				if(Standard.FrameTimer%30<15)
+				{
+					enemy.MoveTo(player.getPos().X, player.getPos().Y, 3);
+					enemy.MoveByVector(new Point(1, 0), 2);
+				}
+				else
+				{
+					enemy.MoveTo(player.getPos().X, player.getPos().Y, -3-ZombieSpeed/3);
+					enemy.MoveByVector(new Point(-1, 0), 2);
+				}
+
 				if ((Standard.Distance(player.getPos(), getPos())) <= 10 && Index != player.getAttackIndex())
 				{
 					GameOver = true;

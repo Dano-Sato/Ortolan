@@ -67,6 +67,11 @@ namespace TestSheet
 			}
 		}
 
+		public void Clear()
+		{
+			Animationlist.Clear();
+		}
+
 
 	}
 }

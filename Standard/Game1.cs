@@ -100,7 +100,15 @@ namespace TestSheet
 			// TODO: Add your drawing code here
 			tester.Draw();
 			Standard.Draw();
-			Standard.DrawString("Bigfont", Tester.Score.ToString(), new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), Color.White);
+			Color ScoreColor = Color.White;
+			if (Standard.IsPrimeNumber(Tester.Score))
+				ScoreColor = Color.Silver;
+			Standard.DrawString("Bigfont", Tester.Score.ToString(), new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), ScoreColor);
+			if(Tester.FreezeTimer>=0&&Tester.FreezeTimer<150)
+			{
+				Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 1f, Standard.LightMode.Absolute);
+			}
+
 			base.Draw(gameTime);
         }
     }

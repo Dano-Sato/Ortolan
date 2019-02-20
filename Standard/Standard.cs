@@ -263,6 +263,14 @@ namespace TestSheet
 			FadeAnimation_ColorException.Add(Color.LightSeaGreen);
 		}
 
+		public static void ClearFadeAnimation()
+		{
+			foreach (KeyValuePair<Color, AnimationList> kv in FadeAnimationList)
+			{
+				kv.Value.Clear();
+			}
+		}
+
 		public static void FadeAnimation(DrawingLayer d, int t)
 		{
 			if(FadeAnimationList.ContainsKey(Color.White))
@@ -357,6 +365,17 @@ namespace TestSheet
 			return random.NextDouble();
 		}
 
+		public static bool IsPrimeNumber(int x)
+		{
+			if (x <= 1)
+				return false;
+			for (int i = 2; i <= Math.Sqrt(x); i++)
+			{
+				if (x % i == 0)
+					return false;
+			}
+			return true;
+		}
 
 	}
 }

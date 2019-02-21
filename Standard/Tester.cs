@@ -255,6 +255,7 @@ namespace TestSheet
 							}
 							else
 							{
+								if(Score<400)
 								Standard.PlaySong(SubMenu.GetIndex(), true);
 							}
 						}
@@ -278,6 +279,7 @@ namespace TestSheet
 							}
 							else
 							{
+								if (Score < 400)
 								GameMode = SubMenu.GetIndex();
 							}
 						}
@@ -349,6 +351,7 @@ namespace TestSheet
 							}
 							else
 							{
+								if (Score < 300)
 								Difficulty = SubMenu.GetIndex();
 							}
 						}
@@ -779,6 +782,8 @@ namespace TestSheet
 								HappyTimer--;
 								NKCell.setSprite("NKCell5_EasterEaster");
 							}
+							if (Score >= 400)
+								NKCell.setSprite("NKCell5_GameEnd");
 							Standard.DrawLight(NKCell, Color.Azure, 0.3f, Standard.LightMode.Vignette);
 							NKCell.Draw();
 							if(Score<10)
@@ -799,6 +804,8 @@ namespace TestSheet
 
 								NKCell.setSprite("CyT3_EasterEaster");
 							}
+							if(Score>=400)
+								NKCell.setSprite("CyT3_GameEnd");
 							NKCell.Draw();
 							Standard.DrawLight(NKCell, Color.Azure, 0.3f, Standard.LightMode.Vignette);
 							if(Score<10)

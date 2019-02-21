@@ -261,6 +261,9 @@ namespace TestSheet
 		{
 			//제외할 컬러들을 선택한다.
 			FadeAnimation_ColorException.Add(Color.LightSeaGreen);
+
+			//미리 계수를 조정하는 것도 가능하다.
+			FadeAnimationList.Add(Color.White, new AnimationList(1/100.0));
 		}
 
 		public static void ClearFadeAnimation()

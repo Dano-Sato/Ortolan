@@ -843,27 +843,59 @@ namespace TestSheet
 			}
 				OldStateOfMouseisOnMenu = MainMenu.Frame.MouseIsOnThis();
 
-			if(Score%30==23|| Score % 30 == 24)
-			{
-				for (int i = 0; i < enemies.Count; i++)
-				{
-					enemies[i].enemy.setSprite("Player_Broken2");
-				}
-			}
-			if(Score%30==25)
-			{
-				for (int i = 0; i < enemies.Count; i++)
-				{
-					enemies[i].enemy.setSprite("Player_V2");
-				}
-			}
-			if(Score%100==87)
-			{
 
-				for (int i = 0; i < enemies.Count; i++)
+			/*스프라이트 바꾸기 장난*/
+
+			if(ScoreStack!=0&&Score>10)
+			{
+				if (Score % 30 == 23 || Score % 30 == 24)
 				{
-					enemies[i].enemy.setSprite("Tip");
+					for (int i = 0; i < enemies.Count; i++)
+					{
+						enemies[i].enemy.setSprite("Player_Broken2");
+					}
 				}
+				else if (Score % 30 == 25)
+				{
+					for (int i = 0; i < enemies.Count; i++)
+					{
+						enemies[i].enemy.setSprite("Player_V2");
+					}
+				}
+				else if (Score % 30 == 22 || Score % 30 == 21)
+				{
+					for (int i = 0; i < enemies.Count; i++)
+					{
+						enemies[i].enemy.setSprite("Player_Broken");
+					}
+				}
+				if (Score % 100 == 87)
+				{
+
+					for (int i = 0; i < enemies.Count; i++)
+					{
+						enemies[i].enemy.setSprite("Tip");
+					}
+				}
+				if (Score % 70 == 9)
+				{
+					for (int i = 0; i < enemies.Count; i++)
+					{
+						enemies[i].enemy.setSprite("Player2");
+						Standard.FadeAnimation(enemies[i].enemy, 30, Color.White);
+					}
+				}
+
+				if(Standard.Random()<0.02)
+				{
+					for (int i = 0; i < enemies.Count; i++)
+					{
+						enemies[i].enemy.setSprite("Cake");
+						Standard.FadeAnimation(enemies[i].enemy, 30, Color.White);
+					}
+				}
+		
+
 			}
 
 			/*시야 처리*/

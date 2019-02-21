@@ -104,10 +104,24 @@ namespace TestSheet
 			if (Standard.IsPrimeNumber(Tester.Score))
 				ScoreColor = Color.Silver;
 			Standard.DrawString("Bigfont", Tester.Score.ToString(), new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), ScoreColor);
-			if(Tester.FreezeTimer>=0&&Tester.FreezeTimer<150)
+			if(Tester.FreezeTimer>=0)
 			{
-				Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 1f, Standard.LightMode.Absolute);
+				if(Tester.FreezeTimer<150)
+				{
+					Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 1f, Standard.LightMode.Absolute);
+				}
+				/*
+				DrawingLayer DeadEnd = new DrawingLayer("DeadEnd2", MasterInfo.FullScreen);
+				GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
+				if (Tester.FreezeTimer<180)
+					DeadEnd.Draw(Color.DarkRed);
+				if (Tester.FreezeTimer < 130)
+					Standard.DrawAddon(DeadEnd, Color.DarkRed, 1f, "DeadEnd3");
+				if (Tester.FreezeTimer < 80)
+					Standard.DrawAddon(DeadEnd, Color.DarkRed, 1f, "DeadEnd1");
+					*/
 			}
+		
 
 			base.Draw(gameTime);
         }

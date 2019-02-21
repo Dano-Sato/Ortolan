@@ -32,7 +32,7 @@ namespace TestSheet
 		{
 			if (GameMode == 0)
 			{
-				player.SetAttackSpeed(8);
+				player.SetAttackSpeed(10);
 				player.setRange(160);
 				player.SetMoveSpeed((8 + ZombieSpeed) / 3);
 				AutoMouse = false;
@@ -124,6 +124,7 @@ namespace TestSheet
 		public static Point OldPlayerDisplacementVector;
 
 		public static int FreezeTimer = -1;
+		public static int HappyTimer = 0;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -772,25 +773,42 @@ namespace TestSheet
 							Standard.DrawString("Model :" + SubMenu.MenuStringList[GameMode] , new Vector2(300,200), Color.White);
 						if(GameMode==0)
 						{
-							DrawingLayer NKCell = new DrawingLayer("NKCell5", new Rectangle(750,100,350,700));
+							DrawingLayer NKCell = new DrawingLayer(Score<10?"NKCell5":"NKCell5_Easter2", new Rectangle(750,50,420,700));
+							if(Score>=10&&(HappyTimer>0||NKCell.GetBound().Contains(player.GetCenter())))
+							{
+								HappyTimer--;
+								NKCell.setSprite("NKCell5_EasterEaster");
+							}
 							Standard.DrawLight(NKCell, Color.Azure, 0.3f, Standard.LightMode.Vignette);
 							NKCell.Draw();
-						
-							Standard.DrawString("* Has short range", new Vector2(500, 500), Color.Red);
-							Standard.DrawString("* Has firearm recoil", new Vector2(400, 550), Color.Red);
-							Standard.DrawString("* Walker", new Vector2(300, 600), Color.Red);
-							Standard.DrawString("* Natural Killer Cell : Induces osmotic cell lysis", new Vector2(330, 450), Color.Red);
+							if(Score<10)
+							{
+								Standard.DrawString("* Has short range", new Vector2(500, 500), Color.Red);
+								Standard.DrawString("* Has firearm recoil", new Vector2(400, 550), Color.Red);
+								Standard.DrawString("* Walker", new Vector2(300, 600), Color.Red);
+								Standard.DrawString("* Natural Killer Cell : Induces osmotic cell lysis", new Vector2(330, 450), Color.Red);
+
+							}
 						}
 						else if(GameMode==1)
 						{
-							DrawingLayer NKCell = new DrawingLayer("CyT3", new Rectangle(750, 100, 350, 700));
+							DrawingLayer NKCell = new DrawingLayer(Score<10?"CyT3":"CyT3_Easter", new Rectangle(750, 50, 420, 700));
+							if (Score >= 10 && (HappyTimer > 0 || NKCell.GetBound().Contains(player.GetCenter())))
+							{
+								HappyTimer--;
+
+								NKCell.setSprite("CyT3_EasterEaster");
+							}
 							NKCell.Draw();
 							Standard.DrawLight(NKCell, Color.Azure, 0.3f, Standard.LightMode.Vignette);
+							if(Score<10)
+							{
+								Standard.DrawString("* Has Extremely short range", new Vector2(500, 500), Color.Red);
+								Standard.DrawString("* Has attack-boost", new Vector2(400, 550), Color.Red);
+								Standard.DrawString("* Sprinter", new Vector2(300, 600), Color.Red);
+								Standard.DrawString("* Cytotoxic T Cell : Induces cell apoptosis", new Vector2(330, 450), Color.Red);
 
-							Standard.DrawString("* Has Extremely short range", new Vector2(500, 500), Color.Red);
-							Standard.DrawString("* Has attack-boost", new Vector2(400, 550), Color.Red);
-							Standard.DrawString("* Sprinter", new Vector2(300, 600), Color.Red);
-							Standard.DrawString("* Cytotoxic T Cell : Induces cell apoptosis", new Vector2(330, 450), Color.Red);
+							}
 						}
 						break;
 
@@ -1154,6 +1172,8 @@ namespace TestSheet
 				{
 					if(AttackTimer==AttackSpeed)
 					{
+						if(Score>=10)
+						HappyTimer += 17;
 						if (Score < 10)
 							Standard.PlaySound("EnemyDead");
 						else if(GameMode==0)

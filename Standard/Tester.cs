@@ -886,7 +886,7 @@ namespace TestSheet
 					}
 				}
 
-				if(Standard.Random()<0.02)
+				if(Standard.Random()<0.008)
 				{
 					for (int i = 0; i < enemies.Count; i++)
 					{

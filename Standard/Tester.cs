@@ -32,7 +32,7 @@ namespace TestSheet
 		{
 			if (GameMode == 0)
 			{
-				player.SetAttackSpeed(10);
+				player.SetAttackSpeed(9);
 				player.setRange(160);
 				player.SetMoveSpeed((8 + ZombieSpeed) / 3);
 				AutoMouse = false;
@@ -81,6 +81,8 @@ namespace TestSheet
 			GameOver = false;
 			GameEnd = false;
 			ZombieDance = false;
+
+			MenuPositionCoefficient = 0;
 		}
 		
 
@@ -125,6 +127,9 @@ namespace TestSheet
 
 		public static int FreezeTimer = -1;
 		public static int HappyTimer = 0;
+		public static int MenuPositionCoefficient = 0;
+		public static bool MenuFlip = false;
+		public static int MenuMoveCounter = 0;
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -467,7 +472,8 @@ namespace TestSheet
 			{
 				if (Standard.FrameTimer % ZombieTime == 0)
 				{
-					enemies.Add(new Enemy());
+					if(!(Score<10&&enemies.Count>10))
+						enemies.Add(new Enemy());
 					if (enemies.Count > 150&&!player.IsAttacking())
 						enemies.RemoveAt(0);
 				}
@@ -516,16 +522,36 @@ namespace TestSheet
 
 			/*메인메뉴 클릭 처리*/
 			MainMenu.Update();
+			if(ScoreStack!=0)
+			{
+				if(MenuFlip)
+				{
+					MenuMoveCounter++;
+				}
+				if(MenuMoveCounter==2)
+				{
+					if (MenuPositionCoefficient == -300)
+						MenuPositionCoefficient = 130;
+					else
+						MenuPositionCoefficient = -300;
+					MenuMoveCounter = 0;
+				}
+				MenuFlip = false;
+			}
+			else
+			{
+				MenuFlip = true;
+			}
 			if (MainMenu.MouseIsOnFrame())
 			{
-				MainMenu.MoveTo(-110, 300, 20);
-				if(MainMenu.GetIndex()!=-1)//실험중.Score<10&&이라는조건뺌
+					MainMenu.MoveTo(-50, 300+MenuPositionCoefficient, 20);
+				if (MainMenu.GetIndex()!=-1)//실험중.Score<10&&이라는조
 				{
 					if (MainMenu.MenuStringList[MainMenu.GetIndex()] == "EXIT")//Exit 위에 마우스가 올라가면 메뉴가 덜덜 떤다.ㅋ
 					{
 						MainMenu.MenuList[MainMenu.GetIndex()].drawingLayer.MoveByVector(new Point(Standard.Random(1, 3), Standard.Random(1, 3)), Standard.Random(1,10));
 					}
-					if (Standard.cursor.didPlayerJustLeftClick() || Standard.JustPressed(Keys.A))
+					if (Standard.cursor.didPlayerJustLeftClick())
 					{
 						if (MainMenu.MenuStringList[MainMenu.GetIndex()] == "EXIT")
 						{
@@ -540,25 +566,22 @@ namespace TestSheet
 			}
 			else
 			{
-				MainMenu.MoveTo(-250, 300, 20);
+				MainMenu.MoveTo(-200, 300 + MenuPositionCoefficient, 20);
 				UsePianoTimer = 0;
 			}
 			if (player.getPos().X < -40)
 				player.setPos(-40, player.getPos().Y);
 
 			//메인 메뉴 위로는 좀비들이 오지 못한다.
-			if (MainMenu.MouseIsOnFrame())
+			if (MainMenu.MouseIsOnFrame()||true)
 			{
 				if (Score >= 10)
 					for (int i = 0; i < enemies.Count; i++)
 					{
 						if (MainMenu.Frame.GetBound().Contains(enemies[i].getCenter()))
 						{
-							enemies[i].enemy.MoveByVector(new Point(1, 0), 20);
-							if (ZombieSpeed < 9)
-								MainMenu.Frame.MoveByVector(new Point(-1, 0), 37 - ZombieSpeed * 3/*Math.Max(1,25-ZombieSpeed*3+UsePianoTimer*7)*/);
-							else
-								MainMenu.Frame.MoveByVector(new Point(-1, 0), Math.Max(13, 25 - ZombieSpeed * 3 + UsePianoTimer * 7));
+							enemies[i].enemy.MoveByVector(new Point(1, 0), 20 + ZombieSpeed);
+							MainMenu.Frame.MoveByVector(new Point(-1, 0), 18);
 						}
 					}
 			}
@@ -627,7 +650,7 @@ namespace TestSheet
 
 			if(Standard.Random()<0.05)
 			{
-				Standard.FadeAnimation(new DrawingLayer("Rhythm2", new Rectangle(Standard.Random(0, 100), Standard.Random(200,600), 40, 80)), 15, Color.Black);
+				Standard.FadeAnimation(new DrawingLayer("Rhythm2", new Rectangle(Standard.Random(0, 100), Standard.Random(200,600)+MenuPositionCoefficient, 40, 80)), 15, Color.Black);
 			}
 
 
@@ -762,6 +785,8 @@ namespace TestSheet
 				}
 			}
 
+			if (HappyTimer > 0)
+				HappyTimer--;
 			
 			if (MainMenuIndex != -1&&SubMenu!= null&&SubMenu.MenuList.Count > 0)//실험중. Score < 10 && 파트 뺌
 			{
@@ -779,7 +804,6 @@ namespace TestSheet
 							DrawingLayer NKCell = new DrawingLayer(Score<10?"NKCell5":"NKCell5_Easter2", new Rectangle(750,50,420,700));
 							if(Score>=10&&(HappyTimer>0||NKCell.GetBound().Contains(player.GetCenter())))
 							{
-								HappyTimer--;
 								NKCell.setSprite("NKCell5_EasterEaster");
 							}
 							if (Score >= 400)
@@ -800,8 +824,7 @@ namespace TestSheet
 							DrawingLayer NKCell = new DrawingLayer(Score<10?"CyT3":"CyT3_Easter", new Rectangle(750, 50, 420, 700));
 							if (Score >= 10 && (HappyTimer > 0 || NKCell.GetBound().Contains(player.GetCenter())))
 							{
-								HappyTimer--;
-
+				
 								NKCell.setSprite("CyT3_EasterEaster");
 							}
 							if(Score>=400)

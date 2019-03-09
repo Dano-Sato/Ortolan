@@ -130,6 +130,9 @@ namespace TestSheet
 		public static int MenuPositionCoefficient = 0;
 		public static bool MenuFlip = false;
 		public static int MenuMoveCounter = 0;
+
+		public static bool ZombieFlip = true;
+		public static Point Wind = new Point(0, 1);
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -530,10 +533,12 @@ namespace TestSheet
 				}
 				if(MenuMoveCounter==2)
 				{
+					/*
 					if (MenuPositionCoefficient == -300)
 						MenuPositionCoefficient = 130;
 					else
 						MenuPositionCoefficient = -300;
+						*/
 					MenuMoveCounter = 0;
 				}
 				MenuFlip = false;
@@ -670,10 +675,13 @@ namespace TestSheet
 				Standard.DrawString("Thank you for playing!", new Vector2(500, 500), Color.Aquamarine);
 				return;
 			}
-			BloodLayer.Draw(Color.LightSeaGreen,Math.Min(10,Score)*0.1f);
+			BloodLayer.Draw(Color.Aquamarine,Math.Min(10,Score)*0.1f);
 			for(int i=0;i<DeadBodys.Count;i++)
 			{
-				DeadBodys[i].Draw(Color.LightSeaGreen, Math.Min(10, Score) * 0.1f);
+				DeadBodys[i].MoveByVector(Wind, ZombieSpeed);
+				if (DeadBodys[i].GetPosition().Y > 1300)
+					DeadBodys[i].setPosition(DeadBodys[i].GetPosition().X, 0);
+				DeadBodys[i].Draw(Color.Aquamarine, Math.Min(10, Score) * 0.1f);
 			}
 			MouseLogo.Draw();
 			if(!AutoMouse)
@@ -801,6 +809,7 @@ namespace TestSheet
 							Standard.DrawString("Model :" + SubMenu.MenuStringList[GameMode] , new Vector2(300,200), Color.White);
 						if(GameMode==0)
 						{
+
 							DrawingLayer NKCell = new DrawingLayer(Score<10?"NKCell5":"NKCell5_Easter2", new Rectangle(750,50,420,700));
 							if(Score>=10&&(HappyTimer>0||NKCell.GetBound().Contains(player.GetCenter())))
 							{
@@ -1048,6 +1057,16 @@ namespace TestSheet
 				return AttackIndex;
 			}
 
+			public int getAttackTimer()
+			{
+				return AttackTimer;
+			}
+
+			public int getAttackSpeed()
+			{
+				return AttackSpeed;
+			}
+
 			public Point getPos()
 			{
 				return player.GetPosition();
@@ -1202,6 +1221,7 @@ namespace TestSheet
 				{
 					if(AttackTimer==AttackSpeed)
 					{
+						//ZombieFlip = !ZombieFlip;
 						if(Score>=10)
 						HappyTimer += 17;
 						if (Score < 10)
@@ -1362,16 +1382,49 @@ namespace TestSheet
 					return;
 				}
 
-				enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, ZombieSpeed);
-				if(Standard.FrameTimer%30<15)
-				{
-					enemy.MoveTo(player.getPos().X, player.getPos().Y, 3);
-					enemy.MoveByVector(new Point(1, 0), 2);
-				}
+				if(GameMode==0)
+					enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, ZombieSpeed*3/4);
 				else
+					enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, ZombieSpeed);
+
+				if (player.getAttackTimer()!=0&&GameMode==0)
 				{
-					enemy.MoveTo(player.getPos().X, player.getPos().Y, -3-ZombieSpeed/3);
-					enemy.MoveByVector(new Point(-1, 0), 2);
+					int FlipSpeed = 10;
+
+					if (ZombieFlip)
+					{
+						if (/*Standard.FrameTimer%30<15*/player.getAttackTimer() < player.getAttackSpeed() / 2)
+						{
+							enemy.MoveTo(player.getPos().X, player.getPos().Y, -FlipSpeed);
+							//enemy.MoveByVector(new Point(1, 0), 2);
+						}
+						else
+						{
+							/*
+							enemy.MoveTo(player.getPos().X, player.getPos().Y, -3 - ZombieSpeed / 3);
+							enemy.MoveByVector(new Point(-1, 0), 2);
+							*/
+							enemy.MoveTo(player.getPos().X, player.getPos().Y, FlipSpeed);
+							//enemy.MoveByVector(new Point(1, 0), 2);
+						}
+					}
+					else
+					{
+						if (/*Standard.FrameTimer%30<15*/player.getAttackTimer() < player.getAttackSpeed() / 2)
+						{
+							enemy.MoveTo(player.getPos().X, player.getPos().Y, FlipSpeed);
+							//enemy.MoveByVector(new Point(1, 0), 2);
+						}
+						else
+						{
+							/*
+							enemy.MoveTo(player.getPos().X, player.getPos().Y, -3 - ZombieSpeed / 3);
+							enemy.MoveByVector(new Point(-1, 0), 2);
+							*/
+							enemy.MoveTo(player.getPos().X, player.getPos().Y, -FlipSpeed);
+							//enemy.MoveByVector(new Point(1, 0), 2);
+						}
+					}
 				}
 
 				if ((Standard.Distance(player.getPos(), getPos())) <= 10 && Index != player.getAttackIndex())

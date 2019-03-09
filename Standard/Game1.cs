@@ -96,7 +96,7 @@ namespace TestSheet
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
-			Standard.DrawLight(MasterInfo.FullScreen, Color.Aquamarine, 1f, Standard.LightMode.Absolute);
+			Standard.DrawLight(MasterInfo.FullScreen, Color.LightSeaGreen, 1f, Standard.LightMode.Absolute);
 			// TODO: Add your drawing code here
 			tester.Draw();
 			Standard.Draw();

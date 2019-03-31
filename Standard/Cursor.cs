@@ -21,30 +21,43 @@ namespace TestSheet
 	public class Cursor
 	{
 		public static readonly int MouseSize = 20;
-		public static Texture2D TestTexture = Game1.content.Load<Texture2D>("Cursor");
-		private Point mousePos = new Point();
-		private MouseState OldMouseState;
-
+		private DrawingLayer mouseLayer = new DrawingLayer("Cursor", new Rectangle(400, 400, MouseSize, MouseSize));
+		private Vector2 MouseLeftOverPosition = new Vector2(0, 0);
+		private MouseState OldMouseState = Mouse.GetState();
+		private DrawingLayer DraggingLayer = new DrawingLayer("WhiteSpace", new Rectangle(0, 0, 0, 0));
+		public float Sensitivity = 1.5f;
 
 		public void SetSprite(string s)
 		{
-			TestTexture = Game1.content.Load<Texture2D>(s);
+			mouseLayer.setSprite(s);
 		}
 		public Point getPos()
 		{
-			return mousePos;
+			return mouseLayer.GetPosition();
+		}
+
+		public void setPos(int x, int y)
+		{
+			mouseLayer.setPosition(x, y);
 		}
 
 		public void OldStateUpdate()//클릭 처리 마지막에 행사되어야 OldMouseState가 보존된다.
 		{
+			if (Sensitivity < 0.3f)
+				Sensitivity = 0.3f;
+			Vector2 RealMousePos = new Vector2(OldMouseState.Position.X + MouseLeftOverPosition.X, OldMouseState.Position.Y + MouseLeftOverPosition.Y);
+			float X = (Mouse.GetState().Position.X - RealMousePos.X) * Sensitivity+(Game1.graphics.GraphicsDevice.Viewport.X-Standard.Viewport.X)/2;
+			float Y = (Mouse.GetState().Position.Y - RealMousePos.Y) * Sensitivity + (Game1.graphics.GraphicsDevice.Viewport.Y - Standard.Viewport.Y) / 2;
+			mouseLayer.setPosition(Standard.Add(mouseLayer.GetPosition(), new Point((int)X, (int)Y)));
+			mouseLayer.setPosition(mouseLayer.GetPosition().X, mouseLayer.GetPosition().Y);
+			MouseLeftOverPosition = new Vector2(X - (int)X, Y - (int)Y);
+			if (Standard.FrameTimer % 3 == 0)
+				Mouse.SetPosition(400, 400);
 			OldMouseState = Mouse.GetState();
-			mousePos = new Point(OldMouseState.X-Standard.Viewport.X/2, OldMouseState.Y - Standard.Viewport.Y/2);
 		}
 		public void Draw()
 		{
-			Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend);
-			Game1.spriteBatch.Draw(TestTexture, new Rectangle(mousePos.X, mousePos.Y, MouseSize, MouseSize), Color.White);
-			Game1.spriteBatch.End();
+			mouseLayer.Draw();
 		}
 		// 반드시 MouseUpdate()이전에 쓰여야 함. 그래야 올드스테이트와 현재스테이트가 구분이 된다.
 		public bool didPlayerJustLeftClick()//플레이어가 막 레프트클릭을 했는지 확인하는 부울함수. 스태틱함수. 

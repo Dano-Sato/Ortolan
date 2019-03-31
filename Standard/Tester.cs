@@ -1001,7 +1001,7 @@ namespace TestSheet
 
 			if (GameStart)
 			{
-				Mouse.SetPosition(450, 480);
+				Standard.cursor.setPos(450, 480);
 				player.setPos(450,480);
 				GameStart = false;
 			}
@@ -1053,8 +1053,10 @@ namespace TestSheet
 
 			public void reset()
 			{
-				Mouse.SetPosition(450, 480);
+				Standard.cursor.setPos(450, 480);
 				setPos(450, 480);
+				Standard.Viewport = new Viewport(-getPos().X  + 400, -getPos().Y +  400, 1300, 1300);
+				Game1.graphics.GraphicsDevice.Viewport = Standard.Viewport;
 				MovePoint = new Point(0, 0);
 				AttackTimer = 0;
 				AttackIndex = -1;

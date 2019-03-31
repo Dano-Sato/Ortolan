@@ -17,7 +17,7 @@ namespace TestSheet
     /// </summary>
     public class Game1 : Game
     {
-        GraphicsDeviceManager graphics;
+        public static GraphicsDeviceManager graphics;
 
 		//Static 삼형제
 		public static SpriteBatch spriteBatch;

@@ -96,7 +96,8 @@ namespace TestSheet
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
-			Standard.DrawLight(MasterInfo.FullScreen, Color.LightSeaGreen, 1f, Standard.LightMode.Absolute);
+			if(Tester.Score<200)
+				Standard.DrawLight(MasterInfo.FullScreen, Color.LightSeaGreen, Math.Max(0f,(float)(1-Tester.Score/200.0)), Standard.LightMode.Absolute);
 			// TODO: Add your drawing code here
 			tester.Draw();
 			Standard.Draw();
@@ -121,9 +122,8 @@ namespace TestSheet
 					Standard.DrawAddon(DeadEnd, Color.DarkRed, 1f, "DeadEnd1");
 					*/
 			}
-		
-
+	
 			base.Draw(gameTime);
-        }
+        }	
     }
 }

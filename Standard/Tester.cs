@@ -32,15 +32,15 @@ namespace TestSheet
 		{
 			if (GameMode == 0)
 			{
-				player.SetAttackSpeed(9);
-				player.setRange(160);
+				player.SetAttackSpeed(10);
+				player.setRange(150 + Difficulty * 10);
 				player.SetMoveSpeed((8 + ZombieSpeed) / 3);
 				AutoMouse = false;
 			}
 			else if (GameMode == 1)
 			{
 				player.SetAttackSpeed(15);
-				player.setRange(130);
+				player.setRange(140+Difficulty*10);
 				player.SetMoveSpeed((7 + ZombieSpeed) / 3);
 				AutoMouse = true;
 			}
@@ -1005,7 +1005,7 @@ namespace TestSheet
 			private int AttackTimer = 0;
 			private int AttackIndex = -1;
 			private bool isAttacking=false;
-
+			private Point ShotPoint=new Point();
 
 			public void SetMoveSpeed(int s)
 			{
@@ -1132,9 +1132,9 @@ namespace TestSheet
 							if (Score >= 10)
 							{
 								if (AttackTimer < 3)
-									player.MoveTo(enemies[AttackIndex].getCenter().X, enemies[AttackIndex].getCenter().Y, AttackTimer * 5);
+									player.MoveTo(ShotPoint.X, ShotPoint.Y, AttackTimer * 5);
 								else
-									player.MoveTo(enemies[AttackIndex].getCenter().X, enemies[AttackIndex].getCenter().Y, -AttackTimer * (MoveSpeed/2));
+									player.MoveTo(ShotPoint.X, ShotPoint.Y, -AttackTimer * (MoveSpeed/2));
 
 							}
 						}
@@ -1221,6 +1221,7 @@ namespace TestSheet
 				{
 					if(AttackTimer==AttackSpeed)
 					{
+						ShotPoint = enemies[AttackIndex].getPos();
 						//ZombieFlip = !ZombieFlip;
 						if(Score>=10)
 						HappyTimer += 17;

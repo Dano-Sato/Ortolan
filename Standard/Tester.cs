@@ -113,7 +113,7 @@ namespace TestSheet
 		public static int MainMenuIndex = -1;
 		public EasyMenu SubMenu=new EasyMenu();
 		public static bool SubMenuIsMade = false;
-		public static int GameMode = 0;//ShutGun Mode;
+		public static int GameMode = 1;//ShutGun Mode;
 		public static int ZombieSpeed = 5;
 		public static bool CursorShouldBeSword = false;
 		public static int UsePianoTimer = 0;
@@ -133,6 +133,8 @@ namespace TestSheet
 
 		public static bool ZombieFlip = true;
 		public static Point Wind = new Point(0, 1);
+		public static bool GameStart = true;
+		public static Point ZombieCOM = new Point(0, 0);
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -158,6 +160,7 @@ namespace TestSheet
 			SetZombieSpeed();
 			SetPlayer();
 
+			
 
 			if (GameEnd)
 			{
@@ -450,7 +453,15 @@ namespace TestSheet
 			{
 				RandomInts.Add(Standard.Random(-300, 300));
 			}
-			int j = 0 ;
+			int j = 0;
+			for(int i=0;i<enemies.Count;i++)
+			{
+				if(i==0)
+				ZombieCOM = new Point(0, 0);
+				ZombieCOM = Standard.Add(ZombieCOM, enemies[i].getCenter());
+			}
+			if(enemies.Count>0)
+			ZombieCOM = new Point(ZombieCOM.X / enemies.Count, ZombieCOM.Y / enemies.Count);
 			for (int i = 0; i < enemies.Count; i++)
 			{
 				if (j >= 14)
@@ -469,7 +480,10 @@ namespace TestSheet
 
 			/*좀비 생성 작업*/
 
-			ZombieTime = 40 - Score/10;//좀비 생성 시간은 스코어가 높을수록 빨라진다.
+			if (Score < 100)
+				ZombieTime = 10 - Score / 10;//좀비 생성 시간은 스코어가 높을수록 빨라진다.
+			else
+				ZombieTime = 1;
 		
 			if(ZombieTime>0)
 			{
@@ -985,7 +999,12 @@ namespace TestSheet
 			if(FreezeTimer>0)
 				Standard.ClearFadeAnimation();
 
-		
+			if (GameStart)
+			{
+				Mouse.SetPosition(450, 480);
+				player.setPos(450,480);
+				GameStart = false;
+			}
 
 		}
 
@@ -1034,7 +1053,8 @@ namespace TestSheet
 
 			public void reset()
 			{
-				player.MoveTo(400, 400);
+				Mouse.SetPosition(450, 480);
+				setPos(450, 480);
 				MovePoint = new Point(0, 0);
 				AttackTimer = 0;
 				AttackIndex = -1;
@@ -1388,6 +1408,7 @@ namespace TestSheet
 				else
 					enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, ZombieSpeed);
 
+				enemy.MoveTo(ZombieCOM.X, ZombieCOM.Y, -1);
 				if (player.getAttackTimer()!=0&&GameMode==0)
 				{
 					int FlipSpeed = 10;

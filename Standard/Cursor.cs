@@ -25,7 +25,7 @@ namespace TestSheet
 		private Vector2 MouseLeftOverPosition = new Vector2(0, 0);
 		private MouseState OldMouseState = Mouse.GetState();
 		private DrawingLayer DraggingLayer = new DrawingLayer("WhiteSpace", new Rectangle(0, 0, 0, 0));
-		public float Sensitivity = 1.5f;
+		public float Sensitivity = 1.0f;
 
 		public void SetSprite(string s)
 		{
@@ -46,13 +46,19 @@ namespace TestSheet
 			if (Sensitivity < 0.3f)
 				Sensitivity = 0.3f;
 			Vector2 RealMousePos = new Vector2(OldMouseState.Position.X + MouseLeftOverPosition.X, OldMouseState.Position.Y + MouseLeftOverPosition.Y);
-			float X = (Mouse.GetState().Position.X - RealMousePos.X) * Sensitivity+(Game1.graphics.GraphicsDevice.Viewport.X-Standard.Viewport.X)/2;
+			float X = (Mouse.GetState().Position.X - RealMousePos.X) * Sensitivity + (Game1.graphics.GraphicsDevice.Viewport.X-Standard.Viewport.X)/2;
 			float Y = (Mouse.GetState().Position.Y - RealMousePos.Y) * Sensitivity + (Game1.graphics.GraphicsDevice.Viewport.Y - Standard.Viewport.Y) / 2;
 			mouseLayer.setPosition(Standard.Add(mouseLayer.GetPosition(), new Point((int)X, (int)Y)));
 			mouseLayer.setPosition(mouseLayer.GetPosition().X, mouseLayer.GetPosition().Y);
 			MouseLeftOverPosition = new Vector2(X - (int)X, Y - (int)Y);
+			
 			if (Standard.FrameTimer % 3 == 0)
-				Mouse.SetPosition(400, 400);
+			{
+				Mouse.WindowHandle = Game1.Handler;
+				Mouse.SetPosition(400,400);
+			}
+			
+			
 			OldMouseState = Mouse.GetState();
 		}
 		public void Draw()
@@ -84,6 +90,25 @@ namespace TestSheet
 			return (Mouse.GetState().LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed);
 		}
 
+
+		public bool IsDragging(DrawingLayer s)
+		{
+			if (didPlayerJustLeftClick()&&s.MouseIsOnThis())
+			{
+				DraggingLayer = s;
+			}
+
+			if (DraggingLayer.Equals(s))
+			{
+				if (!IsPlayerLeftClickingNow())
+					DraggingLayer = new DrawingLayer("WhiteSpace", new Rectangle(0, 0, 0, 0));
+
+			}
+			if (DraggingLayer == s)
+				return true;
+			else
+				return false;
+		}
 
 
 	}

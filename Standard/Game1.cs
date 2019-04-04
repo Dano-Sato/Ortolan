@@ -26,6 +26,8 @@ namespace TestSheet
 
 		public static bool GameExit = false;
 
+		public static IntPtr Handler = new IntPtr();
+
 	
 		public Game1()
         {
@@ -86,8 +88,10 @@ namespace TestSheet
 			tester.Update();		
 			Standard.Update();
 			GraphicsDevice.Viewport = Standard.Viewport;
+			Handler = Window.Handle;
 			base.Update(gameTime);
-        }
+		
+		}
 
         /// <summary>
         /// This is called when the game should draw itself.

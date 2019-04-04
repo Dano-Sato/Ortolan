@@ -135,6 +135,12 @@ namespace TestSheet
 		public static Point Wind = new Point(0, 1);
 		public static bool GameStart = true;
 		public static Point ZombieCOM = new Point(0, 0);
+
+		public static bool ShowMenu = false;
+		public static DrawingLayer MenuLayer=new DrawingLayer("WhiteSpace", new Rectangle(100,50,1000,700));
+		public static ScrollBar ScrollBar_Sensitivity = new ScrollBar(new DrawingLayer("BarFrame2",new Rectangle(200,150,500,50)), "Bar2", 50, false);
+		public static ScrollBar ScrollBar_SongVolume = new ScrollBar(new DrawingLayer("BarFrame2", new Rectangle(200, 220, 500, 50)), "Bar2", 50, false);
+
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -147,6 +153,7 @@ namespace TestSheet
 				"TIPS",
 				"SETTING",
 				"EXIT" },new Rectangle(0,0,300,370),new Rectangle(0,0,200,50),new Point(80,20),new Point(0,70));
+			ScrollBar_Sensitivity.Initialize(1.0f / (2.0f - 0.3f));
 
 		}
 		//Game1.Class 내에 Tester.Update()로 추가될 업데이트문입니다. 다양한 업데이트 처리를 시험할 수 있습니다.
@@ -205,9 +212,12 @@ namespace TestSheet
 			else
 				Standard.cursor.SetSprite("Cursor");
 
-			player.MoveUpdate();
-			Halo.setPosition(player.getPos().X - 40 + Standard.Random(-3, 3), player.getPos().Y - 40 + Standard.Random(-3, 3));
-			player.AttackUpdate();
+			if(!ShowMenu)
+			{
+				player.MoveUpdate();
+				Halo.setPosition(player.getPos().X - 40 + Standard.Random(-3, 3), player.getPos().Y - 40 + Standard.Random(-3, 3));
+				player.AttackUpdate();
+			}
 
 			if (Score == 10)
 			{
@@ -380,6 +390,8 @@ namespace TestSheet
 				if(Standard.IsKeyDown(Keys.OemTilde))
 				{
 					BaseVolume = 0f;
+					Standard.SetSEVolume(0f);
+	
 				}
 				if (Standard.IsKeyDown(Keys.D1))
 				{
@@ -443,7 +455,21 @@ namespace TestSheet
 				{
 					Score = 10;
 				}
+				if(Standard.JustPressed(Keys.Escape))
+				{
+					ShowMenu = !ShowMenu;
+				}
 
+			}
+
+			if(ShowMenu)
+			{
+				
+				ScrollBar_Sensitivity.Update();
+				ScrollBar_SongVolume.Update();
+				Standard.cursor.Sensitivity = ScrollBar_Sensitivity.MapCoefficient(0.5f, 2.0f);
+				Standard.SetSongVolume(ScrollBar_SongVolume.Coefficient);
+				return;
 			}
 
 			/*좀비들의 이동 처리.*/
@@ -481,9 +507,9 @@ namespace TestSheet
 			/*좀비 생성 작업*/
 
 			if (Score < 100)
-				ZombieTime = 10 - Score / 10;//좀비 생성 시간은 스코어가 높을수록 빨라진다.
+				ZombieTime = Math.Max(10 - Score / 10,4);//좀비 생성 시간은 스코어가 높을수록 빨라진다.
 			else
-				ZombieTime = 1;
+				ZombieTime = 4;
 		
 			if(ZombieTime>0)
 			{
@@ -1006,6 +1032,19 @@ namespace TestSheet
 				GameStart = false;
 			}
 
+			if(ShowMenu)
+			{
+				Standard.Viewport = new Viewport(MasterInfo.FullScreen);
+				MenuLayer.Draw(Color.Black * 0.7f);
+				Standard.DrawString("Mouse Sensitivity", new Vector2(ScrollBar_Sensitivity.Frame.GetPosition().X, ScrollBar_Sensitivity.Frame.GetPosition().Y - 20), Color.White);
+				ScrollBar_Sensitivity.Draw();
+				Standard.DrawString(String.Format("{0:0.0}", (ScrollBar_Sensitivity.MapCoefficient(0.3f, 2.0f))), new Vector2(ScrollBar_Sensitivity.Frame.GetPosition().X + 500, ScrollBar_Sensitivity.Frame.GetPosition().Y), Color.White);
+				Standard.DrawString("(Default:1.0)", new Vector2(ScrollBar_Sensitivity.Frame.GetPosition().X + 500, ScrollBar_Sensitivity.Frame.GetPosition().Y+20), Color.White);
+				ScrollBar_SongVolume.Draw();
+				Standard.DrawString("Song Volume", new Vector2(ScrollBar_SongVolume.Frame.GetPosition().X, ScrollBar_SongVolume.Frame.GetPosition().Y - 20), Color.White);
+
+			}
+
 		}
 
 		public int MenuLightR = 0;
@@ -1410,7 +1449,7 @@ namespace TestSheet
 				else
 					enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, ZombieSpeed);
 
-				enemy.MoveTo(ZombieCOM.X, ZombieCOM.Y, -1);
+				enemy.MoveTo(ZombieCOM.X, ZombieCOM.Y, -ZombieSpeed/3);
 				if (player.getAttackTimer()!=0&&GameMode==0)
 				{
 					int FlipSpeed = 10;

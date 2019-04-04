@@ -150,5 +150,90 @@ namespace TestSheet
 
 	}
 
+	public class ScrollBar
+	{
+		public DrawingLayer Frame;
+		public DrawingLayer Bar;
+		public bool isVertical = false;
+		public int Interval;
+		public float Coefficient=0;
+		public ScrollBar(DrawingLayer frame,string BarSpriteName, int BarSize, bool is_vertical)
+		{
+			Frame = frame;
+			isVertical = is_vertical;
+			if (isVertical)
+				Interval = Frame.GetBound().Height - BarSize;
+			else
+				Interval = Frame.GetBound().Width - BarSize;
 
+			if (is_vertical)
+			{
+				Bar = new DrawingLayer(BarSpriteName, new Rectangle(Frame.GetPosition(), new Point(Frame.GetBound().Width, BarSize)));
+			}
+			else
+			{
+				Bar = new DrawingLayer(BarSpriteName, new Rectangle(Frame.GetPosition().X + Interval,Frame.GetPosition().Y,BarSize,Frame.GetBound().Height));
+			}
+		}
+		public void Update()
+		{
+
+			//마우스 입력 처리
+			if (Standard.cursor.IsDragging(Bar)||(Standard.cursor.didPlayerJustLeftClick() && Frame.MouseIsOnThis()))
+			{
+				if (isVertical)
+				{
+					Bar.SetCenter(new Point(Bar.GetPosition().X, Standard.cursor.getPos().Y));
+				}
+				else
+					Bar.SetCenter(new Point(Standard.cursor.getPos().X, Bar.GetPosition().Y));
+			}
+
+			//바가 범위를 벗어나지 않도록 조정.
+			if (isVertical)
+			{
+				if (Bar.GetPosition().Y < Frame.GetPosition().Y)
+					Bar.setPosition(Frame.GetPosition());
+				if (Bar.GetPosition().Y > Frame.GetPosition().Y + Interval)
+					Bar.setPosition(Bar.GetPosition().X, Frame.GetPosition().Y + Interval);
+				Bar.setPosition(Frame.GetPosition().X, Bar.GetPosition().Y);
+			}
+			else
+			{
+				if (Bar.GetPosition().X < Frame.GetPosition().X)
+					Bar.setPosition(Frame.GetPosition());
+				if (Bar.GetPosition().X > Frame.GetPosition().X + Interval)
+					Bar.setPosition(Frame.GetPosition().X + Interval, Bar.GetPosition().Y );
+				Bar.setPosition(Bar.GetPosition().X, Frame.GetPosition().Y);
+			}
+
+			//계수조정.
+			if (isVertical)
+				Coefficient = 1 - (Bar.GetPosition().Y - Frame.GetPosition().Y) / (float)Interval;
+			else
+				Coefficient = (Bar.GetPosition().X - Frame.GetPosition().X) / (float)Interval;
+		}
+
+		public void Draw()
+		{
+			Frame.Draw();
+			Bar.Draw();
+		}
+
+		public void Initialize(float initCoefficient)
+		{
+			Coefficient = initCoefficient;
+			if (isVertical)
+				Bar.setPosition(0, (int)((1.0f - Coefficient) * Interval + Frame.GetPosition().Y));
+			else
+				Bar.setPosition((int)((1.0f - Coefficient) * Interval + Frame.GetPosition().X), 0);
+		}
+
+		public float MapCoefficient(float From, float To)
+		{
+			return Coefficient * (To - From) + From;
+		}
+
+
+	}
 }

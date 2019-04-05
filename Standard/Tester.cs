@@ -140,6 +140,7 @@ namespace TestSheet
 		public static DrawingLayer MenuLayer=new DrawingLayer("WhiteSpace", new Rectangle(100,50,1000,700));
 		public static ScrollBar ScrollBar_Sensitivity = new ScrollBar(new DrawingLayer("BarFrame2",new Rectangle(200,150,500,50)), "Bar2", 50, false);
 		public static ScrollBar ScrollBar_SongVolume = new ScrollBar(new DrawingLayer("BarFrame2", new Rectangle(200, 220, 500, 50)), "Bar2", 50, false);
+		public static ScrollBar ScrollBar_SEVolume= new ScrollBar(new DrawingLayer("BarFrame2", new Rectangle(200, 290, 500, 50)), "Bar2", 50, false);
 
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
@@ -387,56 +388,6 @@ namespace TestSheet
 
 			if (Standard.KeyInputOccurs())
 			{
-				if(Standard.IsKeyDown(Keys.OemTilde))
-				{
-					BaseVolume = 0f;
-					Standard.SetSEVolume(0f);
-	
-				}
-				if (Standard.IsKeyDown(Keys.D1))
-				{
-					BaseVolume = 0.1f;
-				}
-				if (Standard.IsKeyDown(Keys.D2))
-				{
-					BaseVolume = 0.2f;
-				}
-				if (Standard.IsKeyDown(Keys.D3))
-				{
-					BaseVolume = 0.3f;
-				}
-				if (Standard.IsKeyDown(Keys.D4))
-				{
-					BaseVolume = 0.4f;
-				}
-				if (Standard.IsKeyDown(Keys.D5))
-				{
-					BaseVolume = 0.5f;
-				}
-				if (Standard.IsKeyDown(Keys.D6))
-				{
-					BaseVolume = 0.6f;
-				}
-				if (Standard.IsKeyDown(Keys.D7))
-				{
-					BaseVolume = 0.7f;
-				}
-				if (Standard.IsKeyDown(Keys.D8))
-				{
-					BaseVolume = 0.8f;
-				}
-				if (Standard.IsKeyDown(Keys.D9))
-				{
-					BaseVolume = 0.9f;
-				}
-				if (Standard.IsKeyDown(Keys.D0))
-				{
-					BaseVolume = 1.0f;
-				}
-				if(Standard.JustPressed(Keys.M))
-				{
-					AutoMouse = !AutoMouse;
-				}
 				if(Standard.JustPressed(Keys.C))//핏자국 청소
 				{
 					for(int i=0;i<DeadBodys.Count;i++)
@@ -467,8 +418,11 @@ namespace TestSheet
 				
 				ScrollBar_Sensitivity.Update();
 				ScrollBar_SongVolume.Update();
+				ScrollBar_SEVolume.Update();
 				Standard.cursor.Sensitivity = ScrollBar_Sensitivity.MapCoefficient(0.5f, 2.0f);
 				Standard.SetSongVolume(ScrollBar_SongVolume.Coefficient);
+				BaseVolume = ScrollBar_SongVolume.Coefficient;
+				Standard.SetSEVolume(ScrollBar_SEVolume.Coefficient);
 				return;
 			}
 
@@ -507,7 +461,7 @@ namespace TestSheet
 			/*좀비 생성 작업*/
 
 			if (Score < 100)
-				ZombieTime = Math.Max(10 - Score / 10,4);//좀비 생성 시간은 스코어가 높을수록 빨라진다.
+				ZombieTime = Math.Max(10 - Score / 10,5);//좀비 생성 시간은 스코어가 높을수록 빨라진다.
 			else
 				ZombieTime = 4;
 		
@@ -666,7 +620,7 @@ namespace TestSheet
 			}
 
 			/*뷰포트 처리*/
-
+			/*
 			Point PlayerDisPlacementVector = Standard.Deduct(player.getPos(), OldPlayerPos);
 			Point ViewportDisplacement = Standard.Deduct(PlayerDisPlacementVector, OldPlayerDisplacementVector);
 			Standard.Viewport = new Viewport(-player.getPos().X+400, -player.getPos().Y+ 400, 1300, 1300);
@@ -690,10 +644,26 @@ namespace TestSheet
 					Standard.Viewport = new Viewport(ViewportDisplacement.X, ViewportDisplacement.Y / 20, 1300, 1300);
 				
 			}
+			*/
+			Point PlayerDisPlacementVector = Standard.Deduct(player.getPos(), OldPlayerPos);
+			Point ViewportDisplacement = Standard.Deduct(PlayerDisPlacementVector, OldPlayerDisplacementVector);
+			Standard.Viewport = new Viewport(-player.getPos().X + 400, -player.getPos().Y + 400, 1300, 1300);
+			Point CursorDisplacement = Standard.Deduct(player.getPos(), Standard.cursor.getPos());
+			int Dis = Standard.Distance(CursorDisplacement, new Point(0, 0));
+			
+			//CursorDisplacement = new Point(CursorDisplacement.X * 5 / (int)Math.Sqrt(Dis), CursorDisplacement.Y * 5 / (int)Math.Sqrt(Dis));
+			
+			OldPlayerPos = player.getPos();
+			OldPlayerDisplacementVector = PlayerDisPlacementVector;
+
+			if (GameMode == 0)
+				Standard.Viewport = new Viewport(-player.getPos().X / 2 + ViewportDisplacement.X + 400 / 2, -player.getPos().Y / 2 + ViewportDisplacement.Y + 400 / 2, 1300, 1300);
+			else
+				Standard.Viewport = new Viewport( -player.getPos().X +CursorDisplacement.X/2+ ViewportDisplacement.X / 2 + 400, -player.getPos().Y + CursorDisplacement.Y / 2 + ViewportDisplacement.Y / 2 + 400, 1300, 1300);
 
 
 
-			if(Standard.Random()<0.05)
+			if (Standard.Random()<0.05)
 			{
 				Standard.FadeAnimation(new DrawingLayer("Rhythm2", new Rectangle(Standard.Random(0, 100), Standard.Random(200,600)+MenuPositionCoefficient, 40, 80)), 15, Color.Black);
 			}
@@ -1042,6 +1012,8 @@ namespace TestSheet
 				Standard.DrawString("(Default:1.0)", new Vector2(ScrollBar_Sensitivity.Frame.GetPosition().X + 500, ScrollBar_Sensitivity.Frame.GetPosition().Y+20), Color.White);
 				ScrollBar_SongVolume.Draw();
 				Standard.DrawString("Song Volume", new Vector2(ScrollBar_SongVolume.Frame.GetPosition().X, ScrollBar_SongVolume.Frame.GetPosition().Y - 20), Color.White);
+				ScrollBar_SEVolume.Draw();
+				Standard.DrawString("SE Volume", new Vector2(ScrollBar_SEVolume.Frame.GetPosition().X, ScrollBar_SEVolume.Frame.GetPosition().Y - 20), Color.White);
 
 			}
 
@@ -1488,6 +1460,11 @@ namespace TestSheet
 							//enemy.MoveByVector(new Point(1, 0), 2);
 						}
 					}
+				}
+
+				if (Standard.Distance(getCenter(), Standard.cursor.getPos()) < 80&&Standard.Distance(player.GetCenter(), Standard.cursor.getPos())>10)
+				{
+					enemy.MoveTo(Standard.cursor.getPos().X, Standard.cursor.getPos().Y, -3);
 				}
 
 				if ((Standard.Distance(player.getPos(), getPos())) <= 10 && Index != player.getAttackIndex())

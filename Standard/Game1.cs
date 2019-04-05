@@ -27,6 +27,7 @@ namespace TestSheet
 		public static bool GameExit = false;
 
 		public static IntPtr Handler = new IntPtr();
+		public static bool ActivationChecker = true;
 
 	
 		public Game1()
@@ -89,6 +90,7 @@ namespace TestSheet
 			Standard.Update();
 			GraphicsDevice.Viewport = Standard.Viewport;
 			Handler = Window.Handle;
+			ActivationChecker = IsActive;
 			base.Update(gameTime);
 		
 		}

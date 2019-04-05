@@ -43,23 +43,34 @@ namespace TestSheet
 
 		public void OldStateUpdate()//클릭 처리 마지막에 행사되어야 OldMouseState가 보존된다.
 		{
+
+
 			if (Sensitivity < 0.3f)
 				Sensitivity = 0.3f;
 			Vector2 RealMousePos = new Vector2(OldMouseState.Position.X + MouseLeftOverPosition.X, OldMouseState.Position.Y + MouseLeftOverPosition.Y);
 			float X = (Mouse.GetState().Position.X - RealMousePos.X) * Sensitivity + (Game1.graphics.GraphicsDevice.Viewport.X-Standard.Viewport.X)/2;
 			float Y = (Mouse.GetState().Position.Y - RealMousePos.Y) * Sensitivity + (Game1.graphics.GraphicsDevice.Viewport.Y - Standard.Viewport.Y) / 2;
+			if(Mouse.GetState().Position.X==400&&Mouse.GetState().Position.Y==400)
+			{
+				X = 0;
+				Y = 0;
+			}
 			mouseLayer.setPosition(Standard.Add(mouseLayer.GetPosition(), new Point((int)X, (int)Y)));
 			mouseLayer.setPosition(mouseLayer.GetPosition().X, mouseLayer.GetPosition().Y);
 			MouseLeftOverPosition = new Vector2(X - (int)X, Y - (int)Y);
 			
-			if (Standard.FrameTimer % 3 == 0)
+			if (Standard.FrameTimer %3 == 0&&Game1.ActivationChecker)
 			{
 				Mouse.WindowHandle = Game1.Handler;
-				Mouse.SetPosition(400,400);
+				Mouse.SetPosition(450,480);//이 코드로 인해 마우스는 (400,400)으로 이동하는 인력을 가지게 된다.	
+				OldMouseState = Mouse.GetState();
 			}
-			
-			
+			else
+				OldMouseState = Mouse.GetState();
+			/*
 			OldMouseState = Mouse.GetState();
+			mouseLayer.setPosition(new Point(OldMouseState.X - Standard.Viewport.X / 2, OldMouseState.Y - Standard.Viewport.Y / 2));
+			*/
 		}
 		public void Draw()
 		{

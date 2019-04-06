@@ -110,7 +110,7 @@ namespace TestSheet
 			Color ScoreColor = Color.White;
 			if (Standard.IsPrimeNumber(Tester.Score))
 				ScoreColor = Color.Silver;
-			Standard.DrawString("Bigfont", Tester.Score.ToString(), new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), ScoreColor);
+			Standard.DrawString("Bigfont", Tester.Score.ToString()+"/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), ScoreColor);
 			if(Tester.FreezeTimer>=0)
 			{
 				if(Tester.FreezeTimer<150)

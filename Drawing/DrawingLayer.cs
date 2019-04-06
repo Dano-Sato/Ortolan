@@ -44,6 +44,24 @@ namespace TestSheet
 			//그림이 그려질 화면 영역을 지정합니다.
 			Bound = boundRect;
 		}
+
+
+		public DrawingLayer(string s, Point Position, double ratio)
+		{
+			spriteTexture = Game1.content.Load<Texture2D>(s);
+			Bound = new Rectangle(Position, new Point((int)(spriteTexture.Bounds.Width * ratio), (int)(spriteTexture.Bounds.Height * ratio)));
+		}
+
+		public DrawingLayer(string s, Point Position, double ratio, SpritePosition spriteSize)
+		{
+			spriteTexture = Game1.content.Load<Texture2D>(s);
+			SpriteSize = new SpritePosition(spriteSize.X, spriteSize.Y);
+			int SourceW = spriteTexture.Bounds.Width / (SpriteSize.X + 1);
+			int SourceH = spriteTexture.Bounds.Height / (SpriteSize.Y + 1);
+			SourceRect = new Rectangle(0, 0, SourceW, SourceH);
+			Bound = new Rectangle(Position, new Point((int)(SourceW * ratio), (int)(SourceH * ratio)));
+		}
+
 		/*getter-setter*/
 
 		public string GetSpriteName()

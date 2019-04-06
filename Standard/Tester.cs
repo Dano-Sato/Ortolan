@@ -97,8 +97,6 @@ namespace TestSheet
 		public static double Lightr = 0;//화면이 좀 깜빡거리도록 하기 위해 넣은 변수
 		public static string ButtonInfoString = "Right-Click";
 		public static DrawingLayer Halo = new DrawingLayer("Player", new Rectangle(0, 0, 150, 150));
-		public static DrawingLayer MouseLogo = new DrawingLayer("Mouse", new Rectangle(270, 400, 30, 30));
-		public static DrawingLayer MouseButton = new DrawingLayer("Mouse3", new Rectangle(270, 400, 30, 30));
 		public static DrawingLayer RealMonoLogo = new DrawingLayer("RealMono", MasterInfo.PreferredScreen);
 		public static DrawingLayer BloodLayer= new DrawingLayer("Blood", MasterInfo.FullScreen);
 		public static List<DrawingLayer> DeadBodys = new List<DrawingLayer>();
@@ -118,7 +116,7 @@ namespace TestSheet
 		public static bool CursorShouldBeSword = false;
 		public static int UsePianoTimer = 0;
 		public static int Difficulty = 1;
-		public static int SongCount = 5;
+		public static int SongCount = 6;
 		public static int KillerZombieIndex = 0;
 		public static int ScoreStack = 0;
 		public static double Fear = 0;
@@ -138,16 +136,19 @@ namespace TestSheet
 
 		public static bool ShowMenu = false;
 		public static DrawingLayer MenuLayer=new DrawingLayer("WhiteSpace", new Rectangle(100,50,1000,700));
-		public static ScrollBar ScrollBar_Sensitivity = new ScrollBar(new DrawingLayer("BarFrame2",new Rectangle(200,150,500,50)), "Bar2", 50, false);
+		public static ScrollBar ScrollBar_Sensitivity = new ScrollBar(new DrawingLayer("BarFrame2",new Rectangle(200,400,500,50)), "Bar2", 50, false);
 		public static ScrollBar ScrollBar_SongVolume = new ScrollBar(new DrawingLayer("BarFrame2", new Rectangle(200, 220, 500, 50)), "Bar2", 50, false);
 		public static ScrollBar ScrollBar_SEVolume= new ScrollBar(new DrawingLayer("BarFrame2", new Rectangle(200, 290, 500, 50)), "Bar2", 50, false);
+
+		public static DrawingLayer YouDieLayer = new DrawingLayer("Youdie", new Point(200, 500), 1.0f);
+		public static DrawingLayer ExitButton = new DrawingLayer("Exit", new Point(850, 650), 0.7f);
 
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
 			player = new Player();
 			enemies.Add(new Enemy());
-			Standard.PlaySong(Standard.Random(0, SongCount),true);
+			Standard.PlaySong(6,true);
 			MainMenu = new EasyMenu(new string[] {
 				"SONG",
 				"CHARACTER",
@@ -205,7 +206,7 @@ namespace TestSheet
 			{
 				FreezeTimer = -1;
 				Standard.FadeAnimation(new DrawingLayer("YouDied", new Rectangle(200, 350, 400, 200)), 90, Color.DarkRed);
-				Standard.FadeAnimation(new DrawingLayer("Tip", new Rectangle(400, 500, 400, 200)), 150, Color.DarkRed);
+				Standard.FadeAnimation(new DrawingLayer("Tip", new Rectangle(500, 350, 400, 200)), 150, Color.DarkRed);
 				ResetGame();
 			}
 			if (CursorShouldBeSword)
@@ -423,6 +424,8 @@ namespace TestSheet
 				Standard.SetSongVolume(ScrollBar_SongVolume.Coefficient);
 				BaseVolume = ScrollBar_SongVolume.Coefficient;
 				Standard.SetSEVolume(ScrollBar_SEVolume.Coefficient);
+				if (ExitButton.MouseIsOnThis() && Standard.cursor.didPlayerJustLeftClick())
+					Game1.GameExit = true;
 				return;
 			}
 
@@ -478,8 +481,6 @@ namespace TestSheet
 			else if(!ZombieDance)//좀비가 0프레임당 생성된다=게임을 깼다는 뜻. 게임을 깬 상태로 전환한다.
 			{
 				ZombieDance = true;
-				MouseLogo.setSprite("Cake");
-				MouseButton.setSprite("Cake2");
 				EndTimer = 4000;
 			}
 
@@ -518,6 +519,7 @@ namespace TestSheet
 
 
 			/*메인메뉴 클릭 처리*/
+			/*
 			MainMenu.Update();
 			if(ScoreStack!=0)
 			{
@@ -532,7 +534,7 @@ namespace TestSheet
 						MenuPositionCoefficient = 130;
 					else
 						MenuPositionCoefficient = -300;
-						*/
+						*//*
 					MenuMoveCounter = 0;
 				}
 				MenuFlip = false;
@@ -668,7 +670,7 @@ namespace TestSheet
 				Standard.FadeAnimation(new DrawingLayer("Rhythm2", new Rectangle(Standard.Random(0, 100), Standard.Random(200,600)+MenuPositionCoefficient, 40, 80)), 15, Color.Black);
 			}
 
-
+			//YouDieLayer.setPosition(Standard.Viewport.X/2, Standard.Viewport.Y/2);
 
 
 		}
@@ -693,51 +695,12 @@ namespace TestSheet
 					DeadBodys[i].setPosition(DeadBodys[i].GetPosition().X, 0);
 				DeadBodys[i].Draw(Color.Aquamarine, Math.Min(10, Score) * 0.1f);
 			}
-			MouseLogo.Draw();
-			if(!AutoMouse)
-			{
-				if (Standard.FrameTimer % 10 <= 5 && Score < 10)
-					MouseButton.Draw(Color.Red);
-				if (Standard.FrameTimer % 10 <= 5 && ZombieDance)
-					MouseButton.Draw(Color.Crimson);
-			}
 			Color StringColor = Color.White;
 			if (Score >= 10)
 				StringColor = Color.Red;
 
-			if(!Standard.IsPrimeNumber(Score))
-				Standard.DrawString("SCORE : " + Score + "/400", new Vector2(340, 440), StringColor);
-			else
-				Standard.DrawString("BigFont","SCORE : " + Score + "/400", new Vector2(340, 420), StringColor);
 
-
-			if (Score < 300)
-			{
-				if(!AutoMouse)
-					Standard.DrawString(ButtonInfoString + " to live", new Vector2(300, 400), StringColor);
-				else
-					Standard.DrawString("You don't have to click", new Vector2(300, 400), StringColor);
-			}
-			else if (Score < 400)
-				Standard.DrawString("Live to click", new Vector2(300, 400), StringColor);
-			else
-				Standard.DrawString("Congratulation!", new Vector2(300, 400), StringColor);		
-
-			Standard.DrawString("Press \"R\" to reset", new Vector2(550,490), StringColor);
-			if(Score<10)
-			Standard.DrawString("Press \"S\" to skip the break time", new Vector2(290, 470), StringColor);
-		
-			if (Score < 10)
-			{
-				if(Standard.FrameTimer%50<25)
-					Standard.DrawString("Here's Menu!", new Vector2(60, 500), Color.White);
-				else
-					Standard.DrawString("Here's Menu!", new Vector2(60, 500), Color.Gainsboro);
-			}
-			else
-			{
-				Standard.DrawString("Here's Piano!", new Vector2(60, 500), Color.LightSeaGreen);
-			}
+			YouDieLayer.Draw(Color.Aquamarine);
 			Standard.FadeAnimationDraw(Color.LightSeaGreen);//별이 사라지는 페이드애니메이션(컬러는 LighteaGreen으로 지정)은 아래 라이트레이어 전에 발생해야 보기 좋으므로 별도로 처리함.
 
 			/*풀스크린 라이트 레이어 처리*/
@@ -751,6 +714,7 @@ namespace TestSheet
 				Standard.DrawLight(MasterInfo.FullScreen, Color.White, (float)((3000 - EndTimer) / 3000.0), Standard.LightMode.Absolute);//3000프레임동안 점점 하얀색으로 밝아진다.
 		
 		
+			/*
 			MainMenu.Draw(Score>=10? false:true);
 			if (Standard.FrameTimer % 20 == 0)
 				MenuLightR = Standard.Random(0, 5);
@@ -766,6 +730,7 @@ namespace TestSheet
 				Standard.DrawLight(MainMenu.MenuList[MainMenu.GetIndex()].drawingLayer, Color.Crimson,0.2f, Standard.LightMode.Absolute);
 				Standard.DrawLight(MainMenu.MenuList[MainMenu.GetIndex()].drawingLayer, Color.Red, 0.6f, Standard.LightMode.Vignette);
 			}
+			*/
 
 			player.Draw();
 			player.DrawAttack();
@@ -784,24 +749,23 @@ namespace TestSheet
 
 
 
-			if (Score>=10)
+			
+			if(Standard.FrameTimer%10==0)
 			{
-				if(Standard.FrameTimer%10==0)
+				Lightr = Standard.Random() / 10.0;
+			}
+			if(Standard.FrameTimer%150==0 && FreezeTimer < 0)
+			{
+				if(Score>300)
 				{
-					Lightr = Standard.Random() / 10.0;
+					Standard.PlaySound("BackgroundZombieSound");
 				}
-				if(Standard.FrameTimer%150==0 && FreezeTimer < 0)
+				else
 				{
-					if(Score>300)
-					{
-						Standard.PlaySound("BackgroundZombieSound");
-					}
-					else
-					{
-						Standard.PlaySound("BackgroundZombieSound", 0.8f);
-					}
+					Standard.PlaySound("BackgroundZombieSound", 0.8f);
 				}
 			}
+			
 
 			if (HappyTimer > 0)
 				HappyTimer--;
@@ -903,7 +867,7 @@ namespace TestSheet
 
 			}
 
-			if (Score>=10&&Score<400)
+			if (Score<400)
 			{
 				Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 0.2f + (float)Lightr, Standard.LightMode.Absolute);
 				Standard.DrawLight(MasterInfo.FullScreen, Color.DarkBlue, 0.3f, Standard.LightMode.Absolute);
@@ -966,7 +930,7 @@ namespace TestSheet
 			}
 
 			/*시야 처리*/
-			if (Score >= 10&&Score<400)
+			if (Score<400)
 			{
 				for (int i = 0; i < enemies.Count; i++)
 				{
@@ -1014,8 +978,12 @@ namespace TestSheet
 				Standard.DrawString("Song Volume", new Vector2(ScrollBar_SongVolume.Frame.GetPosition().X, ScrollBar_SongVolume.Frame.GetPosition().Y - 20), Color.White);
 				ScrollBar_SEVolume.Draw();
 				Standard.DrawString("SE Volume", new Vector2(ScrollBar_SEVolume.Frame.GetPosition().X, ScrollBar_SEVolume.Frame.GetPosition().Y - 20), Color.White);
-
+				ExitButton.Draw();
+				if (ExitButton.MouseIsOnThis())
+					ExitButton.Draw(Color.DarkRed);
 			}
+			
+			
 
 		}
 
@@ -1258,15 +1226,8 @@ namespace TestSheet
 						//ZombieFlip = !ZombieFlip;
 						if(Score>=10)
 						HappyTimer += 17;
-						if (Score < 10)
-							Standard.PlaySound("EnemyDead");
-						else if(GameMode==0)
-							Standard.PlaySound("GunSound");
-						else if(GameMode==1)
-						{
-							Standard.PlaySound("KnifeSound",0.4f);
-							Standard.PlaySound("GunSound",0.3f);
-						}
+						Standard.PlaySound("KnifeSound",0.4f);
+						Standard.PlaySound("GunSound",0.3f);
 					}
 					if (AttackTimer>0)//투사체 날아가는중
 					{
@@ -1278,13 +1239,13 @@ namespace TestSheet
 						Rectangle r = enemies[AttackIndex].getBound();
 						enemies.RemoveAt(AttackIndex);
 						int rn = Standard.Random(3, 5);
-							for (int i = 0; i < rn; i++)
-							{
-								int s = Standard.Random(10, 50);
-								DrawingLayer newStar;
-								Standard.FadeAnimation(newStar = new DrawingLayer("Player2", new Rectangle(r.Center.X - Standard.Random(-30, 30), r.Center.Y - Standard.Random(-30, 30), s, s)), Standard.Random(5 * 3, 15 * 3), Color.DarkRed);
-								DeadBodys.Add(newStar);
-							}
+						for (int i = 0; i < rn; i++)
+						{
+							int s = Standard.Random(10, 50);
+							DrawingLayer newStar;
+							Standard.FadeAnimation(newStar = new DrawingLayer("Player2", new Rectangle(r.Center.X - Standard.Random(-30, 30), r.Center.Y - Standard.Random(-30, 30), s, s)), Standard.Random(5 * 3, 15 * 3), Color.DarkRed);
+							DeadBodys.Add(newStar);
+						}
 						ScoreStack++;
 						if (KillerZombieIndex >= AttackIndex)
 							ScoreStack++;
@@ -1386,7 +1347,7 @@ namespace TestSheet
 					}
 					return;
 				}
-				if (Score >= 10 && Score<400)
+				if (Score<400)
 					enemy.Draw(Color.LightSeaGreen);
 				else 
 					enemy.Draw(Color.White);
@@ -1407,14 +1368,14 @@ namespace TestSheet
 					return;
 				}
 
-				if (Score < 10)
+				/*if (Score < 10)
 				{
 					if (player.getMovePoint().X != 0 || player.getMovePoint().Y != 0)
 						enemy.MoveTo(player.getMovePoint().X + r_1, player.getMovePoint().Y + r_2, 3);
 					else
 						enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, -Math.Min(Score, 3));
 					return;
-				}
+				}*/
 
 				if(GameMode==0)
 					enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, ZombieSpeed*3/4);

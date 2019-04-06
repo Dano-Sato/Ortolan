@@ -109,7 +109,8 @@ namespace TestSheet
 			AddSong("Polonaise3");      //2
 			AddSong("Ballade8");        //3			
 			AddSong("BWV3");            //4
-			AddSong("Tchai3");			//5
+			AddSong("Tchai3");          //5
+			AddSong("YouDieTheme8");		//6
 		}
 
 

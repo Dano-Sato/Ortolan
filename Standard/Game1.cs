@@ -102,8 +102,7 @@ namespace TestSheet
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
-			if(Tester.Score<200)
-				Standard.DrawLight(MasterInfo.FullScreen, Color.LightSeaGreen, Math.Max(0f,(float)(1-Tester.Score/200.0)), Standard.LightMode.Absolute);
+			Standard.DrawLight(MasterInfo.FullScreen, MasterInfo.ThemeColor, Math.Max(0f,(float)(1-Tester.Score/200.0)), Standard.LightMode.Absolute);
 			// TODO: Add your drawing code here
 			tester.Draw();
 			Standard.Draw();

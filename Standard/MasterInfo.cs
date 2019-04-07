@@ -14,9 +14,10 @@ namespace TestSheet
 	public class MasterInfo
 	{
 		public static readonly Rectangle PreferredScreen = new Rectangle(0, 0, 1200, 800);
-		public static readonly Rectangle FullScreen = new Rectangle(0, 0, 1300, 1300);
+		public static readonly Rectangle FullScreen = new Rectangle(0, 0, 1300, 1178);
 		public static readonly int GridSize = 30;
 		public static readonly Color PlayerColor = Color.Orange;
+		public static Color ThemeColor = Color.LightSeaGreen;
 		public MasterInfo()
 		{
 

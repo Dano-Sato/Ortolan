@@ -92,6 +92,7 @@ namespace TestSheet
 		public static int SongIndex;
 		public static float SongVolume=1.0f;
 		public static float SEVolume=1.0f;
+		public static List<SoundEffectInstance> SoundInstanceList = new List<SoundEffectInstance>();
 
 
 		// * Make your own song Name List;
@@ -104,14 +105,9 @@ namespace TestSheet
 			//AddSong("SongName1");
 			//AddSong("SongName2");
 			//AddSong("SongName3");
-			AddSong("March3");          //0          
-			AddSong("Etude3");          //1
-			AddSong("Polonaise3");      //2
-			AddSong("Ballade8");        //3			
-			AddSong("BWV3");            //4
-			AddSong("Tchai3");          //5
-			AddSong("YouDieTheme8");		//6
-		}
+			AddSong("YouDieTheme8");        //0
+			AddSong("Stage2_Youdie");       //1
+			}
 
 
 		public static void SetSongVolume(float volume)//송의 기본 볼륨을 정한다.
@@ -126,6 +122,11 @@ namespace TestSheet
 		public static void SetSEVolume(float volume)//사운드의 기본 볼륨을 정한다.
 		{
 			SEVolume = volume;
+		}
+
+		public static string GetSongName()
+		{
+			return SongCatalog[SongIndex];
 		}
 
 		public static void AddSong(string SongName)
@@ -164,20 +165,51 @@ namespace TestSheet
 			MediaPlayer.IsRepeating = Repeat;
 		}
 
+		public static void StopSong()
+		{
+			MediaPlayer.Stop();
+		}
+		public static void PlaySong()
+		{
+			MediaPlayer.Play(song);
+		}
+
 		public static void PlaySound(string SEName)
 		{
 			soundEffect = Game1.content.Load<SoundEffect>(SEName);
 			SoundEffectInstance soundEffectInstance = soundEffect.CreateInstance();
 			soundEffectInstance.Volume = SEVolume;
 			soundEffectInstance.Play();
+			SoundInstanceList.Add(soundEffectInstance);
 		}
+		public static void PlayLoopedSound(string SEName)
+		{
+			soundEffect = Game1.content.Load<SoundEffect>(SEName);
+			SoundEffectInstance soundEffectInstance = soundEffect.CreateInstance();
+			soundEffectInstance.Volume = SEVolume;
+			soundEffectInstance.IsLooped = true;
+			soundEffectInstance.Play();
+			SoundInstanceList.Add(soundEffectInstance);
+		}
+
 		public static void PlaySound(string SEName,float Coefficient)
 		{
 			soundEffect = Game1.content.Load<SoundEffect>(SEName);
 			SoundEffectInstance soundEffectInstance = soundEffect.CreateInstance();
 			soundEffectInstance.Volume = SEVolume*Coefficient;
 			soundEffectInstance.Play();
+			SoundInstanceList.Add(soundEffectInstance);
 		}
+		
+		public static void DisposeSE()
+		{
+			foreach (SoundEffectInstance s in SoundInstanceList)
+			{
+				s.Stop();
+			}
+			SoundInstanceList.Clear();
+		}
+
 
 
 
@@ -214,9 +246,12 @@ namespace TestSheet
 			}
 		}
 
+		private static DrawingLayer AddonLayer=new DrawingLayer("WhiteSpace",new Rectangle(0,0,0,0));
+
 		public static void DrawAddon(DrawingLayer d, Color color, float opacity, string LayerName)
 		{
-			DrawingLayer AddonLayer = new DrawingLayer(LayerName, d.GetBound());
+			AddonLayer.setSprite(LayerName);
+			AddonLayer.SetBound(d.GetBound());
 			AddonLayer.Draw(color, opacity);
 		}
 
@@ -348,6 +383,15 @@ namespace TestSheet
 			Game1.spriteBatch.DrawString(Standardfont, s, vector2, color);
 			Game1.spriteBatch.End();
 		}
+		//특정 드로잉레이어에 결합되는 형식의 스트링을 그린다. 이때 포지션 벡터는 드로잉레이어의 위치를 기준으로 잡으면 된다.
+		public static void DrawString(string s, DrawingLayer d, Vector2 vector2, Color color)
+		{
+			Game1.spriteBatch.Begin();
+			Game1.spriteBatch.DrawString(Standardfont, s, vector2 + new Vector2(d.GetPosition().X, d.GetPosition().Y), color);
+			Game1.spriteBatch.End();
+		}
+
+
 
 		public static void DrawString(string FontName,string s, Vector2 vector2, Color color)
 		{

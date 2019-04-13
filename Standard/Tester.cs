@@ -15,14 +15,14 @@ namespace TestSheet
 
 		public static void SetZombieSpeed()
 		{
-			ZombieSpeed = 8;
+			ZombieSpeed = 7;
 		}
 
 		public static void SetPlayer()
 		{
 			player.SetAttackSpeed(15);
 			player.setRange(150);
-			player.SetMoveSpeed((7 + ZombieSpeed) / 3);
+			player.SetMoveSpeed(5);
 		}
 
 		
@@ -80,7 +80,6 @@ namespace TestSheet
 		
 		public static int ZombieSpeed = 5;
 		public static bool CursorShouldBeSword = false;
-		public static int KillerZombieIndex = 0;
 		public static int ScoreStack = 0;
 		public static double Fear = 0;
 		public static Point OldPlayerPos;
@@ -109,7 +108,13 @@ namespace TestSheet
 		public static int StageNum = 1;
 		public static int SavePoint =1;
 		public static int StartStageTimer = 0;
-	
+		public static bool EnableZombieSound = true;
+		public static Bludger bludger;
+		public static Bludger bludger2;
+
+		public static int KillerZombieIndex = -1;
+
+
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
@@ -120,6 +125,10 @@ namespace TestSheet
 
 			SetZombieSpeed();
 			SetPlayer();
+
+			bludger = new Bludger(new Point(1,1));
+			bludger2 = new Bludger(new Point(-3,2));
+
 
 		}
 		//Game1.Class 내에 Tester.Update()로 추가될 업데이트문입니다. 다양한 업데이트 처리를 시험할 수 있습니다.
@@ -161,7 +170,7 @@ namespace TestSheet
 				if (FreezeTimer == 90)
 					Standard.PlaySound("KnifeSound",0.5f);
 				FreezeTimer--;
-				Fear += 10;
+				Fear += 3;
 				return;
 			}
 			if(FreezeTimer==0)
@@ -252,6 +261,8 @@ namespace TestSheet
 
 			/*좀비들의 이동 처리.*/
 
+
+
 			List<int> RandomInts = new List<int>();
 			for(int i=0;i<15;i++)
 			{
@@ -268,23 +279,18 @@ namespace TestSheet
 			ZombieCOM = new Point(ZombieCOM.X / enemies.Count, ZombieCOM.Y / enemies.Count);
 			for (int i = 0; i < enemies.Count; i++)
 			{
-				if (j >= 14)
-					j = 0;
-				if(i<=KillerZombieIndex)
-				{
-					ZombieSpeed += 2;
+				if (i == player.getAttackIndex())
+					continue;
+					if (j >= 14)
+						j = 0;
 					enemies[i].MoveUpdate(i, RandomInts[j], RandomInts[(j + Standard.FrameTimer) % 14]);
-					ZombieSpeed -= 2;
-				}			
-				else
-					enemies[i].MoveUpdate(i, RandomInts[j], RandomInts[(j + Standard.FrameTimer) % 14]);
-				j++;
+					j++;
 			}
 
 
 			/*좀비 생성 작업*/
 
-			ZombieTime = Math.Max(10 - Score / 10,5);//좀비 생성 시간은 스코어가 높을수록 빨라진다.
+			ZombieTime = Math.Max(10 - Score / 10,5)+15;//좀비 생성 시간은 스코어가 높을수록 빨라진다.
 		
 			if (Standard.FrameTimer % ZombieTime == 0)
 			{
@@ -303,6 +309,11 @@ namespace TestSheet
 			Standard.Viewport = new Viewport(-player.getPos().X + 400, -player.getPos().Y + 400, 1300, 1300);
 			Point CursorDisplacement = Standard.Deduct(player.getPos(), Standard.cursor.getPos());
 			int Dis = Standard.Distance(CursorDisplacement, new Point(0, 0));
+
+			if(Dis>250)
+			{
+				CursorDisplacement = new Point(CursorDisplacement.X * 250 / Dis, CursorDisplacement.Y * 250 / Dis);
+			}
 				
 			OldPlayerPos = player.getPos();
 			OldPlayerDisplacementVector = PlayerDisPlacementVector;
@@ -321,8 +332,10 @@ namespace TestSheet
 				Standard.DisposeSE();
 				Standard.PlayLoopedSound("WindOfTheDawn");
 				FadeTimer = 100;
-				if(ScoreStack==0)
-					ScoreStack++;
+				ScoreStack = 0;
+				/*
+				if(ScoreStack==0||ScoreStack>2)
+					ScoreStack=1;*/
 			}
 			if (IsEndPhase&&StartStageTimer==0)
 			{
@@ -374,6 +387,8 @@ namespace TestSheet
 				Standard.FadeSong(Math.Max(0,(float)(1 - StartStageTimer / 100.0)));
 			}
 
+			bludger.MoveUpdate();
+			bludger2.MoveUpdate();
 
 		}
 
@@ -385,6 +400,7 @@ namespace TestSheet
 			BloodLayer.Draw(Color.Aquamarine,Math.Min(10,Score)*0.1f);
 			for(int i=0;i<DeadBodys.Count;i++)
 			{
+
 				if(!IsEndPhase)
 				{
 					DeadBodys[i].MoveByVector(Wind, ZombieSpeed);
@@ -399,6 +415,7 @@ namespace TestSheet
 					if(Standard.Distance(DeadBodys[i].GetPosition(),player.getPos())<10)
 					{
 						DeadBodys.RemoveAt(i);
+						i--;
 					}
 				}
 
@@ -443,10 +460,8 @@ namespace TestSheet
 			for (int i = 0; i < enemies.Count; i++)
 			{
 				enemies[i].Draw();
-				if (i <= KillerZombieIndex)
-					Standard.DrawAddon(enemies[i].enemy, Color.White, 1f, "KillerZombie4");
-				else
-					Standard.DrawAddon(enemies[i].enemy, Color.White, 1f, "NormalZombie");
+				Standard.DrawAddon(enemies[i].enemy, Color.White, 1f, "NormalZombie");
+			
 				if (enemies[i].IsGhost)
 				{
 					if(GhostAnimate)
@@ -464,33 +479,22 @@ namespace TestSheet
 			{
 				Lightr = Standard.Random() / 10.0;
 			}
-			if(!IsEndPhase && Standard.FrameTimer%150==0 && FreezeTimer < 0)
+			if(EnableZombieSound&&!IsEndPhase && Standard.FrameTimer%500==0 && FreezeTimer < 0)
 			{
-				if(Score>300)
-				{
-					Standard.PlaySound("BackgroundZombieSound");
-				}
-				else
-				{
-					Standard.PlaySound("BackgroundZombieSound", 0.8f);
-				}
+			
+				//Standard.PlaySound("BackgroundZombieSound", 0.8f);
 			}
 			
 
 			if (GameOver)
 			{
-				for(int i=0;i<enemies.Count;i++)
+				if(FreezeTimer<50)
 				{
-					enemies[i].enemy.MoveTo(player.getPos().X+Standard.Random(-30,30), player.getPos().Y + Standard.Random(-30, 30), Standard.Random(5,15));
+					for (int i = 0; i < enemies.Count; i++)
+					{
+						enemies[i].enemy.MoveTo(player.getPos().X + Standard.Random(-30, 30), player.getPos().Y + Standard.Random(-30, 30), Standard.Random(5, 15));
+					}
 				}
-				Standard.DrawString("Game Over", new Vector2(500+Standard.Random(-3,3), 400 + Standard.Random(-3, 3)), Color.Red);
-				Rectangle rectangle = new Rectangle(500, 450, 200, 50);
-				if(rectangle.Contains(Standard.cursor.getPos()))
-				{
-					Standard.DrawString("Press \"R\" button to restart", new Vector2(500 + Standard.Random(-3, 3), 450 + Standard.Random(-3, 3)), Color.Honeydew);
-				}
-				else
-					Standard.DrawString("Press \"R\" button to restart", new Vector2(500 + Standard.Random(-3, 3), 450 + Standard.Random(-3, 3)), Color.Red);
 
 			}
 
@@ -516,7 +520,7 @@ namespace TestSheet
 				{
 					for (int i = 0; i < enemies.Count; i++)
 					{
-						enemies[i].enemy.setSprite("Player_V2");
+						enemies[i].enemy.setSprite("Player_V6");
 					}
 				}
 				else if (Score % 30 == 22 || Score % 30 == 21)
@@ -615,10 +619,7 @@ namespace TestSheet
 			{
 				for (int i = 0; i < enemies.Count; i++)
 				{
-					if (i <= KillerZombieIndex)
-						Standard.DrawAddon(enemies[i].enemy, Color.Cornsilk, 0.3f, "KillerZombie4");
-					else
-						Standard.DrawAddon(enemies[i].enemy, Color.Cornsilk, 0.3f, "NormalZombie");
+					Standard.DrawAddon(enemies[i].enemy, Color.Cornsilk, 0.3f, "NormalZombie");
 					if (enemies[i].IsGhost)
 					{
 						if (GhostAnimate)
@@ -628,24 +629,37 @@ namespace TestSheet
 
 					}
 				}
+			}
+			if(GameOver)
+			{
+				Standard.DrawAddon(player.player, Color.White, 1f, "Player");
 
+				if(KillerZombieIndex!=-1)
+				{
+					Standard.DrawAddon(enemies[KillerZombieIndex].enemy, Color.Black, 1f, "Player");
+					if (Standard.FrameTimer % 20 <= 10)
+						Standard.DrawAddon(enemies[KillerZombieIndex].enemy, Color.White, 1f, "ZombieBite");
+					else
+						Standard.DrawAddon(enemies[KillerZombieIndex].enemy, Color.White, 1f, "ZombieBite2");
+
+				}
 
 			}
 
-			if(IsEndPhase)
+			if (IsEndPhase)
 			{
 				SaveButton.Draw(Color.White,(float)((100-FadeTimer)/100.0));
 				if(SaveButton.MouseIsOnThis())
 				{
 					Standard.DrawLight(new Rectangle(-Standard.Viewport.X + 200, -Standard.Viewport.Y + 200,500,50), Color.Black, 0.7f, Standard.LightMode.Absolute);
-					Standard.DrawString("When you die, you will start at this point", new Vector2(-Standard.Viewport.X+220, -Standard.Viewport.Y + 210), Color.White);
+					Standard.DrawString("When you die, you will start after this point", new Vector2(-Standard.Viewport.X+220, -Standard.Viewport.Y + 210), Color.White);
 					SaveButton.Draw(Color.Red);
 				}
 				NoSaveButton.Draw(Color.White, (float)((100 - FadeTimer) / 100.0));
 				if(NoSaveButton.MouseIsOnThis())
 				{
 					Standard.DrawLight(new Rectangle(-Standard.Viewport.X + 200, -Standard.Viewport.Y + 200, 550, 50), Color.Black, 0.7f, Standard.LightMode.Absolute);
-					Standard.DrawString("When you die, you will start at the previous save point", new Vector2(-Standard.Viewport.X + 220, -Standard.Viewport.Y + 210), Color.White);
+					Standard.DrawString("When you die, you will start after the previous save point", new Vector2(-Standard.Viewport.X + 220, -Standard.Viewport.Y + 210), Color.White);
 					NoSaveButton.Draw(Color.Red);
 				}
 
@@ -655,12 +669,15 @@ namespace TestSheet
 				Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 1f, Standard.LightMode.Absolute);
 			}
 
+			bludger.Draw();
+			bludger2.Draw();
+		
 		}
 
 
 		public class Player
 		{
-			private DrawingLayer player;
+			public DrawingLayer player;
 			private DrawingLayer bullet;
 			private DrawingLayer direction;
 			private DrawingLayer wand;
@@ -713,7 +730,6 @@ namespace TestSheet
 					Standard.FadeAnimation(DeadBodys[i], 30,Color.LightSeaGreen);
 				}
 				DeadBodys.Clear();
-				KillerZombieIndex = 0;
 			}
 
 			public int getAttackIndex()
@@ -757,7 +773,7 @@ namespace TestSheet
 
 			public Player()
 			{
-				player = new DrawingLayer("Player_V2",new Rectangle(400,400,80,80));
+				player = new DrawingLayer("Player_V6",new Rectangle(400,400,80,80));
 				bullet = new DrawingLayer("Player2", new Rectangle(0, 0, 80, 80));
 				direction = new DrawingLayer("Player2", new Rectangle(0, 0, 20, 20));
 				wand = new DrawingLayer("WhiteSpace", new Rectangle(0, 0, 5, 5));
@@ -775,6 +791,7 @@ namespace TestSheet
 				direction.Draw(Color.White);
 				if (isAttacking)
 					player.Draw(MasterInfo.PlayerColor*(float)((float)AttackTimer/AttackSpeed));
+			
 			}
 
 			public void MoveUpdate()
@@ -791,7 +808,7 @@ namespace TestSheet
 					if (AttackTimer < AttackSpeed - 2)
 					{						
 						player.MoveTo(Standard.cursor.getPos().X - 40, Standard.cursor.getPos().Y - 40, MoveSpeed * 2);
-						Standard.FadeAnimation(new DrawingLayer("Player", new Rectangle(player.GetPosition(), new Point(80, 80))), 8, Color.Cornsilk);	
+						Standard.FadeAnimation(new DrawingLayer("Player_AfterImage", new Rectangle(player.GetPosition(), new Point(80, 80))), 8, Color.Cornsilk);	
 					}
 					MovePoint = Standard.DivPoint(player.GetCenter(), Standard.cursor.getPos(), 0.8);
 
@@ -854,6 +871,8 @@ namespace TestSheet
 				{
 					if(AttackTimer==AttackSpeed)
 					{
+						enemies[AttackIndex].enemy.setSprite("Player_Broken2");
+						Standard.FadeAnimation(enemies[AttackIndex].enemy, 15, Color.AntiqueWhite);
 						ShotPoint = enemies[AttackIndex].getPos();
 						//ZombieFlip = !ZombieFlip;
 						Standard.PlaySound("KnifeSound",0.4f);
@@ -866,13 +885,17 @@ namespace TestSheet
 					}
 					else//투사체 적중
 					{
-						if(enemies[AttackIndex].IsGhost)
-							RemoveEnemy(AttackIndex, Color.AliceBlue);
-						else
-							RemoveEnemy(AttackIndex, Color.DarkRed);
+						if(enemies.Count>AttackIndex&&AttackIndex!=-1)
+						{
+							if (enemies[AttackIndex].IsGhost)
+								RemoveEnemy(AttackIndex, Color.AliceBlue);
+							else
+								RemoveEnemy(AttackIndex, Color.DarkRed);
+						}
 						ScoreStack++;
-						if (KillerZombieIndex >= AttackIndex)
-							ScoreStack++;
+						ScoreStack++;
+						ScoreStack++;
+
 						isAttacking = false;
 						AttackIndex = -1;
 						BoostTimer = 0;
@@ -883,15 +906,17 @@ namespace TestSheet
 
 			public void DrawAttack()
 			{
-				if(isAttacking&&AttackTimer>=1)
+				if(isAttacking&&AttackTimer>=1&&enemies.Count>AttackIndex&&AttackIndex!=-1)
 				{
 					int x = ((AttackSpeed-AttackTimer) * enemies[AttackIndex].getPos().X + AttackTimer * getPos().X)/AttackSpeed;
 					int y = ((AttackSpeed - AttackTimer) * enemies[AttackIndex].getPos().Y + AttackTimer * getPos().Y)/AttackSpeed;
+
+					/*
 					bullet.setPosition(x + 25, y + 25);
-					bullet.SetBound(new Rectangle(x + 25, y + 25, AttackTimer * 10, AttackTimer * 10));
+					bullet.SetBound(new Rectangle(x + 25, y + 25, AttackTimer * 3, AttackTimer * 3));
 					bullet.SetCenter(new Point(x+40, y+40));
 					bullet.Draw(MasterInfo.PlayerColor,1f);
-					Standard.FadeAnimation(bullet, 10,Color.LightGoldenrodYellow);
+					Standard.FadeAnimation(bullet, 10,Color.LightGoldenrodYellow);*/
 					int KillActionTimer = AttackTimer * 2;
 			
 					if(Standard.FrameTimer%2==0)
@@ -946,7 +971,7 @@ namespace TestSheet
 				IsGhost = isGhost;
 				if(IsGhost)
 				{
-					enemy = new DrawingLayer("Player_V2", new Rectangle(0,0, 80, 80));
+					enemy = new DrawingLayer("Player_V6", new Rectangle(0,0, 80, 80));
 					GhostAngle = Standard.Random() * 3;
 				}
 				else
@@ -962,9 +987,14 @@ namespace TestSheet
 						y = Standard.Random(15, 80);
 					else
 						y = Standard.Random(720, 800);
-					enemy = new DrawingLayer("Player_V2", new Rectangle(x, y, 80, 80));
+					if(Standard.Distance(player.getPos(),new Point(x,y))>80)
+						enemy = new DrawingLayer("Player_V6", new Rectangle(x, y, 80, 80));
+					else
+						enemy = new DrawingLayer("Player_V6", new Rectangle(x+80, y+80, 80, 80));
 				}
 			}
+
+	
 
 			public void Draw()
 			{
@@ -1013,14 +1043,69 @@ namespace TestSheet
 				}
 
 
-				if (!IsEndPhase&&StartStageTimer==0&&(Standard.Distance(player.getPos(), getPos())) <= 10 && Index != player.getAttackIndex())
+				if (!IsEndPhase&&StartStageTimer==0&&(Standard.Distance(player.getPos(), getPos())) <= 20 && Index != player.getAttackIndex())
 				{
-					GameOver = true;
+					KillerZombieIndex = Index;
+					//GameOver = true;
 					StageNum = SavePoint;
 					if (Standard.SongIndex != StageNum - 1)
 						Standard.PlaySong(StageNum - 1, true);
 				}
 			}
+		}
+
+		public class Bludger
+		{
+			public static int BludgerSpeed = 8;
+			public static Rectangle BoundRectangle;
+			public DrawingLayer bludger=new DrawingLayer("Player_V6",new Rectangle(0,0,80,80));
+			public Point v=new Point(1,1);
+
+			public Bludger(Point vector)
+			{
+				v = vector;
+			}
+			public void MoveUpdate()
+			{
+				BoundRectangle = new Rectangle(-Standard.Viewport.X, -Standard.Viewport.Y,900, 720);
+				//벡터 계산
+				if(BoundRectangle.X>bludger.GetPosition().X||0> bludger.GetPosition().X)//공이 왼쪽으로 나갈 경우
+				{
+					v = new Point(Math.Abs(v.X), v.Y);
+				}
+				if(BoundRectangle.Y>bludger.GetPosition().Y||0> bludger.GetPosition().Y)//공이 위로 나갈 경우
+				{
+					v = new Point(v.X, Math.Abs(v.Y));
+				}
+				if(BoundRectangle.X+ BoundRectangle.Width<bludger.GetPosition().X||MasterInfo.FullScreen.Width-80 < bludger.GetPosition().X)//공이 오른쪽으로 나갈 경우
+				{
+					v = new Point(-Math.Abs(v.X), v.Y);
+				}
+				if (BoundRectangle.Y + BoundRectangle.Height < bludger.GetPosition().Y|| MasterInfo.FullScreen.Height-80 < bludger.GetPosition().Y)//공이 오른쪽으로 나갈 경우
+				{
+					v = new Point(v.X, -Math.Abs(v.Y)); 
+				}
+
+				bludger.MoveByVector(v, BludgerSpeed);
+				if (!IsEndPhase && StartStageTimer == 0 && (Standard.Distance(player.getPos(), bludger.GetPosition())) <= 20)
+				{
+					KillerZombieIndex = -1;
+					//GameOver = true;
+					bludger.setPosition(Standard.Random(-300,300), Standard.Random(-300,300));
+					StageNum = SavePoint;
+					if (Standard.SongIndex != StageNum - 1)
+						Standard.PlaySong(StageNum - 1, true);
+				}
+
+			}
+			public void Draw()
+			{
+				bludger.Draw(Color.IndianRed);
+				Standard.FadeAnimation(new DrawingLayer("Player_AfterImage", new Rectangle(bludger.GetPosition(), new Point(80, 80))), 8, Color.IndianRed);
+				Standard.DrawAddon(bludger, Color.Black, 1f, "BludgerFace");
+			}
+
+
 		}
 
 	}

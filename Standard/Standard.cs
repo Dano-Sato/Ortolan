@@ -8,6 +8,9 @@ using Microsoft.Xna.Framework;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
+
+
 namespace TestSheet
 {
 
@@ -20,8 +23,7 @@ namespace TestSheet
 
 		/*기본 인자*/
 		public static int FrameTimer;//프레임 수를 센다.
-
-
+	
 
 		/*기본함수*/
 
@@ -105,9 +107,10 @@ namespace TestSheet
 			//AddSong("SongName1");
 			//AddSong("SongName2");
 			//AddSong("SongName3");
-			AddSong("YouDieTheme8");        //0
+			AddSong("YouDieTheme8");        //2
 			AddSong("Stage2_Youdie");       //1
-			}
+			
+		}
 
 
 		public static void SetSongVolume(float volume)//송의 기본 볼륨을 정한다.

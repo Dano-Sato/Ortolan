@@ -88,7 +88,7 @@ namespace TestSheet
 			// TODO: Add your update logic here
 			tester.Update();		
 			Standard.Update();
-			GraphicsDevice.Viewport = Standard.Viewport;
+			Standard.OldViewport = GraphicsDevice.Viewport;
 			Handler = Window.Handle;
 			ActivationChecker = IsActive;
 			base.Update(gameTime);
@@ -107,8 +107,7 @@ namespace TestSheet
 			tester.Draw();
 			Standard.Draw();
 			Color ScoreColor = Color.White;
-			if (Standard.IsPrimeNumber(Tester.Score))
-				ScoreColor = Color.Silver;
+			
 			Standard.DrawString("Bigfont", Tester.Score.ToString()+"/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), ScoreColor);
 			if(Tester.FreezeTimer>=0)
 			{
@@ -138,7 +137,7 @@ namespace TestSheet
 
 
 			if (Standard.FrameTimer % 60 == 0)
-				Standard.PlaySound("HeartBeat", Math.Min((float)Tester.HeartSignal,1f));
+				Standard.PlayFadedSE("HeartBeat", Math.Min((float)Tester.HeartSignal,1f));
 			if (Tester.GameOver)
 			{
 				

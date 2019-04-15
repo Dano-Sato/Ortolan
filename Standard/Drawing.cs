@@ -8,12 +8,21 @@ using Microsoft.Xna.Framework;
 namespace TestSheet
 {
 
+	public interface IDrawLayer
+	{
+		void Draw();
+		void SetPos(int x, int y);
+		void SetPos(Point p);
+		Point GetPos();
+	}
+
+
 	/* 드로잉이 행해지는 각 레이어의 클래스를 만들었습니다.
 	 * 스트링 지정을 통해 스프라이트시트를 바꿀 수 있습니다.
 	 * 등속 운동이 지원됩니다.
 	 * 스프라이트 애니메이션이 지원됩니다.
 	 * */
-	public class DrawingLayer
+	public class DrawingLayer : IDrawLayer
 	{
 		private Rectangle Bound;//화면에서 그림이 그려지는 영역을 표시합니다.
 		private Texture2D spriteTexture;
@@ -32,21 +41,7 @@ namespace TestSheet
 			Bound = boundRect;
 		}
 
-		public DrawingLayer(string s, Rectangle boundRect, SpritePosition spriteSize)
-		{
-			//스프라이트시트의 기본 상수들을 지정합니다.
-			spriteTexture = Game1.content.Load<Texture2D>(s);
-			SpriteSize = new SpritePosition(spriteSize.X, spriteSize.Y);
-			int SourceW = spriteTexture.Bounds.Width / (SpriteSize.X + 1);
-			int SourceH = spriteTexture.Bounds.Height / (SpriteSize.Y + 1);
-			SourceRect = new Rectangle(0, 0, SourceW, SourceH);
-
-			//그림이 그려질 화면 영역을 지정합니다.
-			Bound = boundRect;
-		}
-
-
-		public DrawingLayer(string s, Point Position, double ratio)
+		public DrawingLayer(string s, Point Position, double ratio)//원본 스프라이트 크기에 대한 비율로 생성하는 경우
 		{
 			spriteTexture = Game1.content.Load<Texture2D>(s);
 			Bound = new Rectangle(Position, new Point((int)(spriteTexture.Bounds.Width * ratio), (int)(spriteTexture.Bounds.Height * ratio)));
@@ -59,9 +54,21 @@ namespace TestSheet
 			int SourceW = spriteTexture.Bounds.Width / (SpriteSize.X + 1);
 			int SourceH = spriteTexture.Bounds.Height / (SpriteSize.Y + 1);
 			SourceRect = new Rectangle(0, 0, SourceW, SourceH);
-			Bound = new Rectangle(Position, new Point((int)(SourceW * ratio), (int)(SourceH * ratio)));
+			Bound = new Rectangle(Position, new Point((int)(SourceW*ratio), (int)(SourceH*ratio)));
 		}
 
+		public DrawingLayer(string s, Rectangle boundRect, SpritePosition spriteSize)
+		{
+			//스프라이트시트의 기본 상수들을 지정합니다.
+			spriteTexture = Game1.content.Load<Texture2D>(s);
+			SpriteSize = new SpritePosition(spriteSize.X, spriteSize.Y);
+			int SourceW = spriteTexture.Bounds.Width / (SpriteSize.X + 1);
+			int SourceH = spriteTexture.Bounds.Height / (SpriteSize.Y + 1);
+			SourceRect = new Rectangle(0, 0, SourceW, SourceH);
+
+			//그림이 그려질 화면 영역을 지정합니다.
+			Bound = boundRect;
+		}
 		/*getter-setter*/
 
 		public string GetSpriteName()
@@ -74,7 +81,7 @@ namespace TestSheet
 			return Bound;
 		}
 
-		public Point GetPosition()
+		public Point GetPos()
 		{
 
 			return Bound.Location;
@@ -90,12 +97,12 @@ namespace TestSheet
 			return spriteTexture.ToString();
 		}
 
-		public void setPosition(int x, int y)
+		public void SetPos(int x, int y)
 		{
 			MoveTo(x, y);
 		}
 
-		public void setPosition(Point p)
+		public void SetPos(Point p)
 		{
 			MoveTo(p);
 		}
@@ -214,7 +221,7 @@ namespace TestSheet
 
 		public void MoveByVector(Point Vector, double speed)
 		{
-			double N = Standard.Distance(new Point(0,0),Vector);
+			double N = Method2D.Distance(new Point(0,0),Vector);
 			int Dis_X = (int)(Vector.X * speed / N);
 			int Dis_Y = (int)(Vector.Y * speed / N);
 			MoveTo(Bound.X+Dis_X, Bound.Y+Dis_Y );
@@ -251,16 +258,231 @@ namespace TestSheet
 
 		public bool MouseJustLeftClickedThis()
 		{
-			return MouseIsOnThis() && Standard.cursor.didPlayerJustLeftClick();
+			return MouseIsOnThis() && Standard.cursor.JustdidLeftClick();
 		}
 
 		public bool MouseIsLeftClickingThis()
 		{
-			return MouseIsOnThis() && Standard.cursor.IsPlayerLeftClickingNow();
+			return MouseIsOnThis() && Standard.cursor.IsLeftClickingNow();
 		}
 
 
 
+
+
+	}
+
+
+
+
+	/*파생 클래스*/
+	public class DrawingLayerWithTimer
+	{
+		public DrawingLayer drawingLayer;
+		public int Timer;
+		public DrawingLayerWithTimer(DrawingLayer d, int t)
+		{
+			drawingLayer = d;
+			Timer = t;
+		}
+	}
+
+
+	public class DrawingLayerWithVector
+	{
+		public DrawingLayer drawingLayer;
+		public Point Vector;
+
+		public DrawingLayerWithVector(DrawingLayer d, Point v)
+		{
+			drawingLayer = d;
+			Vector = v;
+		}
+
+		public void AttachTo(DrawingLayer d)
+		{
+			drawingLayer.SetPos(Method2D.Add(d.GetBound().Location,Vector));
+		}
+
+		public void AttachTo(Point p)
+		{
+			drawingLayer.SetPos(Method2D.Add(p,Vector));
+		}
+	}
+
+
+
+
+	/*스프라이트 내부에서 프레임 위치를 지정해주는 클래스*/
+	public class SpritePosition
+	{
+		public int X;
+		public int Y;
+
+
+		public SpritePosition(int x, int y)
+		{
+			X = x;
+			Y = y;
+		}
+		public void Set(int x, int y)
+		{
+			X = x;
+			Y = y;
+		}
+
+		public bool isZero()
+		{
+			if (X == 0 && Y == 0)
+				return true;
+			return false;
+		}
+
+		public static bool operator <(SpritePosition s1, SpritePosition s2)
+		{
+			if (s1.Y < s2.Y)
+				return true;
+			else if (s1.Y > s2.Y)
+				return false;
+			else
+			{
+				if (s1.X < s2.X)
+					return true;
+				else
+					return false;
+			}
+		}
+		public static bool operator >(SpritePosition s1, SpritePosition s2)
+		{
+			if (s1.Y > s2.Y)
+				return true;
+			else if (s1.Y < s2.Y)
+				return false;
+			else
+			{
+				if (s1.X > s2.X)
+					return true;
+				else
+					return false;
+			}
+		}
+
+		public static bool operator ==(SpritePosition s1, SpritePosition s2)
+		{
+			return (s1.X == s2.X) && (s1.Y == s2.Y);
+		}
+
+		public static bool operator !=(SpritePosition s1, SpritePosition s2)
+		{
+			return !((s1.X == s2.X) && (s1.Y == s2.Y));
+		}
+
+		public void Increase()
+		{
+			X++;
+		}
+		public void Jump()
+		{
+			Y++;
+			X = 0;
+		}
+
+		public void GoNext(SpritePosition SpriteSize)
+		{
+			if (this.X == SpriteSize.X)
+				this.Jump();
+			else
+				this.Increase();
+		}
+
+		public void GoLoop(SpritePosition Max, SpritePosition Min, SpritePosition SpriteSize)
+		{
+			if (this < Min || this > Max)//이상한 범위에 있을 경우
+			{
+				this.Set(Min.X, Min.Y);
+				return;
+			}
+			if (this < Max)
+			{
+				this.GoNext(SpriteSize);
+				return;
+			}
+			if (this == Max)
+			{
+				this.Set(Min.X, Min.Y);
+				return;
+			}
+		}
+
+
+
+	}
+
+
+	/*페이드애니메이션 처리를 위한 애니메이션 리스트*/
+
+	public class AnimationList
+	{
+		//private List<DrawingLayer> Animationlist = new List<DrawingLayer>();
+		//private List<int> AnimationTimerList = new List<int>();
+
+
+		private List<DrawingLayerWithTimer> Animationlist = new List<DrawingLayerWithTimer>();
+		private double DefaultOpacityCoefficient;
+
+		public AnimationList(double OpacityC)
+		{
+			DefaultOpacityCoefficient = OpacityC;
+		}
+
+		public DrawingLayer this[int i]
+		{
+			get { return Animationlist[i].drawingLayer; }
+			set { Animationlist[i].drawingLayer = value; }
+		}
+
+
+		public void Add(DrawingLayer d, int t)
+		{
+			Animationlist.Add(new DrawingLayerWithTimer(d, t));
+		}
+		public void Clear()
+		{
+			Animationlist.Clear();
+		}
+
+		public void TimeUpdate()
+		{
+			for (int i = 0; i < Animationlist.Count; i++)
+			{
+				if (Animationlist[i].Timer == 0)
+				{
+					Animationlist.RemoveAt(i);
+				}
+				else
+				{
+					Animationlist[i].Timer--;
+				}
+			}
+		}
+
+		public void FadeAnimationDraw(Color color, double Opacity)
+		{
+
+			for (int i = 0; i < Animationlist.Count; i++)
+			{
+				Animationlist[i].drawingLayer.Draw(color * (float)(Animationlist[i].Timer * Opacity));
+			}
+		}
+
+		public void FadeAnimationDraw(Color color)
+		{
+
+			for (int i = 0; i < Animationlist.Count; i++)
+			{
+				Animationlist[i].drawingLayer.Draw(color * (float)(Animationlist[i].Timer * DefaultOpacityCoefficient));
+			}
+		}
 
 
 	}

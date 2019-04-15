@@ -38,7 +38,7 @@ namespace TestSheet
 			player.reset();
 			for(int i=0;i<bludgers.Count;i++)
 			{
-				bludgers[i].bludger.setPosition(i*500, Standard.Random(-50, 50));
+				bludgers[i].bludger.SetPos(i*500, Standard.Random(-50, 50));
 
 			}
 			GameOver = false;
@@ -147,18 +147,18 @@ namespace TestSheet
 			{
 				FreezeTimer = 200;
 				Standard.ClearFadeAnimation();
-				Standard.PlaySound("ZombieSound4");
+				Standard.PlaySE("ZombieSound4");
 				return;
 			}
 			if(FreezeTimer>0)
 			{
 				Standard.ClearFadeAnimation();
 				if (FreezeTimer==200)
-					Standard.PlaySound("KnifeSound", 0.3f);
+					Standard.PlayFadedSE("KnifeSound", 0.3f);
 				if(FreezeTimer==140)
-					Standard.PlaySound("KnifeSound", 0.5f);
+					Standard.PlayFadedSE("KnifeSound", 0.5f);
 				if (FreezeTimer == 90)
-					Standard.PlaySound("KnifeSound",0.5f);
+					Standard.PlayFadedSE("KnifeSound",0.5f);
 				FreezeTimer--;
 				Fear += 3;
 				return;
@@ -171,29 +171,37 @@ namespace TestSheet
 				ResetGame();
 			}
 			if (CursorShouldBeSword)
-				Standard.cursor.SetSprite("Sword");
+				Standard.cursor.SetSprite("EmptySpace");
 			else
-				Standard.cursor.SetSprite("Cursor");
+				Standard.cursor.SetSprite("EmptySpace");
 
 			if(!ShowMenu)
 			{
 				player.MoveUpdate();
 				player.AttackUpdate();
 			}
+			/*
 			if (Score % 10 == 9)
 				Reload = true;
 			if (Score % 10 == 0 && Reload == true)
 			{
-				Standard.PlaySound("WipeKnife");
+				Standard.PlaySE("WipeKnife");
 				Reload = false;
-			}
+			}*/
 			if (DeadBodys.Count > 300)
 			{
 				Standard.FadeAnimation(DeadBodys[0], 30, Color.LightSeaGreen);
 				DeadBodys.RemoveAt(0);
 			}
 
-	
+			string ClickSprite;
+			if (Standard.FrameTimer % 30 < 15)
+				ClickSprite = "Click";
+			else
+				ClickSprite = "Click2";
+			DrawingLayer Click = new DrawingLayer(ClickSprite, new Rectangle(Standard.cursor.getPos().X - 15, Standard.cursor.getPos().Y - 15, 30, 30));
+			Standard.FadeAnimation(Click, 10, Color.AliceBlue);
+
 
 
 			/*키보드 입력 처리*/
@@ -264,8 +272,8 @@ namespace TestSheet
 			{
 				if(i==0)
 				ZombieCOM = new Point(0, 0);
-				ZombieCOM = Standard.Add(ZombieCOM, enemies[i].getCenter());
-				double r = Standard.Distance(enemies[i].enemy.GetPosition(), player.getPos());
+				ZombieCOM = Method2D.Add(ZombieCOM, enemies[i].getCenter());
+				double r = Method2D.Distance(enemies[i].enemy.GetPos(), player.getPos());
 				HeartSignal += (1600.0 / (r * r));
 			}
 			if(enemies.Count>0)
@@ -297,11 +305,10 @@ namespace TestSheet
 		
 			/*뷰포트 처리*/
 
-			Point PlayerDisPlacementVector = Standard.Deduct(player.getPos(), OldPlayerPos);
-			Point ViewportDisplacement = Standard.Deduct(PlayerDisPlacementVector, OldPlayerDisplacementVector);
-			Standard.Viewport = new Viewport(-player.getPos().X + 400, -player.getPos().Y + 400, 1300, 1300);
-			Point CursorDisplacement = Standard.Deduct(player.getPos(), Standard.cursor.getPos());
-			int Dis = Standard.Distance(CursorDisplacement, new Point(0, 0));
+			Point PlayerDisPlacementVector = Method2D.Deduct(player.getPos(), OldPlayerPos);
+			Point ViewportDisplacement = Method2D.Deduct(PlayerDisPlacementVector, OldPlayerDisplacementVector);
+			Point CursorDisplacement = Method2D.Deduct(player.getPos(), Standard.cursor.getPos());
+			int Dis = Method2D.Distance(CursorDisplacement, new Point(0, 0));
 
 			if(Dis>250)
 			{
@@ -311,7 +318,7 @@ namespace TestSheet
 			OldPlayerPos = player.getPos();
 			OldPlayerDisplacementVector = PlayerDisPlacementVector;
 
-			Standard.Viewport = new Viewport( -player.getPos().X +CursorDisplacement.X/2+ ViewportDisplacement.X / 2 + 400, -player.getPos().Y + CursorDisplacement.Y / 2 + ViewportDisplacement.Y / 2 + 400, 1300, MasterInfo.FullScreen.Height);
+			Game1.graphics.GraphicsDevice.Viewport = new Viewport( -player.getPos().X +CursorDisplacement.X/2+ ViewportDisplacement.X / 2 + 400, -player.getPos().Y + CursorDisplacement.Y / 2 + ViewportDisplacement.Y / 2 + 400, 1300, MasterInfo.FullScreen.Height);
 
 			
 			if(!IsEndPhase&&Standard.FrameTimer%60==0&&StageNum>1)
@@ -323,7 +330,7 @@ namespace TestSheet
 			{
 				IsEndPhase = true;
 				Standard.DisposeSE();
-				Standard.PlayLoopedSound("WindOfTheDawn");
+				Standard.PlayLoopedSE("WindOfTheDawn");
 				FadeTimer = 100;
 				ScoreStack = 0;
 				/*
@@ -383,7 +390,7 @@ namespace TestSheet
 			for(int i=0;i<bludgers.Count;i++)
 			{
 				bludgers[i].MoveUpdate();
-				double r = Standard.Distance(bludgers[i].bludger.GetPosition(), player.getPos());
+				double r = Method2D.Distance(bludgers[i].bludger.GetPos(), player.getPos());
 				HeartSignal += (400.0 / (r * r));
 			}
 
@@ -403,15 +410,15 @@ namespace TestSheet
 				if(!IsEndPhase)
 				{
 					DeadBodys[i].MoveByVector(Wind, ZombieSpeed);
-					if (DeadBodys[i].GetPosition().Y > MasterInfo.FullScreen.Height)
-						DeadBodys[i].setPosition(DeadBodys[i].GetPosition().X, 0);
+					if (DeadBodys[i].GetPos().Y > MasterInfo.FullScreen.Height)
+						DeadBodys[i].SetPos(DeadBodys[i].GetPos().X, 0);
 					DeadBodys[i].Draw(Color.Aquamarine, Math.Min(10, Score) * 0.1f);
 				}
 				else
 				{
 					DeadBodys[i].Draw(Color.LightGoldenrodYellow, Math.Min(10, Score) * 0.1f);
 					DeadBodys[i].MoveTo(player.getPos().X, player.getPos().Y, 10);
-					if(Standard.Distance(DeadBodys[i].GetPosition(),player.getPos())<10)
+					if(Method2D.Distance(DeadBodys[i].GetPos(),player.getPos())<10)
 					{
 						DeadBodys.RemoveAt(i);
 						i--;
@@ -433,7 +440,7 @@ namespace TestSheet
 				if(YouDieLayer.GetSpriteName()!="Stage1")
 					YouDieLayer = new DrawingLayer("Stage1", new Point(200, 500), 1.5f);
 				YouDieLayer.Draw(Color.LightGoldenrodYellow,(float)(2*FadeTimer/100.0));
-				YouDieLayer.setPosition(player.getPos().X - 300, player.getPos().Y - 100);
+				YouDieLayer.SetPos(player.getPos().X - 300, player.getPos().Y - 100);
 			}
 			Standard.FadeAnimationDraw(Color.LightSeaGreen);//별이 사라지는 페이드애니메이션(컬러는 LighteaGreen으로 지정)은 아래 라이트레이어 전에 발생해야 보기 좋으므로 별도로 처리함.
 
@@ -483,7 +490,7 @@ namespace TestSheet
 			if(EnableZombieSound&&!IsEndPhase && Standard.FrameTimer%500==0 && FreezeTimer < 0)
 			{
 			
-				//Standard.PlaySound("BackgroundZombieSound", 0.8f);
+				//Standard.PlayFadedSE("BackgroundZombieSound", 0.8f);
 			}
 			
 
@@ -557,7 +564,7 @@ namespace TestSheet
 			{
 				for (int i = 0; i < enemies.Count; i++)
 				{
-					int r = Standard.Distance(enemies[i].getCenter(), player.GetCenter());
+					int r = Method2D.Distance(enemies[i].getCenter(), player.GetCenter());
 					Fear = Math.Min(Fear + 400.0/Math.Pow(Math.Max(r,9),2),200);
 				}
 				if (player.IsAttacking())
@@ -584,7 +591,7 @@ namespace TestSheet
 
 			if (GameStart)
 			{
-				Standard.cursor.setPos(450, 480);
+				Standard.cursor.SetPos(450, 480);
 				player.setPos(450,480);
 				GameStart = false;
 			}
@@ -592,16 +599,16 @@ namespace TestSheet
 		
 			if (ShowMenu)
 			{
-				Standard.Viewport = new Viewport(MasterInfo.FullScreen);
+				Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
 				MenuLayer.Draw(Color.Black * 0.7f);
-				Standard.DrawString("Mouse Sensitivity", new Vector2(ScrollBar_Sensitivity.Frame.GetPosition().X, ScrollBar_Sensitivity.Frame.GetPosition().Y - 20), Color.White);
+				Standard.DrawString("Mouse Sensitivity", new Vector2(ScrollBar_Sensitivity.Frame.GetPos().X, ScrollBar_Sensitivity.Frame.GetPos().Y - 20), Color.White);
 				ScrollBar_Sensitivity.Draw();
-				Standard.DrawString(String.Format("{0:0.0}", (ScrollBar_Sensitivity.MapCoefficient(0.3f, 2.0f))), new Vector2(ScrollBar_Sensitivity.Frame.GetPosition().X + 500, ScrollBar_Sensitivity.Frame.GetPosition().Y), Color.White);
-				Standard.DrawString("(Default:1.0)", new Vector2(ScrollBar_Sensitivity.Frame.GetPosition().X + 500, ScrollBar_Sensitivity.Frame.GetPosition().Y+20), Color.White);
+				Standard.DrawString(String.Format("{0:0.0}", (ScrollBar_Sensitivity.MapCoefficient(0.3f, 2.0f))), new Vector2(ScrollBar_Sensitivity.Frame.GetPos().X + 500, ScrollBar_Sensitivity.Frame.GetPos().Y), Color.White);
+				Standard.DrawString("(Default:1.0)", new Vector2(ScrollBar_Sensitivity.Frame.GetPos().X + 500, ScrollBar_Sensitivity.Frame.GetPos().Y+20), Color.White);
 				ScrollBar_SongVolume.Draw();
-				Standard.DrawString("Song Volume", new Vector2(ScrollBar_SongVolume.Frame.GetPosition().X, ScrollBar_SongVolume.Frame.GetPosition().Y - 20), Color.White);
+				Standard.DrawString("Song Volume", new Vector2(ScrollBar_SongVolume.Frame.GetPos().X, ScrollBar_SongVolume.Frame.GetPos().Y - 20), Color.White);
 				ScrollBar_SEVolume.Draw();
-				Standard.DrawString("SE Volume", new Vector2(ScrollBar_SEVolume.Frame.GetPosition().X, ScrollBar_SEVolume.Frame.GetPosition().Y - 20), Color.White);
+				Standard.DrawString("SE Volume", new Vector2(ScrollBar_SEVolume.Frame.GetPos().X, ScrollBar_SEVolume.Frame.GetPos().Y - 20), Color.White);
 				ExitButton.Draw();
 				if (ExitButton.MouseIsOnThis())
 					ExitButton.Draw(Color.DarkRed);
@@ -653,15 +660,15 @@ namespace TestSheet
 				SaveButton.Draw(Color.White,(float)((100-FadeTimer)/100.0));
 				if(SaveButton.MouseIsOnThis())
 				{
-					Standard.DrawLight(new Rectangle(-Standard.Viewport.X + 200, -Standard.Viewport.Y + 200,500,50), Color.Black, 0.7f, Standard.LightMode.Absolute);
-					Standard.DrawString("When you die, you will start after this point", new Vector2(-Standard.Viewport.X+220, -Standard.Viewport.Y + 210), Color.White);
+					Standard.DrawLight(new Rectangle(-Game1.graphics.GraphicsDevice.Viewport.X + 200, -Game1.graphics.GraphicsDevice.Viewport.Y + 200,500,50), Color.Black, 0.7f, Standard.LightMode.Absolute);
+					Standard.DrawString("When you die, you will start after this point", new Vector2(-Game1.graphics.GraphicsDevice.Viewport.X+220, -Game1.graphics.GraphicsDevice.Viewport.Y + 210), Color.White);
 					SaveButton.Draw(Color.Red);
 				}
 				NoSaveButton.Draw(Color.White, (float)((100 - FadeTimer) / 100.0));
 				if(NoSaveButton.MouseIsOnThis())
 				{
-					Standard.DrawLight(new Rectangle(-Standard.Viewport.X + 200, -Standard.Viewport.Y + 200, 550, 50), Color.Black, 0.7f, Standard.LightMode.Absolute);
-					Standard.DrawString("When you die, you will start after the previous save point", new Vector2(-Standard.Viewport.X + 220, -Standard.Viewport.Y + 210), Color.White);
+					Standard.DrawLight(new Rectangle(-Game1.graphics.GraphicsDevice.Viewport.X + 200, -Game1.graphics.GraphicsDevice.Viewport.Y + 200, 550, 50), Color.Black, 0.7f, Standard.LightMode.Absolute);
+					Standard.DrawString("When you die, you will start after the previous save point", new Vector2(-Game1.graphics.GraphicsDevice.Viewport.X + 220, -Game1.graphics.GraphicsDevice.Viewport.Y + 210), Color.White);
 					NoSaveButton.Draw(Color.Red);
 				}
 
@@ -717,10 +724,9 @@ namespace TestSheet
 
 			public void reset()
 			{
-				Standard.cursor.setPos(450, 480);
+				Standard.cursor.SetPos(450, 480);
 				setPos(450, 480);
-				Standard.Viewport = new Viewport(-getPos().X  + 400, -getPos().Y +  400, 1300, 1300);
-				Game1.graphics.GraphicsDevice.Viewport = Standard.Viewport;
+				Game1.graphics.GraphicsDevice.Viewport = new Viewport(-getPos().X  + 400, -getPos().Y +  400, 1300, 1300);
 				MovePoint = new Point(0, 0);
 				AttackTimer = 0;
 				AttackIndex = -1;
@@ -749,12 +755,12 @@ namespace TestSheet
 
 			public Point getPos()
 			{
-				return player.GetPosition();
+				return player.GetPos();
 			}
 
 			public void setPos(int x, int y)
 			{
-				player.setPosition(x, y);
+				player.SetPos(x, y);
 			}
 
 			public Point getMovePoint()
@@ -782,13 +788,14 @@ namespace TestSheet
 			public void Draw()
 			{
 				player.Draw(Color.White);
+				/*
 				for (int i = 0; i < 7; i++)
 				{
-					wand.setPosition(Standard.DivPoint(player.GetBound().Center, direction.GetBound().Center, i / 10.0));
-					wand.setPosition(wand.GetPosition().X - 2, wand.GetPosition().Y - 2);
+					wand.SetPos(Method2D.DivPoint(player.GetBound().Center, direction.GetBound().Center, i / 10.0));
+					wand.SetPos(wand.GetPos().X - 2, wand.GetPos().Y - 2);
 					wand.Draw(Color.Aqua);
 				}
-				direction.Draw(Color.White);
+				direction.Draw(Color.White);*/
 				/*
 				if (isAttacking)
 					player.Draw(MasterInfo.PlayerColor*(float)((float)AttackTimer/AttackSpeed));
@@ -809,44 +816,38 @@ namespace TestSheet
 					if (AttackTimer < AttackSpeed - 3)
 					{						
 						player.MoveTo(Standard.cursor.getPos().X - 40, Standard.cursor.getPos().Y - 40, MoveSpeed * 2);
-						Standard.FadeAnimation(new DrawingLayer("Player_AfterImage", new Rectangle(player.GetPosition(), new Point(80, 80))), 8, Color.AliceBlue);	
+						Standard.FadeAnimation(new DrawingLayer("Player_AfterImage", new Rectangle(player.GetPos(), new Point(80, 80))), 8, Color.AliceBlue);	
 					}
-					MovePoint = Standard.DivPoint(player.GetCenter(), Standard.cursor.getPos(), 0.8);
+					MovePoint = Method2D.DivPoint(player.GetCenter(), Standard.cursor.getPos(), 0.8);
 
 					
 					for(int i=0;i<enemies.Count;i++)
 					{
-						if (enemies[i].getBound().Contains(Standard.cursor.getPos()) && Standard.Distance(getPos(), enemies[i].getPos()) < Range)
+						if (enemies[i].getBound().Contains(Standard.cursor.getPos()) && Method2D.Distance(getPos(), enemies[i].getPos()) < Range)
 						{
 							return;
 						}
 					}
 					MovePoint = Standard.cursor.getPos();
-					
-					if (Standard.FrameTimer % 30 < 15)
-						ClickSprite = "Click";
-					else
-						ClickSprite = "Click2";
-					DrawingLayer Click = new DrawingLayer(ClickSprite, new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30));
-					Standard.FadeAnimation(Click, 10, Color.AliceBlue);
+				
 					return;
 				}
 				if(!IsEndPhase&&StartStageTimer==0)
 				{
 					for (int i = 0; i < enemies.Count; i++)
 					{
-						if (enemies[i].getBound().Contains(Standard.cursor.getPos()) && Standard.Distance(getPos(), enemies[i].getPos()) < Range)
+						if (enemies[i].getBound().Contains(Standard.cursor.getPos()) && Method2D.Distance(getPos(), enemies[i].getPos()) < Range)
 						{
-							int ClickDistance = Standard.Distance(Standard.cursor.getPos(), enemies[i].getCenter());
+							int ClickDistance = Method2D.Distance(Standard.cursor.getPos(), enemies[i].getCenter());
 							AttackIndex = i;
 							for (int j = i; j < enemies.Count; j++)
 							{
-								if (Standard.Distance(Standard.cursor.getPos(), enemies[j].getCenter()) < ClickDistance)
+								if (Method2D.Distance(Standard.cursor.getPos(), enemies[j].getCenter()) < ClickDistance)
 								{
 									AttackIndex = j;
 									if (enemies[j].IsGhost)
 										break;
-									ClickDistance = Standard.Distance(Standard.cursor.getPos(), enemies[j].getCenter());
+									ClickDistance = Method2D.Distance(Standard.cursor.getPos(), enemies[j].getCenter());
 								}
 							}
 							isAttacking = true;
@@ -860,12 +861,7 @@ namespace TestSheet
 			
 					MovePoint = Standard.cursor.getPos();
 				
-				if (Standard.FrameTimer % 30 < 15)
-					ClickSprite = "Click";
-				else
-					ClickSprite = "Click2";
-				DrawingLayer Click2 = new DrawingLayer(ClickSprite, new Rectangle(MovePoint.X - 15, MovePoint.Y - 15, 30, 30));
-				Standard.FadeAnimation(Click2, 10, Color.AliceBlue);
+			
 				
 				if (MovePoint.X!=0||MovePoint.Y!=0)
 				{
@@ -874,7 +870,7 @@ namespace TestSheet
 					player.MoveTo(MovePoint.X - 40, MovePoint.Y - 40, Math.Max(0,MoveSpeed-BoostTimer));
 					int x2 = (MovePoint.X + 4 * getPos().X) / 5;
 					int y2 = (MovePoint.Y + 4 * getPos().Y) / 5;
-					direction.setPosition(x2 + 25, y2 + 25);
+					direction.SetPos(x2 + 25, y2 + 25);
 				}
 			}
 
@@ -888,8 +884,8 @@ namespace TestSheet
 						Standard.FadeAnimation(enemies[AttackIndex].enemy, 15, Color.AntiqueWhite);
 						ShotPoint = enemies[AttackIndex].getPos();
 						//ZombieFlip = !ZombieFlip;
-						Standard.PlaySound("KnifeSound",0.4f);
-						Standard.PlaySound("GunSound",0.3f);
+						Standard.PlayFadedSE("KnifeSound",0.4f);
+						Standard.PlayFadedSE("GunSound",0.3f);
 					}
 					if (AttackTimer>0)//투사체 날아가는중
 					{
@@ -924,7 +920,7 @@ namespace TestSheet
 					int y = ((AttackSpeed - AttackTimer) * enemies[AttackIndex].getPos().Y + AttackTimer * getPos().Y)/AttackSpeed;
 
 					/*
-					bullet.setPosition(x + 25, y + 25);
+					bullet.SetPos(x + 25, y + 25);
 					bullet.SetBound(new Rectangle(x + 25, y + 25, AttackTimer * 3, AttackTimer * 3));
 					bullet.SetCenter(new Point(x+40, y+40));
 					bullet.Draw(MasterInfo.PlayerColor,1f);
@@ -934,11 +930,11 @@ namespace TestSheet
 					if(Standard.FrameTimer%5==0)
 					{
 						if (Standard.FrameTimer % 20 < 6)
-							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X/2+enemies[AttackIndex].enemy.GetPosition().X/2, Standard.cursor.getPos().Y / 2 + enemies[AttackIndex].enemy.GetPosition().Y / 2, 70, 70)), 15, Color.Pink);
+							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X/2+enemies[AttackIndex].enemy.GetPos().X/2, Standard.cursor.getPos().Y / 2 + enemies[AttackIndex].enemy.GetPos().Y / 2, 70, 70)), 15, Color.Pink);
 						else if (Standard.FrameTimer % 20 < 12)
-							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X / 2 + enemies[AttackIndex].enemy.GetPosition().X / 2, Standard.cursor.getPos().Y / 2 + enemies[AttackIndex].enemy.GetPosition().Y / 2, 70, 70)), 15, Color.PaleVioletRed);
+							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X / 2 + enemies[AttackIndex].enemy.GetPos().X / 2, Standard.cursor.getPos().Y / 2 + enemies[AttackIndex].enemy.GetPos().Y / 2, 70, 70)), 15, Color.PaleVioletRed);
 						else
-							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X / 2 + enemies[AttackIndex].enemy.GetPosition().X / 2, Standard.cursor.getPos().Y / 2 + enemies[AttackIndex].enemy.GetPosition().Y / 2, 70, 70)), 15, Color.SkyBlue);
+							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X / 2 + enemies[AttackIndex].enemy.GetPos().X / 2, Standard.cursor.getPos().Y / 2 + enemies[AttackIndex].enemy.GetPos().Y / 2, 70, 70)), 15, Color.SkyBlue);
 					}
 					/*
 					Standard.FadeAnimationDraw(Color.Pink);
@@ -948,7 +944,7 @@ namespace TestSheet
 
 					int x2 = (enemies[AttackIndex].getPos().X + 3 * getPos().X) / 4;
 					int y2 = (enemies[AttackIndex].getPos().Y + 3 * getPos().Y) / 4;
-					direction.setPosition(x2 + 25, y2 + 25);
+					direction.SetPos(x2 + 25, y2 + 25);
 					direction.Draw(Color.White);
 				}
 			}
@@ -965,7 +961,7 @@ namespace TestSheet
 
 			public Point getPos()
 			{
-				return enemy.GetPosition();
+				return enemy.GetPos();
 			}
 
 			public Point getCenter()
@@ -1000,7 +996,7 @@ namespace TestSheet
 						y = Standard.Random(15, 80);
 					else
 						y = Standard.Random(720, 800);
-					if(Standard.Distance(player.getPos(),new Point(x,y))>80)
+					if(Method2D.Distance(player.getPos(),new Point(x,y))>80)
 						enemy = new DrawingLayer("Player_V6", new Rectangle(x, y, 80, 80));
 					else
 						enemy = new DrawingLayer("Player_V6", new Rectangle(x+200, y+200, 80, 80));
@@ -1013,7 +1009,7 @@ namespace TestSheet
 			{
 				if (enemy.GetBound().Contains(Standard.cursor.getPos()))
 				{
-					if (Standard.Distance(player.getPos(), getPos()) > player.getRange())
+					if (Method2D.Distance(player.getPos(), getPos()) > player.getRange())
 						enemy.Draw(Color.Blue);
 					else
 					{
@@ -1036,7 +1032,7 @@ namespace TestSheet
 
 					enemy.MoveTo(ZombieCOM.X, ZombieCOM.Y, -ZombieSpeed / 3);
 
-					if (Standard.Distance(getCenter(), Standard.cursor.getPos()) < 80 && Standard.Distance(player.GetCenter(), Standard.cursor.getPos()) > 10)
+					if (Method2D.Distance(getCenter(), Standard.cursor.getPos()) < 80 && Method2D.Distance(player.GetCenter(), Standard.cursor.getPos()) > 10)
 					{
 						enemy.MoveTo(Standard.cursor.getPos().X, Standard.cursor.getPos().Y, -3);
 					}
@@ -1047,16 +1043,16 @@ namespace TestSheet
 					if (GhostDistance > 0)
 					{
 						GhostDistance = GhostDistance - 2;
-						enemy.setPosition(player.getPos().X + (int)(GhostDistance * (Math.Cos(GhostAngle + GhostTimer * Ghostw))), player.getPos().Y + (int)(GhostDistance * (Math.Sin(GhostAngle + GhostTimer * Ghostw))));
+						enemy.SetPos(player.getPos().X + (int)(GhostDistance * (Math.Cos(GhostAngle + GhostTimer * Ghostw))), player.getPos().Y + (int)(GhostDistance * (Math.Sin(GhostAngle + GhostTimer * Ghostw))));
 					}
 					else
 					{
-						enemy.setPosition(player.getPos());
+						enemy.SetPos(player.getPos());
 					}
 				}
 
 
-				if (!IsEndPhase&&StartStageTimer==0&&(Standard.Distance(player.getPos(), getPos())) <= 10 && Index != player.getAttackIndex())
+				if (!IsEndPhase&&StartStageTimer==0&&(Method2D.Distance(player.getPos(), getPos())) <= 10 && Index != player.getAttackIndex())
 				{
 					KillerZombieIndex = Index;
 					GameOver = true;
@@ -1077,49 +1073,49 @@ namespace TestSheet
 			public Bludger(Point vector)
 			{
 				v = vector;
-				bludger.setPosition(Standard.Random(-50, 50), Standard.Random(-50, 50));
+				bludger.SetPos(Standard.Random(-50, 50), Standard.Random(-50, 50));
 			}
 			public void MoveUpdate()
 			{
-				BoundRectangle = new Rectangle(-Standard.Viewport.X, -Standard.Viewport.Y,900, 720);
+				BoundRectangle = new Rectangle(-Game1.graphics.GraphicsDevice.Viewport.X, -Game1.graphics.GraphicsDevice.Viewport.Y,900, 720);
 				//벡터 계산
-				if(BoundRectangle.X>bludger.GetPosition().X||0> bludger.GetPosition().X)//공이 왼쪽으로 나갈 경우
+				if(BoundRectangle.X>bludger.GetPos().X||0> bludger.GetPos().X)//공이 왼쪽으로 나갈 경우
 				{
 					v = new Point(Math.Abs(v.X), v.Y);
-					v = Standard.Deduct(player.getPos(), bludger.GetPosition());
+					v = Method2D.Deduct(player.getPos(), bludger.GetPos());
 				}
-				if(BoundRectangle.Y>bludger.GetPosition().Y||0> bludger.GetPosition().Y)//공이 위로 나갈 경우
+				if(BoundRectangle.Y>bludger.GetPos().Y||0> bludger.GetPos().Y)//공이 위로 나갈 경우
 				{
 					v = new Point(v.X, Math.Abs(v.Y));
-					v = Standard.Deduct(player.getPos(), bludger.GetPosition());
+					v = Method2D.Deduct(player.getPos(), bludger.GetPos());
 				}
-				if(BoundRectangle.X+ BoundRectangle.Width<bludger.GetPosition().X||MasterInfo.FullScreen.Width-80 < bludger.GetPosition().X)//공이 오른쪽으로 나갈 경우
+				if(BoundRectangle.X+ BoundRectangle.Width<bludger.GetPos().X||MasterInfo.FullScreen.Width-80 < bludger.GetPos().X)//공이 오른쪽으로 나갈 경우
 				{
 					v = new Point(-Math.Abs(v.X), v.Y);
-					v = Standard.Deduct(player.getPos(), bludger.GetPosition());
+					v = Method2D.Deduct(player.getPos(), bludger.GetPos());
 				}
-				if (BoundRectangle.Y + BoundRectangle.Height < bludger.GetPosition().Y|| MasterInfo.FullScreen.Height-80 < bludger.GetPosition().Y)//공이 오른쪽으로 나갈 경우
+				if (BoundRectangle.Y + BoundRectangle.Height < bludger.GetPos().Y|| MasterInfo.FullScreen.Height-80 < bludger.GetPos().Y)//공이 오른쪽으로 나갈 경우
 				{
 					v = new Point(v.X, -Math.Abs(v.Y));
-					v = Standard.Deduct(player.getPos(), bludger.GetPosition());
+					v = Method2D.Deduct(player.getPos(), bludger.GetPos());
 				}
 
 				
 			
 				
 				/*
-				if(bludger.MouseIsOnThis()&&Standard.Distance(player.getPos(),bludger.GetPosition())<player.getRange())
+				if(bludger.MouseIsOnThis()&&Method2D.Distance(player.getPos(),bludger.GetPos())<player.getRange())
 				{
 					Vector2 V1 = new Vector2(v.X, v.Y);
 					V1.Normalize();
-					Vector2 V2 = new Vector2(bludger.GetPosition().X - player.getPos().X, bludger.GetPosition().Y - player.getPos().Y);
+					Vector2 V2 = new Vector2(bludger.GetPos().X - player.getPos().X, bludger.GetPos().Y - player.getPos().Y);
 					V2.Normalize();
 					Vector2 result = (V1 + V2) * 100;
 					v = new Point((int)result.X, (int)result.Y);
 				}*/
 
 				bludger.MoveByVector(v, BludgerSpeed);
-				if (!IsEndPhase && StartStageTimer == 0 && (Standard.Distance(player.getPos(), bludger.GetPosition())) <= 10)
+				if (!IsEndPhase && StartStageTimer == 0 && (Method2D.Distance(player.getPos(), bludger.GetPos())) <= 10)
 				{
 
 
@@ -1141,11 +1137,11 @@ namespace TestSheet
 				bludger.Draw(Color.IndianRed,0.5f);
 				if(!ShowMenu&&!GameOver&&Standard.FrameTimer%3==0)
 				{
-					//Standard.FadeAnimation(new DrawingLayer("Player_AfterImage", new Rectangle(bludger.GetPosition(), new Point(80, 80))), 15, Color.IndianRed);
+					//Standard.FadeAnimation(new DrawingLayer("Player_AfterImage", new Rectangle(bludger.GetPos(), new Point(80, 80))), 15, Color.IndianRed);
 					if(Standard.FrameTimer%30<15)
-						Standard.FadeAnimation(new DrawingLayer("BludgerFire", new Rectangle(bludger.GetPosition(), new Point(80, 80))), 15, Color.IndianRed);
+						Standard.FadeAnimation(new DrawingLayer("BludgerFire", new Rectangle(bludger.GetPos(), new Point(80, 80))), 15, Color.IndianRed);
 					else
-						Standard.FadeAnimation(new DrawingLayer("BludgerFire2", new Rectangle(bludger.GetPosition(), new Point(80, 80))), 30, Color.IndianRed);
+						Standard.FadeAnimation(new DrawingLayer("BludgerFire2", new Rectangle(bludger.GetPos(), new Point(80, 80))), 30, Color.IndianRed);
 
 				}
 				Standard.DrawAddon(bludger, Color.LightYellow, 1f, "BludgerFace");

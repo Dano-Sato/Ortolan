@@ -128,6 +128,48 @@ namespace TestSheet
 					*/
 			}
 
+		
+			if(Tester.FreezeTimer<0)
+				Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal*(float)(Standard.FrameTimer%30/8.0), "Player_Heart");
+			else if(Tester.FreezeTimer>140)
+				Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "HeartBite1");
+			else if (Tester.FreezeTimer > 90)
+				Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "HeartBite2");
+
+
+			if (Standard.FrameTimer % 60 == 0)
+				Standard.PlaySound("HeartBeat", Math.Min((float)Tester.HeartSignal,1f));
+			if (Tester.GameOver)
+			{
+				
+
+				if (Tester.KillerZombieIndex != -1)
+				{
+						if (Standard.FrameTimer % 20 <= 10)
+						Standard.DrawAddon(Tester.enemies[Tester.KillerZombieIndex].enemy, Color.White, 1f, "ZombieBite");
+					else
+						Standard.DrawAddon(Tester.enemies[Tester.KillerZombieIndex].enemy, Color.White, 1f, "ZombieBite2");
+
+				}
+
+			}
+
+			bool GhostAnimate = Standard.FrameTimer % 30 < 15;
+			if (!Tester.GameOver&&!Tester.ShowMenu&&Tester.FreezeTimer<0)
+			{
+				for (int i = 0; i < Tester.bludgers.Count; i++)
+				{
+					Tester.bludgers[i].Draw();
+					if (GhostAnimate)
+						Standard.DrawAddon(Tester.bludgers[i].bludger, Color.LightYellow, 0.1f, "GhostHead_1");
+					else
+						Standard.DrawAddon(Tester.bludgers[i].bludger, Color.LightYellow, 0.1f, "GhostHead_2");
+
+					Standard.DrawAddon(Tester.bludgers[i].bludger, Color.LightYellow, 1f, "BludgerFace");
+
+				}
+		
+			}
 			base.Draw(gameTime);
         }	
     }

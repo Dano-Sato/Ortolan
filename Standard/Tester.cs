@@ -189,7 +189,7 @@ namespace TestSheet
 				ClickSprite = "Click";
 			else
 				ClickSprite = "Click2";
-			DrawingLayer Click = new DrawingLayer(ClickSprite, new Rectangle(Standard.cursor.getPos().X - 15, Standard.cursor.getPos().Y - 15, 30, 30));
+			DrawingLayer Click = new DrawingLayer(ClickSprite, new Rectangle(Cursor.getPos().X - 15, Cursor.getPos().Y - 15, 30, 30));
 			if(!IsEndPhase)
 			Standard.FadeAnimation(Click, 10, Color.AliceBlue);
 			else
@@ -227,7 +227,7 @@ namespace TestSheet
 				ScrollBar_Sensitivity.Update();
 				ScrollBar_SongVolume.Update();
 				ScrollBar_SEVolume.Update();
-				Standard.cursor.Sensitivity = ScrollBar_Sensitivity.MapCoefficient(0.5f, 2.0f);
+				Cursor.Sensitivity = ScrollBar_Sensitivity.MapCoefficient(0.5f, 2.0f);
 				if(!IsEndPhase)
 					Standard.SetSongVolume(ScrollBar_SongVolume.Coefficient);
 				Standard.SetSEVolume(ScrollBar_SEVolume.Coefficient);
@@ -296,7 +296,7 @@ namespace TestSheet
 
 			Point PlayerDisPlacementVector = Method2D.Deduct(player.getPos(), OldPlayerPos);
 			Point ViewportDisplacement = Method2D.Deduct(PlayerDisPlacementVector, OldPlayerDisplacementVector);
-			Point CursorDisplacement = Method2D.Deduct(player.getPos(), Standard.cursor.getPos());
+			Point CursorDisplacement = Method2D.Deduct(player.getPos(), Cursor.getPos());
 			int Dis = Method2D.Abs(CursorDisplacement);
 
 			if(Dis>250)
@@ -718,7 +718,7 @@ namespace TestSheet
 
 			public void reset()
 			{
-				Standard.cursor.SetPos(450, 480);
+				Cursor.SetPos(450, 480);
 				setPos(450, 480);
 				Game1.graphics.GraphicsDevice.Viewport = new Viewport(-getPos().X  + 400, -getPos().Y +  400, 1300, 1300);
 				MovePoint = new Point(0, 0);
@@ -803,20 +803,20 @@ namespace TestSheet
 				{
 					if (AttackTimer < AttackSpeed - 3)
 					{						
-						player.MoveTo(Standard.cursor.getPos().X - 40, Standard.cursor.getPos().Y - 40, MoveSpeed * 2);
+						player.MoveTo(Cursor.getPos().X - 40, Cursor.getPos().Y - 40, MoveSpeed * 2);
 						Standard.FadeAnimation(new DrawingLayer("Player_AfterImage", new Rectangle(player.GetPos(), new Point(70, 70))), 8, Color.AliceBlue);	
 					}
-					MovePoint = Method2D.DivPoint(player.GetCenter(), Standard.cursor.getPos(), 0.8);
+					MovePoint = Method2D.DivPoint(player.GetCenter(), Cursor.getPos(), 0.8);
 
 					
 					for(int i=0;i<enemies.Count;i++)
 					{
-						if (enemies[i].getBound().Contains(Standard.cursor.getPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range)
+						if (enemies[i].getBound().Contains(Cursor.getPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range)
 						{
 							return;
 						}
 					}
-					MovePoint = Standard.cursor.getPos();
+					MovePoint = Cursor.getPos();
 				
 					return;
 				}
@@ -824,18 +824,18 @@ namespace TestSheet
 				{
 					for (int i = 0; i < enemies.Count; i++)
 					{
-						if (enemies[i].getBound().Contains(Standard.cursor.getPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range)
+						if (enemies[i].getBound().Contains(Cursor.getPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range)
 						{
-							int ClickDistance = Method2D.Distance(Standard.cursor.getPos(), enemies[i].getCenter());
+							int ClickDistance = Method2D.Distance(Cursor.getPos(), enemies[i].getCenter());
 							AttackIndex = i;
 							for (int j = i; j < enemies.Count; j++)
 							{
-								if (Method2D.Distance(Standard.cursor.getPos(), enemies[j].getCenter()) < ClickDistance)
+								if (Method2D.Distance(Cursor.getPos(), enemies[j].getCenter()) < ClickDistance)
 								{
 									AttackIndex = j;
 									if (enemies[j].IsGhost)
 										break;
-									ClickDistance = Method2D.Distance(Standard.cursor.getPos(), enemies[j].getCenter());
+									ClickDistance = Method2D.Distance(Cursor.getPos(), enemies[j].getCenter());
 								}
 							}
 							isAttacking = true;
@@ -847,7 +847,7 @@ namespace TestSheet
 				}
 			
 			
-					MovePoint = Standard.cursor.getPos();
+					MovePoint = Cursor.getPos();
 				
 			
 				
@@ -912,11 +912,11 @@ namespace TestSheet
 					if(!ShowMenu&& Standard.FrameTimer%5==0)
 					{
 						if (Standard.FrameTimer % 20 < 6)
-							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X/2+enemies[AttackIndex].enemy.GetPos().X/2, Standard.cursor.getPos().Y / 2 + enemies[AttackIndex].enemy.GetPos().Y / 2, 70, 70)), 15, Color.Pink);
+							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Cursor.getPos().X/2+enemies[AttackIndex].enemy.GetPos().X/2, Cursor.getPos().Y / 2 + enemies[AttackIndex].enemy.GetPos().Y / 2, 70, 70)), 15, Color.Pink);
 						else if (Standard.FrameTimer % 20 < 12)
-							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X / 2 + enemies[AttackIndex].enemy.GetPos().X / 2, Standard.cursor.getPos().Y / 2 + enemies[AttackIndex].enemy.GetPos().Y / 2, 70, 70)), 15, Color.PaleVioletRed);
+							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Cursor.getPos().X / 2 + enemies[AttackIndex].enemy.GetPos().X / 2, Cursor.getPos().Y / 2 + enemies[AttackIndex].enemy.GetPos().Y / 2, 70, 70)), 15, Color.PaleVioletRed);
 						else
-							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Standard.cursor.getPos().X / 2 + enemies[AttackIndex].enemy.GetPos().X / 2, Standard.cursor.getPos().Y / 2 + enemies[AttackIndex].enemy.GetPos().Y / 2, 70, 70)), 15, Color.SkyBlue);
+							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Cursor.getPos().X / 2 + enemies[AttackIndex].enemy.GetPos().X / 2, Cursor.getPos().Y / 2 + enemies[AttackIndex].enemy.GetPos().Y / 2, 70, 70)), 15, Color.SkyBlue);
 					}
 
 
@@ -982,7 +982,7 @@ namespace TestSheet
 
 			public void Draw()
 			{
-				if (enemy.GetBound().Contains(Standard.cursor.getPos()))
+				if (enemy.GetBound().Contains(Cursor.getPos()))
 				{
 					if (Method2D.Distance(player.getPos(), getPos()) > player.getRange())
 						enemy.Draw(Color.Blue);
@@ -1006,9 +1006,9 @@ namespace TestSheet
 
 					enemy.MoveTo(ZombieCOM.X, ZombieCOM.Y, -ZombieSpeed / 3);
 
-					if (Method2D.Distance(getCenter(), Standard.cursor.getPos()) < 80 && Method2D.Distance(player.GetCenter(), Standard.cursor.getPos()) > 10)
+					if (Method2D.Distance(getCenter(), Cursor.getPos()) < 80 && Method2D.Distance(player.GetCenter(), Cursor.getPos()) > 10)
 					{
-						enemy.MoveTo(Standard.cursor.getPos().X, Standard.cursor.getPos().Y, -3);
+						enemy.MoveTo(Cursor.getPos().X, Cursor.getPos().Y, -3);
 					}
 				}
 				else

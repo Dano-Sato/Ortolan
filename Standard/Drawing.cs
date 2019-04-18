@@ -253,17 +253,17 @@ namespace TestSheet
 		/* 클릭처리*/
 		public bool MouseIsOnThis()
 		{
-			return Bound.Contains(Standard.cursor.getPos());
+			return Bound.Contains(Cursor.getPos());
 		}
 
 		public bool MouseJustLeftClickedThis()
 		{
-			return MouseIsOnThis() && Standard.cursor.JustdidLeftClick();
+			return MouseIsOnThis() && Cursor.JustdidLeftClick();
 		}
 
 		public bool MouseIsLeftClickingThis()
 		{
-			return MouseIsOnThis() && Standard.cursor.IsLeftClickingNow();
+			return MouseIsOnThis() && Cursor.IsLeftClickingNow();
 		}
 
 

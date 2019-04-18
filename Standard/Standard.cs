@@ -47,14 +47,14 @@ namespace TestSheet
 			Standardfont = Game1.content.Load<SpriteFont>("StandardFont");
 			RootMouseSpeed = GetMouseSpeed();
 			Mouse.SetPosition(400, 400);
-			cursor = new Cursor();
+			
 			
 		}
 		//Update, Draw 함수는 Game1.cs에서  각각 이름이 일치하는 함수의 마지막 줄로 집어넣어주면 됩니다.
 		//커서, 키보드의 올드 스테이트 업데이트 및 드로잉은 가장 마지막에 행해져야 하기 때문입니다.
 		public static void Update()
 		{
-			cursor.OldStateUpdate();
+			Cursor.OldStateUpdate();
 			OldkeyboardState = Keyboard.GetState();
 			FrameTimer++;
 			FadeAnimationUpdate();
@@ -62,7 +62,7 @@ namespace TestSheet
 		public static void Draw()
 		{
 			FadeAnimationDraw();
-			cursor.Draw();
+			Cursor.Draw();
 		}
 
 		public static void Normalize()
@@ -76,7 +76,6 @@ namespace TestSheet
 
 		/*입력 파트*/
 
-		public static Cursor cursor;
 		public static KeyboardState OldkeyboardState;
 
 		public static bool KeyInputOccurs()
@@ -479,32 +478,31 @@ namespace TestSheet
 	 * Game1.cs의 Draw문에 cursor.Draw()를 추가하십시오.
 	 * */
 
-	public class Cursor
+	public static class Cursor
 	{
 		public static readonly int MouseSize = 20;
-		private DrawingLayer mouseLayer = new DrawingLayer("EmptySpace", new Rectangle(400, 400, MouseSize, MouseSize));
-		private Vector2 MouseLeftOverPosition=new Vector2(0,0);
-		private MouseState OldMouseState=Mouse.GetState();
-		private DrawingLayer DraggingLayer = new DrawingLayer("WhiteSpace",new Rectangle(0,0,0,0));
-		public float Sensitivity=1.0f;
-		private DrawingLayer MouseTracker= new DrawingLayer("EmptySpace", new Rectangle(400, 400, MouseSize, MouseSize));
-
-		public void SetSprite(string s)
+		private static DrawingLayer mouseLayer = new DrawingLayer("EmptySpace", new Rectangle(400, 400, MouseSize, MouseSize));
+		private static Vector2 MouseLeftOverPosition =new Vector2(0,0);
+		private static MouseState OldMouseState =Mouse.GetState();
+		private static DrawingLayer DraggingLayer = new DrawingLayer("WhiteSpace",new Rectangle(0,0,0,0));
+		public static float Sensitivity =1.0f;
+		
+		public static void SetSprite(string s)
 		{
 			mouseLayer.setSprite(s);
 		}
-		public Point getPos()
+		public static Point getPos()
 		{
 			return mouseLayer.GetPos();
 		}
 
 
-		public void SetPos(int x, int y)
+		public static void SetPos(int x, int y)
 		{
 			mouseLayer.SetPos(x, y);
 		}
 
-		public void OldStateUpdate()//클릭 처리 마지막에 행사되어야 OldMouseState가 보존된다.
+		public static void OldStateUpdate()//클릭 처리 마지막에 행사되어야 OldMouseState가 보존된다.
 		{
 
 			OldMouseState = Mouse.GetState();
@@ -526,7 +524,7 @@ namespace TestSheet
 				Mouse.SetPosition(400, 400);
 			OldMouseState = Mouse.GetState();*/
 		}
-		public void Draw()
+		public static void Draw()
 		{
 			mouseLayer.Draw();
 		}
@@ -534,52 +532,52 @@ namespace TestSheet
 
 		/*상호작용 처리*/
 
-		public bool IsOn(Rectangle r)
+		public static bool IsOn(Rectangle r)
 		{
-			return r.Contains(this.getPos());
+			return r.Contains(getPos());
 		}
-		public bool IsOn(DrawingLayer d)
+		public static bool IsOn(DrawingLayer d)
 		{
-			return d.GetBound().Contains(this.getPos());
+			return d.GetBound().Contains(getPos());
 		}
 		// 반드시 MouseUpdate()이전에 쓰여야 함. 그래야 올드스테이트와 현재스테이트가 구분이 된다.
 		// 현재는 스탠다드 내부에서 자동으로 업데이트 되므로 신경쓸 필요는 없음.
-		public bool JustdidLeftClick()//플레이어가 막 레프트클릭을 했는지 확인하는 부울함수. 스태틱함수. 
+		public static bool JustdidLeftClick()//플레이어가 막 레프트클릭을 했는지 확인하는 부울함수. 스태틱함수. 
 		{
 			return (Mouse.GetState().LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed //레프트버튼이 클릭되었고
 && OldMouseState.LeftButton != Microsoft.Xna.Framework.Input.ButtonState.Pressed)//올드마우스스테이트는 클릭이 안되어있었어야해. 혹은..
 || GamePad.GetState(PlayerIndex.One).IsButtonDown(Buttons.X);///게임패드의 경우는 X를 누른거야.
 		}
 
-		public bool JustdidLeftClick(DrawingLayer s)
+		public static bool JustdidLeftClick(DrawingLayer s)
 		{
-			return JustdidLeftClick() && s.GetBound().Contains(this.getPos());
+			return JustdidLeftClick() && s.GetBound().Contains(getPos());
 		}
 
-		public bool JustdidRightClick()
+		public static bool JustdidRightClick()
 		{
 			return (Mouse.GetState().RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed
 				&& OldMouseState.RightButton != Microsoft.Xna.Framework.Input.ButtonState.Pressed)
 				|| GamePad.GetState(PlayerIndex.One).IsButtonDown(Buttons.A);
 		}
 
-		public bool JustdidRightClick(DrawingLayer s)
+		public static bool JustdidRightClick(DrawingLayer s)
 		{
-			return JustdidRightClick() && s.GetBound().Contains(this.getPos());
+			return JustdidRightClick() && s.GetBound().Contains(getPos());
 		}
 
 
-		public bool IsRightClickingNow()//현재 RightClick중이면 참을 반환한다.
+		public static bool IsRightClickingNow()//현재 RightClick중이면 참을 반환한다.
 		{
 			return (Mouse.GetState().RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed);
 		}
 
-		public bool IsLeftClickingNow()//현재 RightClick중이면 참을 반환한다.
+		public static bool IsLeftClickingNow()//현재 RightClick중이면 참을 반환한다.
 		{
 			return (Mouse.GetState().LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed);
 		}
 
-		public bool IsDragging(DrawingLayer s)
+		public static bool IsDragging(DrawingLayer s)
 		{
 			if (JustdidLeftClick(s))
 			{

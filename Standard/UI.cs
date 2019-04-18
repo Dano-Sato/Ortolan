@@ -246,14 +246,14 @@ namespace TestSheet
 		{
 
 			//마우스 입력 처리
-			if (Standard.cursor.IsDragging(Bar)||(Standard.cursor.JustdidLeftClick() && Standard.cursor.IsOn(Frame)))
+			if (Cursor.IsDragging(Bar)||(Cursor.JustdidLeftClick() && Cursor.IsOn(Frame)))
 			{
 				if (isVertical)
 				{
-					Bar.SetPos(Bar.GetPos().X, Standard.cursor.getPos().Y);
+					Bar.SetPos(Bar.GetPos().X, Cursor.getPos().Y);
 				}
 				else
-					Bar.SetPos(Standard.cursor.getPos().X, Bar.GetPos().Y);
+					Bar.SetPos(Cursor.getPos().X, Bar.GetPos().Y);
 			}
 
 			//바가 범위를 벗어나지 않도록 조정.

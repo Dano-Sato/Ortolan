@@ -122,7 +122,8 @@ namespace TestSheet
 			//AddSong("SongName2");
 			//AddSong("SongName3");
 
-			AddSong("YouDieTheme8");        //0
+			AddSong("Inferno");
+			//AddSong("YouDieTheme8");        //0
 			AddSong("Stage2_Youdie");       //1
 		}
 
@@ -481,11 +482,12 @@ namespace TestSheet
 	public class Cursor
 	{
 		public static readonly int MouseSize = 20;
-		private DrawingLayer mouseLayer = new DrawingLayer("Cursor", new Rectangle(400, 400, MouseSize, MouseSize));
+		private DrawingLayer mouseLayer = new DrawingLayer("EmptySpace", new Rectangle(400, 400, MouseSize, MouseSize));
 		private Vector2 MouseLeftOverPosition=new Vector2(0,0);
 		private MouseState OldMouseState=Mouse.GetState();
 		private DrawingLayer DraggingLayer = new DrawingLayer("WhiteSpace",new Rectangle(0,0,0,0));
 		public float Sensitivity=1.0f;
+		private DrawingLayer MouseTracker= new DrawingLayer("EmptySpace", new Rectangle(400, 400, MouseSize, MouseSize));
 
 		public void SetSprite(string s)
 		{

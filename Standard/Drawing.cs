@@ -107,6 +107,13 @@ namespace TestSheet
 			MoveTo(p);
 		}
 
+		public void SetRatio(double ratio)
+		{
+			int SourceW = spriteTexture.Bounds.Width / (SpriteSize.X + 1);
+			int SourceH = spriteTexture.Bounds.Height / (SpriteSize.Y + 1);
+			SourceRect = new Rectangle(0, 0, SourceW, SourceH);
+			Bound = new Rectangle(GetPos(), new Point((int)(SourceW * ratio), (int)(SourceH * ratio)));
+		}
 		public Point GetFrame()
 		{
 			return new Point(Frame.X, Frame.Y);
@@ -207,7 +214,7 @@ namespace TestSheet
 			double Dx = (x - Bound.X);
 			double Dy = (y - Bound.Y);
 			double N = Math.Sqrt(Math.Pow(Dx, 2) + Math.Pow(Dy, 2));//두 물체 사이의 거리이자 노말벡터인자.
-			if (N < Math.Abs(speed))//거리가 스피드보다 가까우면 도착.
+			if (N < speed)//거리가 스피드보다 가까우면 도착.
 			{
 				MoveTo(x, y);
 				return;

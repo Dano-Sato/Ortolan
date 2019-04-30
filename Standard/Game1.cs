@@ -102,12 +102,13 @@ namespace TestSheet
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
-			Standard.DrawLight(MasterInfo.FullScreen, MasterInfo.ThemeColor, Math.Max(0f,(float)(1-Tester.Score/200.0)), Standard.LightMode.Absolute);
+			Standard.DrawLight(MasterInfo.FullScreen, Tester.Room.RoomColor, Math.Max(0f,(float)(1-Tester.Score/200.0)), Standard.LightMode.Absolute);
 			// TODO: Add your drawing code here
 			tester.Draw();
 			Standard.Draw();
 			Color ScoreColor = Color.White;
 			
+			if(!Tester.IsEndPhase)
 			Standard.DrawString("Bigfont", Tester.Score.ToString()+"/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), ScoreColor);
 			if(Tester.FreezeTimer>=0)
 			{
@@ -129,10 +130,15 @@ namespace TestSheet
 
 		
 			if(Tester.FreezeTimer<0)
-				Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal*(float)(Standard.FrameTimer%30/8.0), "Player_Heart");
-			else if(Tester.FreezeTimer>140)
+			{
+				if(Standard.IsKeyDown(Keys.A))
+					Standard.DrawAddon(Tester.player.player, Color.Blue, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "Player_Heart");
+				else
+					Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "Player_Heart");
+			}
+			else if(Tester.FreezeTimer>Tester.FreezeTime-60)
 				Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "HeartBite1");
-			else if (Tester.FreezeTimer > 90)
+			else if (Tester.FreezeTimer > Tester.FreezeTime-110)
 				Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "HeartBite2");
 
 
@@ -142,7 +148,7 @@ namespace TestSheet
 			{
 				
 
-				if (Tester.KillerZombieIndex != -1)
+				if (Tester.FreezeTimer > Tester.FreezeTime-110&&Tester.KillerZombieIndex != -1)
 				{
 						if (Standard.FrameTimer % 20 <= 10)
 						Standard.DrawAddon(Tester.enemies[Tester.KillerZombieIndex].enemy, Color.White, 1f, "ZombieBite");
@@ -151,6 +157,22 @@ namespace TestSheet
 
 				}
 
+				if(Tester.FreezeTimer==Tester.FreezeTime-110)
+				{
+					double Rnd = Standard.Random();
+					if (Rnd<0.5)
+						Tester.KillCard.setSprite("KilldByRock3");
+					else
+						Tester.KillCard.setSprite("KilldByRock4");
+
+				}
+				if (Tester.FreezeTimer > 0 && Tester.FreezeTimer < Tester.FreezeTime-110)
+				{
+					GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
+					Tester.KillCard.SetRatio(Math.Min((Tester.FreezeTime-110-Tester.FreezeTimer)*5,75) / 100.0);
+					Tester.KillCard.SetCenter(new Point(500,400));
+					Tester.KillCard.Draw(Color.White,(float)(Tester.FreezeTimer/75.0));
+				}
 			}
 
 			bool GhostAnimate = Standard.FrameTimer % 30 < 15;
@@ -169,6 +191,90 @@ namespace TestSheet
 				}
 		
 			}
+
+			Viewport Temp = GraphicsDevice.Viewport;
+			GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
+			DrawingLayer Heart = new DrawingLayer("Heart", new Rectangle(50, 50, 60,60));
+			Color HeartColor = Color.DarkRed;
+			int Hearts_5 = Tester.Hearts / 5;
+			int LeftHearts = Tester.Hearts % 5;
+			for(int i=0;i<Hearts_5;i++)
+			{
+				Heart.setSprite("Heart5");
+				Heart.SetPos(Heart.GetPos().X+80, Heart.GetPos().Y);
+				if(Tester.FreezeTimer<0)
+				{
+					
+					Heart.Draw(HeartColor);
+					Heart.Draw(Color.White*0.7f);
+				}
+				else
+					Heart.Draw(HeartColor);
+			}
+			for(int i=0;i<LeftHearts;i++)
+			{
+				Heart.setSprite("Heart");
+				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+				if (Tester.FreezeTimer < 0)
+				{
+
+					Heart.Draw(HeartColor);
+					Heart.Draw(Color.White * 0.7f);
+				}
+				else
+					Heart.Draw(HeartColor);
+			}
+			if(Tester.HeartStack>0)
+			{
+				if(Tester.HeartTimer>0)
+					Tester.HeartTimer--;
+				else
+				{
+					Tester.Hearts += Tester.HeartStack;
+					Tester.HeartStack = 0;
+				}
+				for (int i=0;i<Tester.HeartStack;i++)
+				{
+					Heart.setSprite("Heart");
+					Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+					if (Tester.FreezeTimer < 0)
+					{
+
+						Heart.Draw(HeartColor);
+						Heart.Draw(Color.White * 0.7f);
+					}
+					else
+						Heart.Draw(HeartColor);
+					Heart.Draw(Color.Honeydew * (float)(Tester.HeartTimer / 8.0));
+			
+				}
+			}
+			if (Tester.FreezeTimer > Tester.FreezeTime - 60)
+			{
+				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+				Heart.setSprite("Heart_Broken");
+				Heart.Draw(HeartColor);
+			}
+			else if (Tester.FreezeTimer > Tester.FreezeTime - 110)
+			{
+				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+				Heart.setSprite("Heart_Broken2");
+				Heart.Draw(HeartColor);
+			}
+			else if(Tester.FreezeTimer>0)
+			{
+				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+				Heart.setSprite("Heart_Broken3");
+				Heart.Draw(HeartColor * (float)(Tester.FreezeTimer/(Tester.FreezeTime - 110.0)));
+			}
+			if (Tester.Room.Number == 0&&!Tester.IsEndPhase)
+			{
+				DrawingLayer Menual = new DrawingLayer("Menual", new Point(800, 500), 0.75f);
+				Menual.Draw();
+			}
+
+
+			GraphicsDevice.Viewport = Temp;
 			base.Draw(gameTime);
         }	
     }

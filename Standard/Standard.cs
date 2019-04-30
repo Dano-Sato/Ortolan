@@ -58,6 +58,22 @@ namespace TestSheet
 			OldkeyboardState = Keyboard.GetState();
 			FrameTimer++;
 			FadeAnimationUpdate();
+			if(SongFadeTimer>0)
+			{
+				SongFadeTimer--;
+				if(FadedSong.Count>0)
+				{
+					FadedSong[0].Volume = (SongVolume * SongFadeTimer) / SongFadeTimer_Initial;
+				}
+			}
+			else
+			{
+				if (FadedSong.Count > 0)
+				{
+					FadedSong[0].Stop();
+					FadedSong.Clear();
+				}
+			}
 		}
 		public static void Draw()
 		{
@@ -102,12 +118,18 @@ namespace TestSheet
 		/*사운드 관련 파트*/
 
 		public static SoundEffect soundEffect;
-		public static Song song;
 		public static List<String> SongCatalog = new List<string>();
-		public static int SongIndex;
+		public static int SongIndex=-1;
+		public static int SongFadeTimer = 0;
+		public static int SongFadeTimer_Initial = 0;
+
 		public static float SongVolume=1.0f;
 		public static float SEVolume=1.0f;
 		public static List<SoundEffectInstance> SoundInstanceList=new List<SoundEffectInstance>();
+		public static List<SoundEffectInstance> Song= new List<SoundEffectInstance>();
+		public static List<SoundEffectInstance> FadedSong= new List<SoundEffectInstance>();
+
+		public static string SongName;
 
 
 		// * Make your own song Name List;
@@ -121,68 +143,99 @@ namespace TestSheet
 			//AddSong("SongName2");
 			//AddSong("SongName3");
 
-			AddSong("Inferno");
-			//AddSong("YouDieTheme8");        //0
-			AddSong("Stage2_Youdie");       //1
+		
+
 		}
 
 
 		public static void SetSongVolume(float volume)//송의 기본 볼륨을 정한다.
 		{
 			SongVolume = volume;
-			MediaPlayer.Volume = SongVolume;
+			//MediaPlayer.Volume = SongVolume;
+			if(Song.Count>0)
+				Song[0].Volume = volume;
 		}
 		public static void FadeSong(float Coefficient)//송에 페이드 효과를 가한다. 기본 볼륨은 변하지 않는다.
 		{
-			MediaPlayer.Volume = SongVolume * Coefficient;
+			if (Song.Count > 0)
+				Song[0].Volume = SongVolume * Coefficient;
+		}
+
+		public static void FadeOutSong(int FadeTime)
+		{
+			if(Song.Count>0)
+			{
+				FadedSong.Add(Song[0]);
+				SongFadeTimer = FadeTime;
+				SongFadeTimer_Initial = FadeTime;
+				Song.Clear();
+			}
 		}
 		public static void SetSEVolume(float volume)//사운드의 기본 볼륨을 정한다.
 		{
 			SEVolume = volume;
+	
 		}
 
-		public static void AddSong(string SongName)
+	
+		public static void PlaySong(string songName)
 		{
-			SongCatalog.Add(SongName);
-		}
-		public static void PlaySong()
-		{
-			MediaPlayer.Play(song);
+			if (SongName == songName)
+				return;
+			if (Song.Count > 0)
+			{
+				Song[0].Stop();
+				Song.Clear();
+			}
+			SongName = songName;
+			soundEffect = Game1.content.Load<SoundEffect>(songName);
+			SoundEffectInstance soundEffectInstance = soundEffect.CreateInstance();
+			soundEffectInstance.Volume = SEVolume;
+			soundEffectInstance.Play();
+			Song.Add(soundEffectInstance);
 		}
 
-		public static void PlaySong(bool Repeat)
+		public static void PlayLoopedSong(string songName)
 		{
-			song = Game1.content.Load<Song>(SongCatalog[SongIndex]);
-			MediaPlayer.Volume = SongVolume;
-			MediaPlayer.Play(song);
-			MediaPlayer.IsRepeating = Repeat;
+			if (SongName == songName)
+				return;
+			if (Song.Count > 0)
+			{
+				Song[0].Stop();
+				Song.Clear();
+			}
+			SongName = songName;
+			soundEffect = Game1.content.Load<SoundEffect>(songName);
+			SoundEffectInstance soundEffectInstance = soundEffect.CreateInstance();
+			soundEffectInstance.Volume = SEVolume;
+			soundEffectInstance.Play();
+			soundEffectInstance.IsLooped = true;
+			Song.Add(soundEffectInstance);
 		}
 		public static void PlaySong(bool Repeat, float Coefficient)
 		{
-			song = Game1.content.Load<Song>(SongCatalog[SongIndex]);
-			MediaPlayer.Volume = SongVolume*Coefficient;
-			MediaPlayer.Play(song);
-			MediaPlayer.IsRepeating = Repeat;
+			//song = Game1.content.Load<Song>(SongCatalog[SongIndex]);
+			//MediaPlayer.Volume = SongVolume*Coefficient;
+			//MediaPlayer.Play(song);
+			//MediaPlayer.IsRepeating = Repeat;
 		}
-		public static void PlaySong(int songIndex, bool Repeat)
+
+		public static void DisposeSong()
 		{
-			SongIndex = songIndex;
-			song = Game1.content.Load<Song>(SongCatalog[SongIndex]);
-			MediaPlayer.Volume = SongVolume;
-			MediaPlayer.Play(song);
-			MediaPlayer.IsRepeating = Repeat;
-		}
-		public static void StopSong()
-		{
-			MediaPlayer.Stop();
+			SongName = "";
+			if (Song.Count > 0)
+			{
+				Song[0].Stop();
+				Song.Clear();
+			}
 		}
 		public static void PlayFadedSong(int songIndex, bool Repeat,float Coefficient)
 		{
-			SongIndex = songIndex;
-			song = Game1.content.Load<Song>(SongCatalog[SongIndex]);
-			MediaPlayer.Volume = SongVolume*Coefficient;
-			MediaPlayer.Play(song);
-			MediaPlayer.IsRepeating = Repeat;
+		//	SongIndex = songIndex;
+		//	song = Game1.content.Load<Song>(SongCatalog[SongIndex]);
+			//MediaPlayer.Volume = SongVolume*Coefficient;
+			//MediaPlayer.Play(song);
+		//	MediaPlayer.IsRepeating = Repeat;
 		}
 		public static void PlaySE(string SEName)
 		{
@@ -458,7 +511,6 @@ namespace TestSheet
 	{
 		public static readonly Rectangle PreferredScreen = new Rectangle(0, 0, 1200, 800);
 		public static readonly Rectangle FullScreen = new Rectangle(0, 0, 1300, 1000);
-		public static Color ThemeColor = Color.LightSeaGreen;
 		public MasterInfo()
 		{
 
@@ -738,6 +790,24 @@ namespace TestSheet
 		public static Point Vector2ToPoint(Vector2 v)
 		{
 			return new Point((int)(v.X), (int)(v.Y));
+		}
+
+		public static Rectangle RectangleMoveTo(Rectangle Rec, Point Des, double speed)
+		{
+			double Dx = (Des.X - Rec.X);
+			double Dy = (Des.Y - Rec.Y);
+			double N = Math.Sqrt(Math.Pow(Dx, 2) + Math.Pow(Dy, 2));//두 물체 사이의 거리이자 노말벡터인자.
+			if (N < speed)//거리가 스피드보다 가까우면 도착.
+			{
+				Rec.Location=new Point(Des.X, Des.Y);
+				return Rec;
+			}
+
+			int X_Displacement = (int)(Dx * speed / N);
+			int Y_Displacement = (int)(Dy * speed / N);
+
+			Rec.Location=new Point(Rec.X + X_Displacement, Rec.Y + Y_Displacement);
+			return Rec;
 		}
 
 	

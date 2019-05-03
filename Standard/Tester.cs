@@ -108,7 +108,7 @@ namespace TestSheet
 		public static Point CardPos = new Point(200, 400);
 		public static int FreezeTime = 210;
 
-		public static double TimeCoefficient = 1;
+		public static double TimeCoefficient = 0.9;
 		public static DrawingLayer KillCard = new DrawingLayer("KilldByRock3", new Point(0,0), 0.8f);
 
 		public static List<DrawingLayer> Rewards = new List<DrawingLayer>();
@@ -120,6 +120,9 @@ namespace TestSheet
 		public static int HeartStack = 0;
 		public static int HeartTimer = 0;
 
+		public static int LeechLife = 0;
+	
+		//public static int PressedATimer = 0;
 		public void AddCard(int i)
 		{
 			Cards.Add(new DrawingLayer("RoomCard_" + i, CardPos, 0.75f));
@@ -127,7 +130,7 @@ namespace TestSheet
 
 		public void AddReward()
 		{
-			Rewards.Add(new DrawingLayer("RewardCard_" + Standard.Random(0, 6), CardPos, 0.75f));
+			Rewards.Add(new DrawingLayer("RewardCard_" + Standard.Random(0, 12), CardPos, 0.75f));
 		}
 
 		public int MouseIsOnCardsIndex()
@@ -285,10 +288,12 @@ namespace TestSheet
 				if(Standard.IsKeyDown(Keys.A))
 				{
 					player.SetMoveSpeed(3);
+					//PressedATimer = 0;
 				}
 				else
 				{
 					player.SetMoveSpeed(6);
+					//PressedATimer++;
 				}
 				if(Standard.JustPressed(Keys.T))
 				{
@@ -413,12 +418,16 @@ namespace TestSheet
 
 			if(Standard.IsKeyDown(Keys.A))
 			{
-				Rectangle rectangle = Method2D.RectangleMoveTo(Game1.graphics.GraphicsDevice.Viewport.Bounds, new Point(-player.getPos().X + ViewportDisplacement.X / 2 + 400, -player.getPos().Y + ViewportDisplacement.Y / 2 + 400), 5);
-				Game1.graphics.GraphicsDevice.Viewport = new Viewport(rectangle);
+				//Rectangle rectangle = Method2D.RectangleMoveTo(Game1.graphics.GraphicsDevice.Viewport.Bounds, new Point(-player.getPos().X + ViewportDisplacement.X / 2 + 400, -player.getPos().Y + ViewportDisplacement.Y / 2 + 400), 5);
+				//Game1.graphics.GraphicsDevice.Viewport = new Viewport(rectangle);
+				Game1.graphics.GraphicsDevice.Viewport = new Viewport(-player.getPos().X + CursorDisplacement.X / 4 + ViewportDisplacement.X / 2 + 400, -player.getPos().Y + CursorDisplacement.Y / 4 + ViewportDisplacement.Y / 2 + 400, 1300, MasterInfo.FullScreen.Height);
+
 			}
 			else
 			{
+
 				Game1.graphics.GraphicsDevice.Viewport = new Viewport(-player.getPos().X + CursorDisplacement.X / 4 + ViewportDisplacement.X / 2 + 400, -player.getPos().Y + CursorDisplacement.Y / 4 + ViewportDisplacement.Y / 2 + 400, 1300, MasterInfo.FullScreen.Height);
+				
 			}
 
 
@@ -435,6 +444,11 @@ namespace TestSheet
 				Standard.DisposeSE();
 				Standard.FadeOutSong(100);
 				Standard.PlayLoopedSE("WindOfTheDawn");
+				if(LeechLife==1|| LeechLife == 3)
+				{
+					Standard.PlaySE("LeechLife");
+					Standard.FadeAnimation(player.player, 30, Color.Red);
+				}
 				FadeTimer = 100;
 				ScoreStack = 0;
 				/*
@@ -507,6 +521,30 @@ namespace TestSheet
 									Haste = 3;
 								player.SetAttackSpeed(12);
 
+								break;
+							case 6:
+								if (LeechLife < 1)
+									LeechLife = 1;
+								break;
+							case 7:
+								if (LeechLife < 2)
+									LeechLife = 2;
+								break;
+							case 8:
+								if (LeechLife < 3)
+									LeechLife = 3;
+								break;
+							case 9:
+								if (Checker.Luck < 1)
+									Checker.Luck = 1;
+								break;
+							case 10:
+								if (Checker.Luck < 2)
+									Checker.Luck = 2;
+								break;
+							case 11:
+								if (Checker.Luck < 3)
+									Checker.Luck = 3;
 								break;
 
 
@@ -594,6 +632,20 @@ namespace TestSheet
 
 
 			Room.Update();
+			Checker.Update();
+
+			Point p = Method2D.Deduct(Cursor.getPos(), player.GetCenter());
+
+		
+				if (Standard.FrameTimer % 60 < 30)
+				{
+					player.player.setSprite("Player_Ani1");
+				}
+				else
+				{
+					player.player.setSprite("Player_Ani2");
+				}
+
 
 		}
 
@@ -757,6 +809,45 @@ namespace TestSheet
 
 			}
 			
+			if(ScoreStack!=0)
+			{
+				switch (LeechLife)
+				{
+					case 1:
+						if (Score % 100 == 99)
+						{
+							HeartStack++;
+							HeartTimer = 30;
+							Standard.PlaySE("LeechLife");
+							Standard.FadeAnimation(player.player, 30, Color.Red);
+						}
+						break;
+					case 2:
+						if(Score%75==74)
+						{
+							HeartStack++;
+							HeartTimer = 30;
+							Standard.PlaySE("LeechLife");
+
+							Standard.FadeAnimation(player.player, 30, Color.Red);
+						}
+						break;
+					case 3:
+						if (Score%50==49)
+						{
+							HeartStack++;
+							HeartTimer = 30;
+							Standard.PlaySE("LeechLife");
+							Standard.FadeAnimation(player.player, 30, Color.Red);
+						}
+						break;
+
+				}
+
+			}
+
+
+
 			/*시야 처리*/
 			if (!ShowMenu)
 			{
@@ -880,7 +971,7 @@ namespace TestSheet
 			}
 			if(GameOver)
 			{
-				Standard.DrawAddon(player.player, Color.White, 1f, "Player");
+				//Standard.DrawAddon(player.player, Color.White, 1f, "Player_Ani1");
 
 				if(KillerZombieIndex!=-1)
 				{
@@ -1087,7 +1178,7 @@ namespace TestSheet
 			
 				
 				if (MovePoint.X!=0||MovePoint.Y!=0)
-					player.MoveTo(MovePoint.X - 40, MovePoint.Y - 40,MoveSpeed+Haste);
+					player.MoveTo(MovePoint.X - 40, MovePoint.Y - 40,MoveSpeed+Haste*2.0/3.0);
 			}
 
 			public void AttackUpdate()
@@ -1228,7 +1319,7 @@ namespace TestSheet
 			{
 				if(!IsGhost)
 				{
-					if(player.IsAttacking())
+					if(Standard.IsKeyDown(Keys.A))
 						enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, ZombieSpeed*TimeCoefficient);
 					else
 						enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, ZombieSpeed);
@@ -1250,10 +1341,10 @@ namespace TestSheet
 				{
 					if (GhostDistance > 3)
 					{
-						if(player.IsAttacking())
-							GhostDistance = GhostDistance - 3;
+						if(Standard.IsKeyDown(Keys.A))
+							GhostDistance = GhostDistance - 3*TimeCoefficient;
 						else
-							GhostDistance = GhostDistance - 3/TimeCoefficient;
+							GhostDistance = GhostDistance - 3;
 						enemy.SetCenter(new Point(player.GetCenter().X + (int)(GhostDistance * (Math.Cos(GhostAngle + Standard.FrameTimer * Ghostw))), player.GetCenter().Y + (int)(GhostDistance * (Math.Sin(GhostAngle + Standard.FrameTimer * Ghostw)))));
 					}
 					else
@@ -1265,10 +1356,14 @@ namespace TestSheet
 
 				if (!IsEndPhase&&StartStageTimer==0&&(Method2D.Distance(player.GetCenter(), getCenter())) <= 10 && Index != player.getAttackIndex())
 				{
-					KillerZombieIndex = Index;
-					GameOver = true;
-					Hearts--;
+					
+					if(!Checker.LuckCheck())
+					{
+						KillerZombieIndex = Index;
+						GameOver = true;
+						Hearts--;
 					}
+				}
 			}
 		}
 
@@ -1323,7 +1418,7 @@ namespace TestSheet
 					v = new Point((int)result.X, (int)result.Y);
 				}*/
 
-				if(player.IsAttacking())
+				if(Standard.IsKeyDown(Keys.A))
 					bludger.MoveByVector(v, BludgerSpeed*TimeCoefficient);
 				else
 					bludger.MoveByVector(v, BludgerSpeed);
@@ -1331,10 +1426,14 @@ namespace TestSheet
 				if (!IsEndPhase && StartStageTimer == 0 && (Method2D.Distance(player.GetCenter(), bludger.GetCenter())) <= 10)
 				{
 
+					
+					if(!Checker.LuckCheck())
+					{
+						KillerZombieIndex = -1;
+						GameOver = true;
+						Hearts--;
+					}
 
-					KillerZombieIndex = -1;
-					GameOver = true;
-					Hearts--;
 					/* 현재 블러저 처리에 관한 두가지 안
 					 * 1. 맞으면 사망
 					 * 2. 맞으면 끌려감
@@ -1485,10 +1584,10 @@ namespace TestSheet
 						RoomColor = Color.MonoGameOrange;
 						StarColor = Color.Orange;
 						Standard.PlayLoopedSong("Inferno_Final");
-						for (int i = 0; i < 20; i++)
+						for (int i = 0; i < 17; i++)
 						{
 							bludgers.Add(new Bludger(new Point(i + 1, 1)));
-							bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 15)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 20)));
+							bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 15)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 17)));
 						}
 
 						break;
@@ -1578,7 +1677,7 @@ namespace TestSheet
 							for (int i = 0; i < bludgers.Count; i++)
 							{
 								//bludgers[i].bludger.SetPos(i*500, Standard.Random(-50, 50));
-								bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 20 + Rnd)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 20 + Rnd)));
+								bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 17 + Rnd)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 17 + Rnd)));
 
 							}
 						}
@@ -1689,6 +1788,125 @@ namespace TestSheet
 
 			}
 		}
+
+	}
+
+
+
+	public static class Checker
+	{
+		public static int Luck=0;
+		public static int LuckTimer;
+
+		public static void Update()
+		{
+			if (LuckTimer > 0)
+				LuckTimer--;
+		}
+
+		public static bool LuckCheck()
+		{
+			if (LuckTimer > 0)
+				return true;
+			switch (Luck)
+			{
+				case 1:
+					if (Standard.Random() < 0.05)
+					{
+						Standard.FadeAnimation(Tester.player.player, 30, Color.Green);
+						Standard.PlaySE("GetHeart");
+						LuckTimer = 30;
+						return true;
+					}
+					break;
+				case 2:
+					if (Standard.Random() < 0.10)
+					{
+						Standard.FadeAnimation(Tester.player.player, 30, Color.Green);
+						Standard.PlaySE("GetHeart");
+						LuckTimer = 30;
+
+						return true;
+					}
+
+					break;
+				case 3:
+					if (Standard.Random() < 0.15)
+					{
+						Standard.FadeAnimation(Tester.player.player, 30, Color.Green);
+						Standard.PlaySE("GetHeart");
+						LuckTimer = 30;
+						return true;
+					}
+					break;
+			}
+			return false;
+		}
+
+		public class Card
+		{
+			public DrawingLayer Frame;
+			public int FlipTimer=-1;//-1:뒷면, 0:앞면, 1~30:까는중
+			public string FrontFrameName;
+			public string BackFrameName="RewardCard";
+			public static readonly int CardWidth = 140;
+			public static readonly int FlipTime = 30;
+
+			public Card(int Number)
+			{
+				//Rewards.Add(new DrawingLayer("RewardCard_" + Standard.Random(0, 12), CardPos, 0.75f));
+				Frame = new DrawingLayer(BackFrameName, Tester.CardPos, 0.75f);
+				FrontFrameName = "RewardCard_" + Number;
+			}
+			public bool isOpened()
+			{
+				if (FlipTimer < FlipTime/2)
+					return true;
+				else
+					return false;
+			}
+
+			public int GetCardIndex()
+			{
+				return Int32.Parse(FrontFrameName.Substring(11));
+			}
+			public void Open()
+			{
+				FlipTimer = FlipTime;
+			}
+			public void Update()
+			{
+				if (FlipTimer > 0)
+				{
+					FlipTimer--;
+					Point p = Frame.GetCenter();
+					Frame.SetBound(new Rectangle(0, 0, Math.Abs((int)(CardWidth * Math.Cos(Math.PI*(FlipTime-FlipTimer)/(FlipTime)))), Frame.GetBound().Height));
+					Frame.SetCenter(p);
+				}
+				else
+					return;
+				if(Cursor.JustdidLeftClick(Frame)&&FlipTimer==-1)
+				{
+					Open();
+					Standard.PlaySE();
+				}
+			}
+			public void Draw()
+			{
+				if(isOpened())
+				{
+					Frame.setSprite(FrontFrameName);
+				}
+				else
+					Frame.setSprite(BackFrameName);
+				Frame.Draw();
+
+			}
+		}
+
+
+
+
 
 	}
 

@@ -109,8 +109,25 @@ namespace TestSheet
 			Color ScoreColor = Color.White;
 			
 			if(!Tester.IsEndPhase)
-			Standard.DrawString("Bigfont", Tester.Score.ToString()+"/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), ScoreColor);
-			if(Tester.FreezeTimer>=0)
+			{
+				Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), ScoreColor);
+				switch (Tester.LeechLife)
+				{
+					case 1:
+						Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), Color.Red*(float)(Tester.Score/100.0));
+						break;
+					case 2:
+						Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), Color.Red * (float)(Tester.Score%75 / 75.0));
+						break;
+					case 3:
+						Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), Color.Red * (float)(Tester.Score%50 / 50.0));
+						break;
+
+
+				}
+
+			}
+			if (Tester.FreezeTimer>=0)
 			{
 				if(Tester.FreezeTimer<150)
 				{
@@ -235,7 +252,11 @@ namespace TestSheet
 				}
 				for (int i=0;i<Tester.HeartStack;i++)
 				{
-					Heart.setSprite("Heart");
+					if(Tester.HeartTimer!=0)
+						Heart.setSprite("HeartAni"+(30-Tester.HeartTimer)/6);
+					else
+						Heart.setSprite("Heart");
+
 					Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
 					if (Tester.FreezeTimer < 0)
 					{
@@ -267,11 +288,45 @@ namespace TestSheet
 				Heart.setSprite("Heart_Broken3");
 				Heart.Draw(HeartColor * (float)(Tester.FreezeTimer/(Tester.FreezeTime - 110.0)));
 			}
-			if (Tester.Room.Number == 0&&!Tester.IsEndPhase)
+			if (Tester.Room.Number ==0&&!Tester.IsEndPhase)
 			{
 				DrawingLayer Menual = new DrawingLayer("Menual", new Point(800, 500), 0.75f);
-				Menual.Draw();
+				Menual.Draw(Color.White,(float)(Math.Min(Standard.FrameTimer % 120, 120 - Standard.FrameTimer % 120) / 120.0+0.5f));
 			}
+
+			Vector2 InfoVector = new Vector2(130, 140);
+			if(Tester.Haste>0)
+			{
+				string InfoString = "- Haste ";
+				for(int i=0;i<Tester.Haste;i++)
+				{
+					InfoString = InfoString + "I";
+				}
+				Standard.DrawString(InfoString, InfoVector, Color.White*(float)(Math.Min(Standard.FrameTimer%240, 240-Standard.FrameTimer % 240) / 120.0));
+				InfoVector += new Vector2(0, 35);
+			}
+			if(Tester.LeechLife>0)
+			{
+				string InfoString = "- Leech Life ";
+				for (int i = 0; i < Tester.LeechLife; i++)
+				{
+					InfoString = InfoString + "I";
+				}
+				Standard.DrawString(InfoString, InfoVector, Color.White * (float)(Math.Min(Standard.FrameTimer % 240, 240 - Standard.FrameTimer % 240) / 120.0));
+				InfoVector += new Vector2(0, 35);
+			}
+			if (Checker.Luck > 0)
+			{
+				string InfoString = "- Luck ";
+				for (int i = 0; i < Checker.Luck; i++)
+				{
+					InfoString = InfoString + "I";
+				}
+				Standard.DrawString(InfoString, InfoVector, Color.White * (float)(Math.Min(Standard.FrameTimer % 240, 240 - Standard.FrameTimer % 240) / 120.0));
+				InfoVector += new Vector2(0, 35);
+
+			}
+
 
 
 			GraphicsDevice.Viewport = Temp;

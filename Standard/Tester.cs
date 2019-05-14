@@ -115,12 +115,11 @@ namespace TestSheet
 
 		public static List<int> MonsterDeck = new List<int>();
 
-		public static int Haste = 0;
+		public static int Swiftness = 0;
 		public static int Hearts = 10;
 		public static int HeartStack = 0;
 		public static int HeartTimer = 0;
 
-		public static int LeechLife = 0;
 	
 		//public static int PressedATimer = 0;
 		public void AddCard(int i)
@@ -444,11 +443,7 @@ namespace TestSheet
 				Standard.DisposeSE();
 				Standard.FadeOutSong(100);
 				Standard.PlayLoopedSE("WindOfTheDawn");
-				if(LeechLife==1|| LeechLife == 3)
-				{
-					Standard.PlaySE("LeechLife");
-					Standard.FadeAnimation(player.player, 30, Color.Red);
-				}
+			
 				FadeTimer = 100;
 				ScoreStack = 0;
 				/*
@@ -486,8 +481,11 @@ namespace TestSheet
 				for (int i = 0; i < Rewards.Count; i++)
 				{
 					Rewards[i].Update();
-					Rewards[i].Frame.SetCenter(new Point(CardPos.X + (Card.CardWidth + 10) * i, CardPos.Y));
-					if(Rewards[i].RemoveTimer==0)
+					Rewards[i].Frame.CenterMoveTo(CardPos.X + (Card.CardWidth + 10) * i, CardPos.Y,50);
+					if(FadeTimer>50)
+					Rewards[i].Frame.SetRatio((1.5f * (FadeTimer-50) + (0.75) * (100 - FadeTimer)) / 50f);
+
+					if (Rewards[i].RemoveTimer==0)
 					{
 						Rewards.RemoveAt(i);
 						i--;
@@ -747,44 +745,7 @@ namespace TestSheet
 
 
 			}
-			
-			if(ScoreStack!=0)
-			{
-				switch (LeechLife)
-				{
-					case 1:
-						if (Score % 100 == 99)
-						{
-							HeartStack++;
-							HeartTimer = 30;
-							Standard.PlaySE("LeechLife");
-							Standard.FadeAnimation(player.player, 30, Color.Red);
-						}
-						break;
-					case 2:
-						if(Score%75==74)
-						{
-							HeartStack++;
-							HeartTimer = 30;
-							Standard.PlaySE("LeechLife");
-
-							Standard.FadeAnimation(player.player, 30, Color.Red);
-						}
-						break;
-					case 3:
-						if (Score%50==49)
-						{
-							HeartStack++;
-							HeartTimer = 30;
-							Standard.PlaySE("LeechLife");
-							Standard.FadeAnimation(player.player, 30, Color.Red);
-						}
-						break;
-
-				}
-
-			}
-
+		
 
 
 			/*시야 처리*/
@@ -1117,7 +1078,7 @@ namespace TestSheet
 			
 				
 				if (MovePoint.X!=0||MovePoint.Y!=0)
-					player.MoveTo(MovePoint.X - 40, MovePoint.Y - 40,MoveSpeed+Haste*2.0/3.0);
+					player.MoveTo(MovePoint.X - 40, MovePoint.Y - 40,MoveSpeed+Swiftness*2.0/3.0);
 			}
 
 			public void AttackUpdate()
@@ -1734,6 +1695,7 @@ namespace TestSheet
 
 	public static class Checker
 	{
+		public static int Bloodthirst = 0;
 		public static int Luck=0;
 		public static int LuckTimer;
 
@@ -1741,6 +1703,48 @@ namespace TestSheet
 		{
 			if (LuckTimer > 0)
 				LuckTimer--;
+			if (Tester.FadeTimer==99&&(Checker.Bloodthirst == 1 || Checker.Bloodthirst == 3))
+			{
+				Standard.PlaySE("Bloodthirst");
+				Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
+			}
+			if (Tester.ScoreStack != 0)
+			{
+				switch (Checker.Bloodthirst)
+				{
+					case 1:
+						if (Tester.Score % 100 == 99)
+						{
+							Tester.HeartStack++;
+							Tester.HeartTimer = 30;
+							Standard.PlaySE("Bloodthirst");
+							Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
+						}
+						break;
+					case 2:
+						if (Tester.Score % 75 == 74)
+						{
+							Tester.HeartStack++;
+							Tester.HeartTimer = 30;
+							Standard.PlaySE("Bloodthirst");
+
+							Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
+						}
+						break;
+					case 3:
+						if (Tester.Score % 50 == 49)
+						{
+							Tester.HeartStack++;
+							Tester.HeartTimer = 30;
+							Standard.PlaySE("Bloodthirst");
+							Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
+						}
+						break;
+
+				}
+
+			}
+
 		}
 
 		public static bool LuckCheck()
@@ -1801,12 +1805,12 @@ namespace TestSheet
 		 * 0:Heart 1
 		 * 1:Heart 2
 		 * 2:Heart 3
-		 * 3:Haste 1
-		 * 4:Haste 2
-		 * 5:Haste 3
-		 * 6:Leech Life 1
-		 * 7:Leech Life 2
-		 * 8:Leech Life 3
+		 * 3:Swiftness 1
+		 * 4:Swiftness 2
+		 * 5:Swiftness 3
+		 * 6:Bloodthirst 1
+		 * 7:Bloodthirst 2
+		 * 8:Bloodthirst 3
 		 * 9:Luck 1 
 		 * 10:Luck 2
 		 * 11:Luck 3
@@ -1816,6 +1820,7 @@ namespace TestSheet
 		{
 			//Rewards.Add(new DrawingLayer("RewardCard_" + Standard.Random(0, 12), CardPos, 0.75f));
 			Frame = new DrawingLayer(BackFrameName, Tester.CardPos, 0.75f);
+			Frame.SetCenter(new Point(Tester.CardPos.X+800, Tester.CardPos.Y));
 			FrontFrameName = "RewardCard_" + Number;
 			switch (Number)
 			{
@@ -1829,22 +1834,22 @@ namespace TestSheet
 					InfoString = "Heart 3:\n\nGet 3 Hearts.";
 					break;
 				case 3:
-					InfoString = "Haste 1:\n\nSpeed+10%, Attack Speed+7%.";
+					InfoString = "Swiftness 1:\n\nSpeed+10%, Attack Speed+7%.";
 					break;
 				case 4:
-					InfoString = "Haste 2:\n\nSpeed+20%, Attack Speed+15%.";
+					InfoString = "Swiftness 2:\n\nSpeed+20%, Attack Speed+15%.";
 					break;
 				case 5:
-					InfoString = "Haste 3:\n\nSpeed+30%, Attack Speed+25%.";
+					InfoString = "Swiftness 3:\n\nSpeed+30%, Attack Speed+25%.";
 					break;
 				case 6:
-					InfoString = "Leech Life 1:\n\nGet 1 heart when you earn a 100 score. ";
+					InfoString = "Bloodthirst 1:\n\nGet 1 heart when you earn a 100 score. ";
 					break;
 				case 7:
-					InfoString = "Leech Life 2:\n\nGet 1 heart when you earn a 75 score. ";
+					InfoString = "Bloodthirst 2:\n\nGet 1 heart when you earn a 75 score. ";
 					break;
 				case 8:
-					InfoString = "Leech Life 3:\n\nGet 1 heart when you earn a 50 & 100 score. ";
+					InfoString = "Bloodthirst 3:\n\nGet 1 heart when you earn a 50 & 100 score. ";
 					break;
 				case 9:
 					InfoString = "Luck 1:\n\nChances of avoiding death: 5%.";
@@ -1913,33 +1918,33 @@ namespace TestSheet
 						Tester.HeartTimer = 30;
 							break;
 					case 3:
-						if (Tester.Haste < 1)
-							Tester.Haste = 1;
+						if (Tester.Swiftness < 1)
+							Tester.Swiftness = 1;
 						Tester.player.SetAttackSpeed(14);
 						break;
 					case 4:
-						if (Tester.Haste < 2)
-							Tester.Haste = 2;
+						if (Tester.Swiftness < 2)
+							Tester.Swiftness = 2;
 						Tester.player.SetAttackSpeed(13);
 
 						break;
 					case 5:
-						if (Tester.Haste < 3)
-							Tester.Haste = 3;
+						if (Tester.Swiftness < 3)
+							Tester.Swiftness = 3;
 						Tester.player.SetAttackSpeed(12);
 
 						break;
 					case 6:
-						if (Tester.LeechLife < 1)
-							Tester.LeechLife = 1;
+						if (Checker.Bloodthirst < 1)
+							Checker.Bloodthirst = 1;
 						break;
 					case 7:
-						if (Tester.LeechLife < 2)
-							Tester.LeechLife = 2;
+						if (Checker.Bloodthirst < 2)
+							Checker.Bloodthirst = 2;
 						break;
 					case 8:
-						if (Tester.LeechLife < 3)
-							Tester.LeechLife = 3;
+						if (Checker.Bloodthirst < 3)
+							Checker.Bloodthirst = 3;
 						break;
 					case 9:
 						if (Checker.Luck < 1)

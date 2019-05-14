@@ -111,7 +111,7 @@ namespace TestSheet
 			if(!Tester.IsEndPhase)
 			{
 				Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), ScoreColor);
-				switch (Tester.LeechLife)
+				switch (Checker.Bloodthirst)
 				{
 					case 1:
 						Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), Color.Red*(float)(Tester.Score/100.0));
@@ -296,10 +296,10 @@ namespace TestSheet
 
 			Vector2 InfoVector = new Vector2(130, 150);
 			DrawingLayer StringBackGround = new DrawingLayer("WhiteSpace", new Rectangle((int)(InfoVector.X-15), (int)(InfoVector.Y - 10), 170, 35));
-			if(Tester.Haste>0)
+			if(Tester.Swiftness>0)
 			{
-				string InfoString = "- Haste ";
-				for(int i=0;i<Tester.Haste;i++)
+				string InfoString = "- Swiftness ";
+				for(int i=0;i<Tester.Swiftness;i++)
 				{
 					InfoString = InfoString + "I";
 				}
@@ -309,10 +309,10 @@ namespace TestSheet
 				
 				StringBackGround.SetBound(new Rectangle(StringBackGround.GetBound().X, StringBackGround.GetBound().Y+35, StringBackGround.GetBound().Width, StringBackGround.GetBound().Height));
 			}
-			if(Tester.LeechLife>0)
+			if(Checker.Bloodthirst >0)
 			{
-				string InfoString = "- Leech Life ";
-				for (int i = 0; i < Tester.LeechLife; i++)
+				string InfoString = "- Bloodthirst ";
+				for (int i = 0; i < Checker.Bloodthirst; i++)
 				{
 					InfoString = InfoString + "I";
 				}

@@ -33,6 +33,7 @@ namespace TestSheet
 		private SpritePosition Frame = new SpritePosition(0, 0);
 		private SpritePosition SpriteSize = new SpritePosition(0, 0);//스프라이트 격자상의 최대 지점을 나타냅니다.
 
+		private double Ratio=1f;
 
 
 		public DrawingLayer(string s, Rectangle boundRect)//애니메이션이 없는 경우의 생성자. 
@@ -45,6 +46,7 @@ namespace TestSheet
 		{
 			spriteTexture = Game1.content.Load<Texture2D>(s);
 			Bound = new Rectangle(Position, new Point((int)(spriteTexture.Bounds.Width * ratio), (int)(spriteTexture.Bounds.Height * ratio)));
+			Ratio = ratio;
 		}
 
 		public DrawingLayer(string s, Point Position, double ratio, SpritePosition spriteSize)
@@ -55,6 +57,7 @@ namespace TestSheet
 			int SourceH = spriteTexture.Bounds.Height / (SpriteSize.Y + 1);
 			SourceRect = new Rectangle(0, 0, SourceW, SourceH);
 			Bound = new Rectangle(Position, new Point((int)(SourceW*ratio), (int)(SourceH*ratio)));
+			Ratio = ratio;
 		}
 
 		public DrawingLayer(string s, Rectangle boundRect, SpritePosition spriteSize)
@@ -109,10 +112,14 @@ namespace TestSheet
 
 		public void SetRatio(double ratio)
 		{
+			Point Center = GetCenter();
 			int SourceW = spriteTexture.Bounds.Width / (SpriteSize.X + 1);
 			int SourceH = spriteTexture.Bounds.Height / (SpriteSize.Y + 1);
 			SourceRect = new Rectangle(0, 0, SourceW, SourceH);
-			Bound = new Rectangle(GetPos(), new Point((int)(SourceW * ratio), (int)(SourceH * ratio)));
+			Bound = new Rectangle(GetPos(), new Point((int)(Bound.Width * ratio/Ratio), (int)(Bound.Height * ratio/Ratio)));
+			Ratio = ratio;
+
+			SetCenter(Center);
 		}
 		public Point GetFrame()
 		{
@@ -224,6 +231,22 @@ namespace TestSheet
 			int Y_Displacement = (int)(Dy * speed / N);
 
 			MoveTo(Bound.X + X_Displacement, Bound.Y + Y_Displacement);
+		}
+		public void CenterMoveTo(int x, int y, double speed)//등속운동합니다.
+		{
+			double Dx = (x -GetCenter().X);
+			double Dy = (y - GetCenter().Y);
+			double N = Math.Sqrt(Math.Pow(Dx, 2) + Math.Pow(Dy, 2));//두 물체 사이의 거리이자 노말벡터인자.
+			if (N < speed)//거리가 스피드보다 가까우면 도착.
+			{
+				SetCenter(new Point(x, y));
+				return;
+			}
+
+			int X_Displacement = (int)(Dx * speed / N);
+			int Y_Displacement = (int)(Dy * speed / N);
+
+			SetCenter(new Point(GetCenter().X + X_Displacement, GetCenter().Y + Y_Displacement));
 		}
 
 		public void MoveByVector(Point Vector, double speed)

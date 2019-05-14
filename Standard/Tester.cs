@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Linq;
 
 namespace TestSheet
@@ -115,10 +116,8 @@ namespace TestSheet
 
 		public static List<int> MonsterDeck = new List<int>();
 
-		public static int Swiftness = 0;
-		public static int Hearts = 10;
-		public static int HeartStack = 0;
-		public static int HeartTimer = 0;
+		
+		
 
 	
 		//public static int PressedATimer = 0;
@@ -1078,7 +1077,7 @@ namespace TestSheet
 			
 				
 				if (MovePoint.X!=0||MovePoint.Y!=0)
-					player.MoveTo(MovePoint.X - 40, MovePoint.Y - 40,MoveSpeed+Swiftness*2.0/3.0);
+					player.MoveTo(MovePoint.X - 40, MovePoint.Y - 40,MoveSpeed+Checker.Swiftness * 2.0/3.0);
 			}
 
 			public void AttackUpdate()
@@ -1261,7 +1260,7 @@ namespace TestSheet
 					{
 						KillerZombieIndex = Index;
 						GameOver = true;
-						Hearts--;
+						Checker.Hearts--;
 					}
 				}
 			}
@@ -1331,7 +1330,7 @@ namespace TestSheet
 					{
 						KillerZombieIndex = -1;
 						GameOver = true;
-						Hearts--;
+						Checker.Hearts--;
 					}
 
 					/* 현재 블러저 처리에 관한 두가지 안
@@ -1695,9 +1694,32 @@ namespace TestSheet
 
 	public static class Checker
 	{
+		public static int Hearts = 10;
+		public static int HeartStack = 0;
+		public static int HeartTimer = 0;
+
 		public static int Bloodthirst = 0;
 		public static int Luck=0;
+		public static int Swiftness = 0;
 		public static int LuckTimer;
+
+		public static Vector2 InfoVector;
+		public static DrawingLayer StringBackGround;
+		
+
+		//본 열거자의 이름은 실제 변수명과 일치해야 한다.(리플렉션 활용)
+		public enum Status { Swiftness, Bloodthirst, Luck };
+
+		public static void GetHeart()
+		{
+			HeartStack++;
+			HeartTimer = 30;
+		}
+		public static void GetHeart(int i)
+		{
+			HeartStack += i;
+			HeartTimer = 30;
+		}
 
 		public static void Update()
 		{
@@ -1715,8 +1737,7 @@ namespace TestSheet
 					case 1:
 						if (Tester.Score % 100 == 99)
 						{
-							Tester.HeartStack++;
-							Tester.HeartTimer = 30;
+							GetHeart();
 							Standard.PlaySE("Bloodthirst");
 							Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
 						}
@@ -1724,8 +1745,7 @@ namespace TestSheet
 					case 2:
 						if (Tester.Score % 75 == 74)
 						{
-							Tester.HeartStack++;
-							Tester.HeartTimer = 30;
+							GetHeart();
 							Standard.PlaySE("Bloodthirst");
 
 							Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
@@ -1734,14 +1754,155 @@ namespace TestSheet
 					case 3:
 						if (Tester.Score % 50 == 49)
 						{
-							Tester.HeartStack++;
-							Tester.HeartTimer = 30;
+							GetHeart();
 							Standard.PlaySE("Bloodthirst");
 							Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
 						}
 						break;
 
 				}
+
+			}
+
+		}
+
+		public static void ShowStatus()
+		{
+			Viewport Temp = Game1.graphics.GraphicsDevice.Viewport;
+			Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
+
+			//Show Hearts
+			DrawingLayer Heart = new DrawingLayer("Heart", new Rectangle(50, 50, 60, 60));
+			Color HeartColor = Color.DarkRed;
+			int Hearts_5 = Checker.Hearts / 5;
+			int LeftHearts = Checker.Hearts % 5;
+			for (int i = 0; i < Hearts_5; i++)
+			{
+				Heart.setSprite("Heart5");
+				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+				if (Tester.FreezeTimer < 0)
+				{
+
+					Heart.Draw(HeartColor);
+					Heart.Draw(Color.White * 0.7f);
+				}
+				else
+					Heart.Draw(HeartColor);
+			}
+			for (int i = 0; i < LeftHearts; i++)
+			{
+				Heart.setSprite("Heart");
+				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+				if (Tester.FreezeTimer < 0)
+				{
+
+					Heart.Draw(HeartColor);
+					Heart.Draw(Color.White * 0.7f);
+				}
+				else
+					Heart.Draw(HeartColor);
+			}
+			if (Checker.HeartStack > 0)
+			{
+				if (Checker.HeartTimer > 0)
+					Checker.HeartTimer--;
+				else
+				{
+					Checker.Hearts += Checker.HeartStack;
+					Checker.HeartStack = 0;
+				}
+				for (int i = 0; i < Checker.HeartStack; i++)
+				{
+					if (Checker.HeartTimer != 0)
+						Heart.setSprite("HeartAni" + (30 - Checker.HeartTimer) / 6);
+					else
+						Heart.setSprite("Heart");
+
+					Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+					if (Tester.FreezeTimer < 0)
+					{
+
+						Heart.Draw(HeartColor);
+						Heart.Draw(Color.White * 0.7f);
+					}
+					else
+						Heart.Draw(HeartColor);
+					Heart.Draw(Color.Honeydew * (float)(Checker.HeartTimer / 8.0));
+
+				}
+			}
+			if (Tester.FreezeTimer > Tester.FreezeTime - 60)
+			{
+				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+				Heart.setSprite("Heart_Broken");
+				Heart.Draw(HeartColor);
+			}
+			else if (Tester.FreezeTimer > Tester.FreezeTime - 110)
+			{
+				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+				Heart.setSprite("Heart_Broken2");
+				Heart.Draw(HeartColor);
+			}
+			else if (Tester.FreezeTimer > 0)
+			{
+				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+				Heart.setSprite("Heart_Broken3");
+				Heart.Draw(HeartColor * (float)(Tester.FreezeTimer / (Tester.FreezeTime - 110.0)));
+			}
+
+
+
+
+			//Show Menual
+			if (Tester.Room.Number == 0 && !Tester.IsEndPhase)
+			{
+				DrawingLayer Menual = new DrawingLayer("Menual", new Point(800, 500), 0.75f);
+				Menual.Draw(Color.White, (float)(Math.Min(Standard.FrameTimer % 120, 120 - Standard.FrameTimer % 120) / 120.0 + 0.5f));
+			}
+
+
+
+
+
+			//Show Buff Info
+			InfoVector = new Vector2(130, 150);
+			StringBackGround = new DrawingLayer("WhiteSpace", new Rectangle((int)(InfoVector.X - 15), (int)(InfoVector.Y - 10), 170, 35));
+			ShowBuffString(Status.Luck);
+			ShowBuffString(Status.Swiftness);
+			ShowBuffString(Status.Bloodthirst);
+			Game1.graphics.GraphicsDevice.Viewport = Temp;
+		}
+
+		public static void ShowBuffString(Status status)
+		{
+			int checker=-1;
+			/*
+			switch (status)
+			{
+				case Status.Swiftness:
+					checker = Swiftness;
+					break;
+				case Status.Bloodthirst:
+					checker = Bloodthirst;
+					break;
+				case Status.Luck:
+					checker = Luck;
+					break;
+			}*/
+			Type type = typeof(Checker);
+			FieldInfo FInfo=type.GetField(status.ToString());
+			checker = (int)FInfo.GetValue(null);
+			if(checker>0)
+			{
+				string InfoString = "- " + status.ToString()+" ";
+				for (int i = 0; i < checker; i++)
+				{
+					InfoString = InfoString + "I";
+				}
+				StringBackGround.Draw(Color.Black * 0.5f);
+				Standard.DrawString(InfoString, InfoVector, Color.White * (float)(Math.Min(Standard.FrameTimer % 240, 240 - Standard.FrameTimer % 240) / 120.0 + 0.3f));
+				InfoVector += new Vector2(0, 35);
+				StringBackGround.SetBound(new Rectangle(StringBackGround.GetBound().X, StringBackGround.GetBound().Y + 35, StringBackGround.GetBound().Width, StringBackGround.GetBound().Height));
 
 			}
 
@@ -1834,31 +1995,31 @@ namespace TestSheet
 					InfoString = "Heart 3:\n\nGet 3 Hearts.";
 					break;
 				case 3:
-					InfoString = "Swiftness 1:\n\nSpeed+10%, Attack Speed+7%.";
+					InfoString = "Swiftness 1:\n\nSpeed+10%, Attack Speed+7%";
 					break;
 				case 4:
-					InfoString = "Swiftness 2:\n\nSpeed+20%, Attack Speed+15%.";
+					InfoString = "Swiftness 2:\n\nSpeed+20%, Attack Speed+15%";
 					break;
 				case 5:
-					InfoString = "Swiftness 3:\n\nSpeed+30%, Attack Speed+25%.";
+					InfoString = "Swiftness 3:\n\nSpeed+30%, Attack Speed+25%";
 					break;
 				case 6:
-					InfoString = "Bloodthirst 1:\n\nGet 1 heart when you earn a 100 score. ";
+					InfoString = "Bloodthirst 1:\n\nGet 1 heart when you score 100. ";
 					break;
 				case 7:
-					InfoString = "Bloodthirst 2:\n\nGet 1 heart when you earn a 75 score. ";
+					InfoString = "Bloodthirst 2:\n\nGet 1 heart when you score 75. ";
 					break;
 				case 8:
-					InfoString = "Bloodthirst 3:\n\nGet 1 heart when you earn a 50 & 100 score. ";
+					InfoString = "Bloodthirst 3:\n\nGet 1 heart when you score 50 & 100. ";
 					break;
 				case 9:
-					InfoString = "Luck 1:\n\nChances of avoiding death: 5%.";
+					InfoString = "Luck 1:\n\nChance of avoiding death: 5%";
 					break;
 				case 10:
-					InfoString = "Luck 2:\n\nChances of avoiding death: 10%.";
+					InfoString = "Luck 2:\n\nChance of avoiding death: 10%";
 					break;
 				case 11:
-					InfoString = "Luck 3:\n\nChances of avoiding death: 15%.";
+					InfoString = "Luck 3:\n\nChance of avoiding death: 15%";
 					break;
 				default:   
 					InfoString = "Preparing..";
@@ -1906,31 +2067,28 @@ namespace TestSheet
 				switch (GetIndex())
 				{
 					case 0:
-						Tester.HeartStack++;
-						Tester.HeartTimer = 30;
+						Checker.GetHeart();
 						break;
 					case 1:
-						Tester.HeartStack += 2;
-						Tester.HeartTimer = 30;
+						Checker.GetHeart(2);
 						break;
 					case 2:
-						Tester.HeartStack += 3;
-						Tester.HeartTimer = 30;
-							break;
+						Checker.GetHeart(3);
+						break;
 					case 3:
-						if (Tester.Swiftness < 1)
-							Tester.Swiftness = 1;
+						if (Checker.Swiftness < 1)
+							Checker.Swiftness = 1;
 						Tester.player.SetAttackSpeed(14);
 						break;
 					case 4:
-						if (Tester.Swiftness < 2)
-							Tester.Swiftness = 2;
+						if (Checker.Swiftness < 2)
+							Checker.Swiftness = 2;
 						Tester.player.SetAttackSpeed(13);
 
 						break;
 					case 5:
-						if (Tester.Swiftness < 3)
-							Tester.Swiftness = 3;
+						if (Checker.Swiftness < 3)
+							Checker.Swiftness = 3;
 						Tester.player.SetAttackSpeed(12);
 
 						break;

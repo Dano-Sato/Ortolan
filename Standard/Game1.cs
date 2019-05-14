@@ -294,7 +294,8 @@ namespace TestSheet
 				Menual.Draw(Color.White,(float)(Math.Min(Standard.FrameTimer % 120, 120 - Standard.FrameTimer % 120) / 120.0+0.5f));
 			}
 
-			Vector2 InfoVector = new Vector2(130, 140);
+			Vector2 InfoVector = new Vector2(130, 150);
+			DrawingLayer StringBackGround = new DrawingLayer("WhiteSpace", new Rectangle((int)(InfoVector.X-15), (int)(InfoVector.Y - 10), 170, 35));
 			if(Tester.Haste>0)
 			{
 				string InfoString = "- Haste ";
@@ -302,8 +303,11 @@ namespace TestSheet
 				{
 					InfoString = InfoString + "I";
 				}
-				Standard.DrawString(InfoString, InfoVector, Color.White*(float)(Math.Min(Standard.FrameTimer%240, 240-Standard.FrameTimer % 240) / 120.0));
+				StringBackGround.Draw(Color.Black * 0.5f);
+				Standard.DrawString(InfoString, InfoVector, Color.White*(float)(Math.Min(Standard.FrameTimer%240, 240-Standard.FrameTimer % 240) / 120.0+0.3f));
 				InfoVector += new Vector2(0, 35);
+				
+				StringBackGround.SetBound(new Rectangle(StringBackGround.GetBound().X, StringBackGround.GetBound().Y+35, StringBackGround.GetBound().Width, StringBackGround.GetBound().Height));
 			}
 			if(Tester.LeechLife>0)
 			{
@@ -312,8 +316,11 @@ namespace TestSheet
 				{
 					InfoString = InfoString + "I";
 				}
-				Standard.DrawString(InfoString, InfoVector, Color.White * (float)(Math.Min(Standard.FrameTimer % 240, 240 - Standard.FrameTimer % 240) / 120.0));
+				StringBackGround.Draw(Color.Black*0.5f);
+				Standard.DrawString(InfoString, InfoVector, Color.White * (float)(Math.Min(Standard.FrameTimer % 240, 240 - Standard.FrameTimer % 240) / 120.0 + 0.3f));
 				InfoVector += new Vector2(0, 35);
+				
+				StringBackGround.SetBound(new Rectangle(StringBackGround.GetBound().X, StringBackGround.GetBound().Y+35, StringBackGround.GetBound().Width, StringBackGround.GetBound().Height));
 			}
 			if (Checker.Luck > 0)
 			{
@@ -322,9 +329,10 @@ namespace TestSheet
 				{
 					InfoString = InfoString + "I";
 				}
-				Standard.DrawString(InfoString, InfoVector, Color.White * (float)(Math.Min(Standard.FrameTimer % 240, 240 - Standard.FrameTimer % 240) / 120.0));
+				StringBackGround.Draw(Color.Black * 0.5f);
+				Standard.DrawString(InfoString, InfoVector, Color.White * (float)(Math.Min(Standard.FrameTimer % 240, 240 - Standard.FrameTimer % 240) / 120.0 + 0.3f));
 				InfoVector += new Vector2(0, 35);
-
+				StringBackGround.SetBound(new Rectangle(StringBackGround.GetBound().X, StringBackGround.GetBound().Y+35, StringBackGround.GetBound().Width, StringBackGround.GetBound().Height));
 			}
 
 

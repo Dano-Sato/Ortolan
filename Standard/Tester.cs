@@ -111,7 +111,7 @@ namespace TestSheet
 		public static double TimeCoefficient = 0.9;
 		public static DrawingLayer KillCard = new DrawingLayer("KilldByRock3", new Point(0,0), 0.8f);
 
-		public static List<DrawingLayer> Rewards = new List<DrawingLayer>();
+		public static List<Card> Rewards = new List<Card>();
 
 		public static List<int> MonsterDeck = new List<int>();
 
@@ -130,7 +130,7 @@ namespace TestSheet
 
 		public void AddReward()
 		{
-			Rewards.Add(new DrawingLayer("RewardCard_" + Standard.Random(0, 12), CardPos, 0.75f));
+			Rewards.Add(new Card(Standard.Random(0, 12)));
 		}
 
 		public int MouseIsOnCardsIndex()
@@ -485,71 +485,10 @@ namespace TestSheet
 
 				for (int i = 0; i < Rewards.Count; i++)
 				{
-					Rewards[i].MoveTo(CardPos.X+Rewards[i].GetBound().Width*i+10*i,CardPos.Y);
-					if(Cursor.JustdidLeftClick(Rewards[i]))
+					Rewards[i].Update();
+					Rewards[i].Frame.SetCenter(new Point(CardPos.X + (Card.CardWidth + 10) * i, CardPos.Y));
+					if(Rewards[i].RemoveTimer==0)
 					{
-						switch (Int32.Parse(Rewards[i].GetSpriteName().Substring(11)))
-						{
-							case 0:
-								HeartStack++;
-								HeartTimer = 30;
-								Standard.PlaySE("GetHeart");
-								break;
-							case 1:
-								HeartStack += 2;
-								HeartTimer = 30;
-								Standard.PlaySE("GetHeart");
-								break;
-							case 2:
-								HeartStack += 3;
-								HeartTimer = 30;
-								Standard.PlaySE("GetHeart");
-								break;
-							case 3:
-								if(Haste<1)
-								Haste = 1;
-								player.SetAttackSpeed(14);
-								break;
-							case 4:
-								if (Haste < 2)
-									Haste = 2;
-								player.SetAttackSpeed(13);
-
-								break;
-							case 5:
-								if (Haste < 3)
-									Haste = 3;
-								player.SetAttackSpeed(12);
-
-								break;
-							case 6:
-								if (LeechLife < 1)
-									LeechLife = 1;
-								break;
-							case 7:
-								if (LeechLife < 2)
-									LeechLife = 2;
-								break;
-							case 8:
-								if (LeechLife < 3)
-									LeechLife = 3;
-								break;
-							case 9:
-								if (Checker.Luck < 1)
-									Checker.Luck = 1;
-								break;
-							case 10:
-								if (Checker.Luck < 2)
-									Checker.Luck = 2;
-								break;
-							case 11:
-								if (Checker.Luck < 3)
-									Checker.Luck = 3;
-								break;
-
-
-
-						}
 						Rewards.RemoveAt(i);
 						i--;
 					}
@@ -1843,71 +1782,220 @@ namespace TestSheet
 			return false;
 		}
 
-		public class Card
+	}
+	public class Card
+	{
+		public DrawingLayer Frame;
+		public int FlipTimer = -1;//-1:뒷면, 0:앞면, 1~30:까는중
+		public int RemoveTimer = -1;//-1:파괴X,0이상:파괴타이머
+
+		public string FrontFrameName;
+		public string BackFrameName = "RewardCard";
+		public static readonly int CardWidth = 140;
+		public static readonly int FlipTime = 30;
+		public string InfoString;
+
+
+
+		/*Card Index
+		 * 0:Heart 1
+		 * 1:Heart 2
+		 * 2:Heart 3
+		 * 3:Haste 1
+		 * 4:Haste 2
+		 * 5:Haste 3
+		 * 6:Leech Life 1
+		 * 7:Leech Life 2
+		 * 8:Leech Life 3
+		 * 9:Luck 1 
+		 * 10:Luck 2
+		 * 11:Luck 3
+		 * */
+
+		public Card(int Number)
 		{
-			public DrawingLayer Frame;
-			public int FlipTimer=-1;//-1:뒷면, 0:앞면, 1~30:까는중
-			public string FrontFrameName;
-			public string BackFrameName="RewardCard";
-			public static readonly int CardWidth = 140;
-			public static readonly int FlipTime = 30;
+			//Rewards.Add(new DrawingLayer("RewardCard_" + Standard.Random(0, 12), CardPos, 0.75f));
+			Frame = new DrawingLayer(BackFrameName, Tester.CardPos, 0.75f);
+			FrontFrameName = "RewardCard_" + Number;
+			switch (Number)
+			{
+				case 0:
+					InfoString = "Heart 1: \n\nGet 1 Heart.";
+					break;
+				case 1:
+					InfoString = "Heart 2:\n\nGet 2 Hearts.";
+					break;
+				case 2:
+					InfoString = "Heart 3:\n\nGet 3 Hearts.";
+					break;
+				case 3:
+					InfoString = "Haste 1:\n\nSpeed+10%, Attack Speed+7%.";
+					break;
+				case 4:
+					InfoString = "Haste 2:\n\nSpeed+20%, Attack Speed+15%.";
+					break;
+				case 5:
+					InfoString = "Haste 3:\n\nSpeed+30%, Attack Speed+25%.";
+					break;
+				case 6:
+					InfoString = "Leech Life 1:\n\nGet 1 heart when you earn a 100 score. ";
+					break;
+				case 7:
+					InfoString = "Leech Life 2:\n\nGet 1 heart when you earn a 75 score. ";
+					break;
+				case 8:
+					InfoString = "Leech Life 3:\n\nGet 1 heart when you earn a 50 & 100 score. ";
+					break;
+				case 9:
+					InfoString = "Luck 1:\n\nChances of avoiding death: 5%.";
+					break;
+				case 10:
+					InfoString = "Luck 2:\n\nChances of avoiding death: 10%.";
+					break;
+				case 11:
+					InfoString = "Luck 3:\n\nChances of avoiding death: 15%.";
+					break;
+				default:   
+					InfoString = "Preparing..";
+					break;
 
-			public Card(int Number)
-			{
-				//Rewards.Add(new DrawingLayer("RewardCard_" + Standard.Random(0, 12), CardPos, 0.75f));
-				Frame = new DrawingLayer(BackFrameName, Tester.CardPos, 0.75f);
-				FrontFrameName = "RewardCard_" + Number;
-			}
-			public bool isOpened()
-			{
-				if (FlipTimer < FlipTime/2)
-					return true;
-				else
-					return false;
+
 			}
 
-			public int GetCardIndex()
+		}
+		public bool isOpened()
+		{
+			if (FlipTimer < FlipTime / 2&&FlipTimer!=-1)
+				return true;
+			else
+				return false;
+		}
+
+		public int GetIndex()
+		{
+			return Int32.Parse(FrontFrameName.Substring(11));
+		}
+		public void Open()
+		{
+			FlipTimer = FlipTime;
+		}
+		public void Update()
+		{
+			if (FlipTimer > 0)
 			{
-				return Int32.Parse(FrontFrameName.Substring(11));
+				FlipTimer--;
+				Point p = Frame.GetCenter();
+				Frame.SetBound(new Rectangle(0, 0, Math.Abs((int)(CardWidth * Math.Cos(Math.PI * (FlipTime - FlipTimer) / (FlipTime)))), Frame.GetBound().Height));
+				Frame.SetCenter(p);
 			}
-			public void Open()
+			if(RemoveTimer>0)
 			{
-				FlipTimer = FlipTime;
+				RemoveTimer--;
+			
 			}
-			public void Update()
+			if(FlipTimer==1)
 			{
-				if (FlipTimer > 0)
+				Standard.FadeAnimation(new DrawingLayer("WhiteSpace",Frame.GetBound()), 30, Color.PaleGoldenrod);
+				Standard.PlaySE("GetHeart");
+			
+				switch (GetIndex())
 				{
-					FlipTimer--;
-					Point p = Frame.GetCenter();
-					Frame.SetBound(new Rectangle(0, 0, Math.Abs((int)(CardWidth * Math.Cos(Math.PI*(FlipTime-FlipTimer)/(FlipTime)))), Frame.GetBound().Height));
-					Frame.SetCenter(p);
-				}
-				else
-					return;
-				if(Cursor.JustdidLeftClick(Frame)&&FlipTimer==-1)
-				{
-					Open();
-					Standard.PlaySE();
+					case 0:
+						Tester.HeartStack++;
+						Tester.HeartTimer = 30;
+						break;
+					case 1:
+						Tester.HeartStack += 2;
+						Tester.HeartTimer = 30;
+						break;
+					case 2:
+						Tester.HeartStack += 3;
+						Tester.HeartTimer = 30;
+							break;
+					case 3:
+						if (Tester.Haste < 1)
+							Tester.Haste = 1;
+						Tester.player.SetAttackSpeed(14);
+						break;
+					case 4:
+						if (Tester.Haste < 2)
+							Tester.Haste = 2;
+						Tester.player.SetAttackSpeed(13);
+
+						break;
+					case 5:
+						if (Tester.Haste < 3)
+							Tester.Haste = 3;
+						Tester.player.SetAttackSpeed(12);
+
+						break;
+					case 6:
+						if (Tester.LeechLife < 1)
+							Tester.LeechLife = 1;
+						break;
+					case 7:
+						if (Tester.LeechLife < 2)
+							Tester.LeechLife = 2;
+						break;
+					case 8:
+						if (Tester.LeechLife < 3)
+							Tester.LeechLife = 3;
+						break;
+					case 9:
+						if (Checker.Luck < 1)
+							Checker.Luck = 1;
+						break;
+					case 10:
+						if (Checker.Luck < 2)
+							Checker.Luck = 2;
+						break;
+					case 11:
+						if (Checker.Luck < 3)
+							Checker.Luck = 3;
+						break;
 				}
 			}
-			public void Draw()
+			
+			if (Cursor.JustdidLeftClick(Frame) && FlipTimer == -1)
 			{
-				if(isOpened())
-				{
-					Frame.setSprite(FrontFrameName);
-				}
-				else
-					Frame.setSprite(BackFrameName);
+				Open();
+				Standard.PlaySE("CardHandOver");			
+			}
+			if (Cursor.JustdidLeftClick(Frame) && FlipTimer == 0&&RemoveTimer==-1)
+			{
+				RemoveTimer = 30;
+			}
+		}
+		public void Draw()
+		{
+			if (RemoveTimer < 30 && RemoveTimer > 5)
+			{
+				Frame.setSprite("CardCrash" + (6 - RemoveTimer / 5));
+				Frame.Draw();
+			}
+			else if (RemoveTimer <= 5 && RemoveTimer >= 0)
+			{
+				Frame.setSprite("EmptySpace");
+				Frame.Draw();
+			}
+			else if (isOpened())
+			{
+				Frame.setSprite(FrontFrameName);
+				Frame.Draw();
+				Standard.DrawAddon(Frame, Color.White, 1f, "CardFrame");
+			}
+			else
+			{
+				Frame.setSprite(BackFrameName);
 				Frame.Draw();
 
 			}
+			if(Cursor.IsOn(Frame)&&FlipTimer==0)
+			{
+				Standard.DrawString(InfoString, new Vector2(Frame.GetPos().X, Frame.GetPos().Y+200), Color.Black);
+			}
+		
+			
 		}
-
-
-
-
-
 	}
-
 }

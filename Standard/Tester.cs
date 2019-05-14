@@ -1768,6 +1768,8 @@ namespace TestSheet
 
 		public static void ShowStatus()
 		{
+
+			//뷰포트를 컴퓨터화면에 맞게 세팅한다.
 			Viewport Temp = Game1.graphics.GraphicsDevice.Viewport;
 			Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
 
@@ -1870,6 +1872,9 @@ namespace TestSheet
 			ShowBuffString(Status.Luck);
 			ShowBuffString(Status.Swiftness);
 			ShowBuffString(Status.Bloodthirst);
+
+
+			//뷰포트 원상복귀.
 			Game1.graphics.GraphicsDevice.Viewport = Temp;
 		}
 

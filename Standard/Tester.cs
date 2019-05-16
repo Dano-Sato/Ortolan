@@ -116,7 +116,7 @@ namespace TestSheet
 
 		public static List<int> MonsterDeck = new List<int>();
 
-		
+		public static int PressedATimer;
 		
 
 	
@@ -261,17 +261,23 @@ namespace TestSheet
 				ClickSprite = "Click2";
 			DrawingLayer Click = new DrawingLayer(ClickSprite, new Rectangle(Cursor.getPos().X - 15, Cursor.getPos().Y - 15, 30, 30));
 			if(!IsEndPhase)
-			Standard.FadeAnimation(Click, 10, Color.AliceBlue);
+			{
+					Standard.FadeAnimation(Click, 10, Color.OrangeRed);
+					Standard.FadeAnimation(Click, 10, Color.AliceBlue);
+			}
 			else
+			{
 				Standard.FadeAnimation(Click, 10, Color.Black);
+				Standard.FadeAnimation(Click, 10, Color.DarkGray);
+			}
 
 
 
 
 			/*키보드 입력 처리*/
 
-		
-				if(Standard.JustPressed(Keys.C))//핏자국 청소
+
+			if (Standard.JustPressed(Keys.C))//핏자국 청소
 				{
 					for(int i=0;i<DeadBodys.Count;i++)
 					{
@@ -286,12 +292,12 @@ namespace TestSheet
 				if(Standard.IsKeyDown(Keys.A))
 				{
 					player.SetMoveSpeed(3);
-					//PressedATimer = 0;
+					PressedATimer=Math.Min(25,PressedATimer+1);
 				}
 				else
 				{
 					player.SetMoveSpeed(6);
-					//PressedATimer++;
+					PressedATimer = Math.Max(0,PressedATimer-3);
 				}
 				if(Standard.JustPressed(Keys.T))
 				{
@@ -701,7 +707,7 @@ namespace TestSheet
 
 			/*스프라이트 바꾸기 장난*/
 
-			if(ScoreStack!=0&&Score>10)
+			if (ScoreStack!=0&&Score>10)
 			{
 				if (Score % 30 == 23 || Score % 30 == 24)
 				{
@@ -757,13 +763,12 @@ namespace TestSheet
 				}
 				if (player.IsAttacking())
 					Fear = Math.Max(0, Fear - Math.Max(1,enemies.Count/10));
-				int Sight = Math.Max(800-(int)(Fear*4),player.getRange()+50);
+				int Sight = Math.Max(800-(int)(Fear*4)-PressedATimer*10+Standard.Random(-5, 5), player.getRange()+50);
 				if (FreezeTimer > 0)
 				{
 					Sight = 800 - (int)(Fear * 4);
 					if (FreezeTimer < 170)
 						Sight = 0;
-
 				}
 
 				Standard.DrawLight(new Rectangle(0, 0, Math.Max(player.GetCenter().X - Sight, 0), 1300), Color.Black, 1f, Standard.LightMode.Absolute);
@@ -773,6 +778,8 @@ namespace TestSheet
 				DrawingLayer PlayerSight = new DrawingLayer("Sight3", new Rectangle(player.GetCenter().X - Sight, player.GetCenter().Y - Sight, Sight * 2, Sight * 2));
 				PlayerSight.Draw();
 			}
+
+			Standard.DrawLight(MasterInfo.FullScreen, Color.DarkBlue, (float)(PressedATimer / 100.0), Standard.LightMode.Absolute);
 
 			if(FreezeTimer>0)
 				Standard.ClearFadeAnimation();
@@ -824,6 +831,7 @@ namespace TestSheet
 
 
 			}
+			Standard.DrawAddon(BloodLayer, Game1.WallColor, 1f, "Wall");
 
 			if (ShowMenu)
 			{
@@ -895,7 +903,6 @@ namespace TestSheet
 				Standard.DrawString("BigFont",RoomKeys[Room.Number], new Vector2(-Game1.graphics.GraphicsDevice.Viewport.X+400, -Game1.graphics.GraphicsDevice.Viewport.Y+300), Color.White*(float)(StartStageTimer/100.0));
 			}
 			//Standard.DrawString("BigFont", Hearts.ToString(), new Vector2(-Game1.graphics.GraphicsDevice.Viewport.X + 50, -Game1.graphics.GraphicsDevice.Viewport.Y + 50), Color.White);
-	
 
 		}
 
@@ -1077,7 +1084,7 @@ namespace TestSheet
 			
 				
 				if (MovePoint.X!=0||MovePoint.Y!=0)
-					player.MoveTo(MovePoint.X - 40, MovePoint.Y - 40,MoveSpeed+Checker.Swiftness * 2.0/3.0);
+					player.MoveTo(MovePoint.X - 40, MovePoint.Y - 40,MoveSpeed+Checker.Swiftness * 1.5/3.0);
 			}
 
 			public void AttackUpdate()
@@ -1504,7 +1511,7 @@ namespace TestSheet
 
 
 				}
-
+				
 
 			}
 
@@ -1780,7 +1787,11 @@ namespace TestSheet
 			int LeftHearts = Checker.Hearts % 5;
 			for (int i = 0; i < Hearts_5; i++)
 			{
-				Heart.setSprite("Heart5");
+				if((Standard.FrameTimer+25)%60<30)
+					Heart.setSprite("Heart5");
+				else
+					Heart.setSprite("Heart5_2");
+
 				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
 				if (Tester.FreezeTimer < 0)
 				{
@@ -1793,7 +1804,10 @@ namespace TestSheet
 			}
 			for (int i = 0; i < LeftHearts; i++)
 			{
-				Heart.setSprite("Heart");
+				if((Standard.FrameTimer + 25) % 60<30)
+					Heart.setSprite("Heart");
+				else
+					Heart.setSprite("Heart2");
 				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
 				if (Tester.FreezeTimer < 0)
 				{
@@ -1835,6 +1849,7 @@ namespace TestSheet
 			}
 			if (Tester.FreezeTimer > Tester.FreezeTime - 60)
 			{
+				
 				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
 				Heart.setSprite("Heart_Broken");
 				Heart.Draw(HeartColor);

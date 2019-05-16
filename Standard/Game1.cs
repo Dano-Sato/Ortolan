@@ -29,6 +29,8 @@ namespace TestSheet
 		public static IntPtr Handler = new IntPtr();
 		public static bool ActivationChecker = true;
 
+		public static Color WallColor = Color.Black;
+
 	
 		public Game1()
         {
@@ -101,7 +103,7 @@ namespace TestSheet
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.Black);
+            GraphicsDevice.Clear(WallColor);
 			Standard.DrawLight(MasterInfo.FullScreen, Tester.Room.RoomColor, Math.Max(0f,(float)(1-Tester.Score/200.0)), Standard.LightMode.Absolute);
 			// TODO: Add your drawing code here
 			tester.Draw();
@@ -160,7 +162,13 @@ namespace TestSheet
 
 
 			if (Standard.FrameTimer % 60 == 0)
-				Standard.PlayFadedSE("HeartBeat", Math.Min((float)Tester.HeartSignal,1f));
+			{
+				if(Tester.PressedATimer==0)
+					Standard.PlayFadedSE("HeartBeat", Math.Min((float)Tester.HeartSignal, 1f));
+				else
+					Standard.PlayFadedSE("HeartBeat", 1f);
+
+			}
 			if (Tester.GameOver)
 			{
 				
@@ -176,6 +184,7 @@ namespace TestSheet
 
 				if(Tester.FreezeTimer==Tester.FreezeTime-110)
 				{
+					Tester.KillCard = new DrawingLayer("KilldByRock3", new Point(0, 0), 0.8f);
 					double Rnd = Standard.Random();
 					if (Rnd<0.5)
 						Tester.KillCard.setSprite("KilldByRock3");

@@ -378,6 +378,8 @@ namespace TestSheet
 				ZombieTime = Math.Max(10 - Score / 10,5)+25;//좀비 생성 시간은 스코어가 높을수록 빨라진다.
 			else
 				ZombieTime = Math.Max(10 - Score / 10, 5) + 20;//좀비 생성 시간은 스코어가 높을수록 빨라진다.
+			if (Room.Number == 0)
+				ZombieTime = 17;
 
 			if (Standard.FrameTimer % ZombieTime == 0)
 			{
@@ -1401,10 +1403,10 @@ namespace TestSheet
 						StarColor = Color.Orange;
 						TheIceRoom = false;
 						Standard.PlayLoopedSong("GhostTown");
-						for (int i = 0; i < 2; i++)
+						for (int i = 0; i < 20; i++)
 						{
 							bludgers.Add(new Bludger(new Point(i + 1, 1)));
-							bludgers[i].bludger.SetPos(i*300,0);
+							bludgers[i].bludger.SetPos(i*1500,0);
 						}
 						break;
 					case 2:
@@ -1420,10 +1422,10 @@ namespace TestSheet
 						TheIceRoom = false;
 						Standard.PlayLoopedSong("GhostTown");
 
-						for (int i = 0; i < 10; i++)
+						for (int i = 0; i < 30; i++)
 						{
 							bludgers.Add(new Bludger(new Point(i + 1, 1)));
-							bludgers[i].bludger.SetPos(i * 300, 0);
+							bludgers[i].bludger.SetPos(i * 1000, 0);
 						}
 						break;
 					case 4:
@@ -1432,10 +1434,10 @@ namespace TestSheet
 						TheIceRoom = false;
 						Standard.PlayLoopedSong("GhostTown");
 
-						for (int i = 0; i < 20; i++)
+						for (int i = 0; i < 40; i++)
 						{
 							bludgers.Add(new Bludger(new Point(i + 1, 1)));
-							bludgers[i].bludger.SetPos(i * 300, 0);
+							bludgers[i].bludger.SetPos(i * 500, 0);
 						}
 						break;
 					case 5:
@@ -1457,10 +1459,10 @@ namespace TestSheet
 						TheIceRoom = true;
 						Standard.PlayLoopedSong("FireAndIce2");
 
-						for (int i = 0; i < 2; i++)
+						for (int i = 0; i < 18; i++)
 						{
 							bludgers.Add(new Bludger(new Point(i + 1, 1)));
-							bludgers[i].bludger.SetPos(i * 300, 0);
+							bludgers[i].bludger.SetPos(i * 1500, 0);
 						}
 						break;
 					case 77:
@@ -1468,10 +1470,10 @@ namespace TestSheet
 						StarColor = Color.Aquamarine;
 						TheIceRoom = true;
 						Standard.PlayLoopedSong("FireAndIce2");
-						for (int i = 0; i < 8; i++)
+						for (int i = 0; i < 28; i++)
 						{
 							bludgers.Add(new Bludger(new Point(i + 1, 1)));
-							bludgers[i].bludger.SetPos(i * 300, 0);
+							bludgers[i].bludger.SetPos(i * 1000, 0);
 						}
 						break;
 					case 777:
@@ -1479,10 +1481,10 @@ namespace TestSheet
 						StarColor = Color.Aquamarine;
 						TheIceRoom = true;
 						Standard.PlayLoopedSong("FireAndIce2");
-						for (int i = 0; i < 15; i++)
+						for (int i = 0; i < 38; i++)
 						{
 							bludgers.Add(new Bludger(new Point(i + 1, 1)));
-							bludgers[i].bludger.SetPos(i * 300, 0);
+							bludgers[i].bludger.SetPos(i * 500, 0);
 						}
 						break;
 					case 66:
@@ -1519,39 +1521,42 @@ namespace TestSheet
 			{
 				switch (Number)
 				{
+				
+
 					case 2:
-						if (Standard.FrameTimer % 120 == 0)//아이스(=고스트좀비) 생성
-						{
-							enemies.Add(new Enemy(true));
-						}
-						break;
-					case 5:
-						if (Standard.FrameTimer % 60 == 0)//아이스(=고스트좀비) 생성
-						{
-							enemies.Add(new Enemy(true));
-						}
-						break;
-					case 6:
 						if (Standard.FrameTimer % 40 == 0)//아이스(=고스트좀비) 생성
 						{
 							enemies.Add(new Enemy(true));
 						}
 						break;
+
+					case 5:
+						if (Standard.FrameTimer % 30 == 0)//아이스(=고스트좀비) 생성
+						{
+							enemies.Add(new Enemy(true));
+						}
+						break;
+					case 6:
+						if (Standard.FrameTimer % 22 == 0)//아이스(=고스트좀비) 생성
+						{
+							enemies.Add(new Enemy(true));
+						}
+						break;
 					case 13:
-						if (Standard.FrameTimer % 90 == 0)//아이스(=고스트좀비) 생성
+						if (Standard.FrameTimer % 48 == 0)//아이스(=고스트좀비) 생성
 						{
 							enemies.Add(new Enemy(true));
 						}
 						break;
 					case 77:
-						if (Standard.FrameTimer % 60 == 0)//아이스(=고스트좀비) 생성
+						if (Standard.FrameTimer % 38 == 0)//아이스(=고스트좀비) 생성
 						{
 							enemies.Add(new Enemy(true));
 
 						}
 						break;
 					case 777:
-						if (Standard.FrameTimer % 48 == 0)//아이스(=고스트좀비) 생성
+						if (Standard.FrameTimer % 30 == 0)//아이스(=고스트좀비) 생성
 						{
 							enemies.Add(new Enemy(true));
 						}
@@ -1874,7 +1879,14 @@ namespace TestSheet
 			if (Tester.Room.Number == 0 && !Tester.IsEndPhase)
 			{
 				DrawingLayer Menual = new DrawingLayer("Menual", new Point(800, 500), 0.75f);
-				Menual.Draw(Color.White, (float)(Math.Min(Standard.FrameTimer % 120, 120 - Standard.FrameTimer % 120) / 120.0 + 0.5f));
+				if (Standard.FrameTimer % 60 > 30)
+					Menual.setSprite("Menual2");
+				if(Standard.FrameTimer%60>30)
+					Menual.Draw(Color.White);
+				else
+					Menual.Draw(Color.Goldenrod);
+				//(float)(Math.Min(Standard.FrameTimer % 120, 120 - Standard.FrameTimer % 120) / 120.0 + 0.5f)
+
 			}
 
 

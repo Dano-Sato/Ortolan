@@ -31,6 +31,7 @@ namespace TestSheet
 		{
 			Score = 0;
 			Fear = 0;
+			Gauge = 1;
 			Standard.FrameTimer = 0;
 			ZombieTime = 40;
 			enemies.Clear();
@@ -109,7 +110,7 @@ namespace TestSheet
 		public static Point CardPos = new Point(200, 400);
 		public static int FreezeTime = 210;
 
-		public static double TimeCoefficient = 0.9;
+		public static double TimeCoefficient = 0.5;
 		public static DrawingLayer KillCard = new DrawingLayer("KilldByRock3", new Point(0,0), 0.8f);
 
 		public static List<Card> Rewards = new List<Card>();
@@ -117,6 +118,9 @@ namespace TestSheet
 		public static List<int> MonsterDeck = new List<int>();
 
 		public static int PressedATimer;
+		public static double Gauge = 1;
+		public static bool SlowMode = false;
+		public static bool TimeSleeper = false;
 		
 
 	
@@ -128,7 +132,7 @@ namespace TestSheet
 
 		public void AddReward()
 		{
-			Rewards.Add(new Card(Standard.Random(0, 12)));
+			Rewards.Add(new Card(Table.Pick()));
 		}
 
 		public int MouseIsOnCardsIndex()
@@ -201,6 +205,8 @@ namespace TestSheet
 			MonsterDeck.Add(6);
 			MonsterDeck.Add(777);
 			MonsterDeck.Add(666);
+
+			Table.Init();
 
 
 		}
@@ -285,24 +291,43 @@ namespace TestSheet
 					}
 					DeadBodys.Clear();
 				}
-				if(Standard.JustPressed(Keys.Escape))
-				{
-					ShowMenu = !ShowMenu;
-				}
-				if(Standard.IsKeyDown(Keys.A))
-				{
-					player.SetMoveSpeed(3);
-					PressedATimer=Math.Min(25,PressedATimer+1);
-				}
+			if(Standard.JustPressed(Keys.Escape))
+			{
+				ShowMenu = !ShowMenu;
+			}
+			if(Standard.IsKeyDown(Keys.A))
+			{
+				
+				Gauge = Math.Max(0,Gauge-0.015);
+				if (Gauge == 0)
+					SlowMode = false;
 				else
-				{
-					player.SetMoveSpeed(6);
-					PressedATimer = Math.Max(0,PressedATimer-3);
-				}
-				if(Standard.JustPressed(Keys.T))
-				{
-					Score = 95;
-				}
+					SlowMode = true;
+			}
+			else
+			{
+				
+				Gauge = Math.Min(1, Gauge + 0.003);
+				SlowMode = false;
+			}
+			if(Standard.JustPressed(Keys.T))
+			{
+				Score = 95;
+			}
+
+			if(SlowMode)
+			{
+				TimeSleeper = !TimeSleeper;
+				if (TimeSleeper)
+					Standard.FrameTimer--;
+				player.SetMoveSpeed(3);
+				PressedATimer = Math.Min(25, PressedATimer + 1);
+			}
+			else
+			{
+				player.SetMoveSpeed(6);
+				PressedATimer = Math.Max(0, PressedATimer - 3);
+			}
 
 
 			
@@ -374,12 +399,12 @@ namespace TestSheet
 
 			/*좀비 생성 작업*/
 
-			if(TheIceRoom)
-				ZombieTime = Math.Max(10 - Score / 10,5)+25;//좀비 생성 시간은 스코어가 높을수록 빨라진다.
+			if (TheIceRoom)
+				ZombieTime = Math.Max(10 - Score / 10, 5) + 25;//좀비 생성 시간은 스코어가 높을수록 빨라진다.
 			else
 				ZombieTime = Math.Max(10 - Score / 10, 5) + 20;//좀비 생성 시간은 스코어가 높을수록 빨라진다.
 			if (Room.Number == 0)
-				ZombieTime = 17;
+				ZombieTime = 20-Score/10;
 
 			if (Standard.FrameTimer % ZombieTime == 0)
 			{
@@ -422,7 +447,7 @@ namespace TestSheet
 			OldPlayerPos = player.getPos();
 			OldPlayerDisplacementVector = PlayerDisPlacementVector;
 
-			if(Standard.IsKeyDown(Keys.A))
+			if(SlowMode)
 			{
 				//Rectangle rectangle = Method2D.RectangleMoveTo(Game1.graphics.GraphicsDevice.Viewport.Bounds, new Point(-player.getPos().X + ViewportDisplacement.X / 2 + 400, -player.getPos().Y + ViewportDisplacement.Y / 2 + 400), 5);
 				//Game1.graphics.GraphicsDevice.Viewport = new Viewport(rectangle);
@@ -765,7 +790,7 @@ namespace TestSheet
 				}
 				if (player.IsAttacking())
 					Fear = Math.Max(0, Fear - Math.Max(1,enemies.Count/10));
-				int Sight = Math.Max(800-(int)(Fear*4)-PressedATimer*10+Standard.Random(-5, 5), player.getRange()+50);
+				int Sight = Math.Max(800-(int)(Fear*4)-Math.Min(PressedATimer*30,250)+Standard.Random(-5, 5), player.getRange()+50);
 				if (FreezeTimer > 0)
 				{
 					Sight = 800 - (int)(Fear * 4);
@@ -1115,7 +1140,7 @@ namespace TestSheet
 								RemoveEnemy(AttackIndex, Color.DarkRed);
 						}
 						ScoreStack++;
-
+						
 
 						isAttacking = false;
 						AttackIndex = -1;
@@ -1227,7 +1252,7 @@ namespace TestSheet
 			{
 				if(!IsGhost)
 				{
-					if(Standard.IsKeyDown(Keys.A))
+					if(SlowMode)
 						enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, ZombieSpeed*TimeCoefficient);
 					else
 						enemy.MoveTo(player.getPos().X + r_1, player.getPos().Y + r_2, ZombieSpeed);
@@ -1249,7 +1274,7 @@ namespace TestSheet
 				{
 					if (GhostDistance > 3)
 					{
-						if(Standard.IsKeyDown(Keys.A))
+						if(SlowMode)
 							GhostDistance = GhostDistance - 3*TimeCoefficient;
 						else
 							GhostDistance = GhostDistance - 3;
@@ -1326,7 +1351,7 @@ namespace TestSheet
 					v = new Point((int)result.X, (int)result.Y);
 				}*/
 
-				if(Standard.IsKeyDown(Keys.A))
+				if(SlowMode)
 					bludger.MoveByVector(v, BludgerSpeed*TimeCoefficient);
 				else
 					bludger.MoveByVector(v, BludgerSpeed);
@@ -1492,10 +1517,10 @@ namespace TestSheet
 						RoomColor = Color.MonoGameOrange;
 						StarColor = Color.Orange;
 						Standard.PlayLoopedSong("Inferno_Final");
-						for (int i = 0; i < 17; i++)
+						for (int i = 0; i < 25; i++)
 						{
 							bludgers.Add(new Bludger(new Point(i + 1, 1)));
-							bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 15)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 17)));
+							bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 25)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 25)));
 						}
 
 						break;
@@ -1504,10 +1529,10 @@ namespace TestSheet
 						RoomColor = Color.MonoGameOrange;
 						StarColor = Color.Orange;
 						Standard.PlayLoopedSong("Inferno_Final");
-						for (int i = 0; i < 25; i++)
+						for (int i = 0; i < 35; i++)
 						{
 							bludgers.Add(new Bludger(new Point(i + 1, 1)));
-							bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 25)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 25)));
+							bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 35)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 35)));
 						}
 						break;
 
@@ -1543,20 +1568,20 @@ namespace TestSheet
 						}
 						break;
 					case 13:
-						if (Standard.FrameTimer % 48 == 0)//아이스(=고스트좀비) 생성
+						if (Standard.FrameTimer % 55 == 0)//아이스(=고스트좀비) 생성
 						{
 							enemies.Add(new Enemy(true));
 						}
 						break;
 					case 77:
-						if (Standard.FrameTimer % 38 == 0)//아이스(=고스트좀비) 생성
+						if (Standard.FrameTimer % 45 == 0)//아이스(=고스트좀비) 생성
 						{
 							enemies.Add(new Enemy(true));
 
 						}
 						break;
 					case 777:
-						if (Standard.FrameTimer % 30 == 0)//아이스(=고스트좀비) 생성
+						if (Standard.FrameTimer % 37 == 0)//아이스(=고스트좀비) 생성
 						{
 							enemies.Add(new Enemy(true));
 						}
@@ -1588,7 +1613,7 @@ namespace TestSheet
 							for (int i = 0; i < bludgers.Count; i++)
 							{
 								//bludgers[i].bludger.SetPos(i*500, Standard.Random(-50, 50));
-								bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 17 + Rnd)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 17 + Rnd)));
+								bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 25 + Rnd)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 25 + Rnd)));
 
 							}
 						}
@@ -1616,9 +1641,10 @@ namespace TestSheet
 							for (int i = 0; i < bludgers.Count; i++)
 							{
 								if (i < bludgers.Count / 2)
-									bludgers[i].bludger.SetPos(0, i * 200);
+									bludgers[i].bludger.SetPos(0, i * 300);
 								else
-									bludgers[i].bludger.SetPos(1800, (i - bludgers.Count / 2) * 200);
+									bludgers[i].bludger.SetPos(2300, (i - bludgers.Count / 2 - 5) * 400);
+
 
 							}
 						}
@@ -1652,7 +1678,7 @@ namespace TestSheet
 							for (int i = 0; i < bludgers.Count; i++)
 							{
 								//bludgers[i].bludger.SetPos(i*500, Standard.Random(-50, 50));
-								bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 25 + Rnd)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 25 + Rnd)));
+								bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 35 + Rnd)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 35 + Rnd)));
 
 							}
 						}
@@ -1661,7 +1687,7 @@ namespace TestSheet
 							for (int i = 0; i < bludgers.Count; i++)
 							{
 								//bludgers[i].bludger.SetPos(i*500, Standard.Random(-50, 50));
-								bludgers[i].bludger.SetPos(i*200,0);
+								bludgers[i].bludger.SetPos(i*150,0);
 
 							}
 						}
@@ -1670,7 +1696,7 @@ namespace TestSheet
 							for (int i = 0; i < bludgers.Count; i++)
 							{
 								//bludgers[i].bludger.SetPos(i*500, Standard.Random(-50, 50));
-								bludgers[i].bludger.SetPos(i * 200, 1300);
+								bludgers[i].bludger.SetPos(i * 150, 1300);
 
 							}
 						}
@@ -1717,6 +1743,8 @@ namespace TestSheet
 
 		public static Vector2 InfoVector;
 		public static DrawingLayer StringBackGround;
+
+		public static double BloodStack = 0;
 		
 
 		//본 열거자의 이름은 실제 변수명과 일치해야 한다.(리플렉션 활용)
@@ -1737,41 +1765,56 @@ namespace TestSheet
 		{
 			if (LuckTimer > 0)
 				LuckTimer--;
+			/*
 			if (Tester.FadeTimer==99&&(Checker.Bloodthirst == 1 || Checker.Bloodthirst == 3))
 			{
 				Standard.PlaySE("Bloodthirst");
 				Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
-			}
+			}*/
 			if (Tester.ScoreStack != 0)
 			{
 				switch (Checker.Bloodthirst)
 				{
 					case 1:
+						BloodStack += 0.01;
+						/*
 						if (Tester.Score % 100 == 99)
 						{
 							GetHeart();
 							Standard.PlaySE("Bloodthirst");
 							Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
-						}
+						}*/
 						break;
 					case 2:
+						BloodStack += 1.0/75;
+						/*
 						if (Tester.Score % 75 == 74)
 						{
 							GetHeart();
 							Standard.PlaySE("Bloodthirst");
 
 							Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
-						}
+						}*/
 						break;
 					case 3:
+						BloodStack += 0.02;
+						/*
 						if (Tester.Score % 50 == 49)
 						{
 							GetHeart();
 							Standard.PlaySE("Bloodthirst");
 							Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
-						}
+						}*/
 						break;
 
+				}
+
+				if(BloodStack>=1.0)
+				{
+					BloodStack = 0;
+					GetHeart();
+					Standard.PlaySE("Bloodthirst");
+					Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
 				}
 
 			}
@@ -1886,7 +1929,6 @@ namespace TestSheet
 				else
 					Menual.Draw(Color.Goldenrod);
 				//(float)(Math.Min(Standard.FrameTimer % 120, 120 - Standard.FrameTimer % 120) / 120.0 + 0.5f)
-
 			}
 
 
@@ -1899,6 +1941,11 @@ namespace TestSheet
 			ShowBuffString(Status.Luck);
 			ShowBuffString(Status.Swiftness);
 			ShowBuffString(Status.Bloodthirst);
+
+			//Show Gauge
+			DrawingLayer gauge = new DrawingLayer("WhiteSpace", new Rectangle(100,300,10, (int)(300 * Tester.Gauge)));
+			gauge.Draw(Color.AliceBlue);
+			gauge.Draw(Color.Red*(float)(1-Tester.Gauge));
 
 
 			//뷰포트 원상복귀.
@@ -2193,4 +2240,127 @@ namespace TestSheet
 			
 		}
 	}
+
+	public static class Table
+	{
+		public static Dictionary<int, double> ValueTable=new Dictionary<int, double>();
+		public static Dictionary<int, double> DropTable = new Dictionary<int, double>();
+		public static double m=0;//parameter
+
+		/*Card Index
+		 * 0:Heart 1
+		 * 1:Heart 2
+		 * 2:Heart 3
+		 * 3:Swiftness 1
+		 * 4:Swiftness 2
+		 * 5:Swiftness 3
+		 * 6:Bloodthirst 1
+		 * 7:Bloodthirst 2
+		 * 8:Bloodthirst 3
+		 * 9:Luck 1 
+		 * 10:Luck 2
+		 * 11:Luck 3
+		 * */
+
+		public static void Init()
+		{
+			ValueTable.Add(0, 1);
+			ValueTable.Add(1, 3);
+			ValueTable.Add(2, 5);
+			ValueTable.Add(3, 7);
+			ValueTable.Add(4, 14);
+			ValueTable.Add(5, 21);
+			ValueTable.Add(6, 10);
+			ValueTable.Add(7, 20);
+			ValueTable.Add(8, 30);
+			ValueTable.Add(9, 5);
+			ValueTable.Add(10, 10);
+			ValueTable.Add(11, 15);
+			foreach(KeyValuePair<int,double> v in ValueTable)
+			{
+				DropTable.Add(v.Key, v.Value);
+			}
+			UpdateM();
+		}
+
+		public static void RemoveDrop(int key)
+		{
+			if(DropTable.ContainsKey(key))
+			{
+				DropTable.Remove(key);
+			}
+			UpdateM();
+
+		}
+		public static void UpdateM()
+		{
+			m = 0;
+			foreach (KeyValuePair<int, double> v in DropTable)
+			{
+				m += (1.0 / v.Value);
+			}
+		}
+		public static int Pick()
+		{
+			double k = Standard.Random();
+			double counter = 0;
+			foreach (KeyValuePair<int, double> v in DropTable)
+			{
+				double temp = counter;
+				counter += (1.0 / v.Value)/m;
+				if(k>=temp&&k<counter)
+				{
+					switch (v.Key)
+					{
+						case 3:
+							RemoveDrop(3);
+							break;
+						case 4:
+							RemoveDrop(3);
+							RemoveDrop(4);
+							break;
+						case 5:
+							RemoveDrop(3);
+							RemoveDrop(4);
+							RemoveDrop(5);
+							break;
+						case 6:
+							RemoveDrop(6);
+							break;
+						case 7:
+							RemoveDrop(6);
+							RemoveDrop(7);
+							break;
+						case 8:
+							RemoveDrop(6);
+							RemoveDrop(7);
+							RemoveDrop(8);
+							break;
+						case 9:
+							RemoveDrop(9);
+							break;
+						case 10:
+							RemoveDrop(9);
+							RemoveDrop(10);
+							break;
+						case 11:
+							RemoveDrop(9);
+							RemoveDrop(10);
+							RemoveDrop(11);
+							break;
+
+
+
+					}
+
+					return v.Key;
+				}
+			}
+			return -1;
+		}
+
+
+
+	}
+
 }

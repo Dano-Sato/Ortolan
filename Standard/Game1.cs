@@ -113,6 +113,7 @@ namespace TestSheet
 			if(!Tester.IsEndPhase)
 			{
 				Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), ScoreColor);
+				/*
 				switch (Checker.Bloodthirst)
 				{
 					case 1:
@@ -124,9 +125,9 @@ namespace TestSheet
 					case 3:
 						Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), Color.Red * (float)(Tester.Score%50 / 50.0));
 						break;
+				}*/
+				Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), Color.Red * (float)(Checker.BloodStack));
 
-
-				}
 
 			}
 			if (Tester.FreezeTimer>=0)
@@ -163,12 +164,16 @@ namespace TestSheet
 
 			if (Standard.FrameTimer % 60 == 0)
 			{
-				if(Tester.PressedATimer==0)
+				if(!Tester.SlowMode)
 					Standard.PlayFadedSE("HeartBeat", Math.Min((float)Tester.HeartSignal, 1f));
 				else
 					Standard.PlayFadedSE("HeartBeat", 1f);
-
 			}
+			if(Tester.PressedATimer==10)
+			{
+				Standard.PlayFadedSE("Oveclock", 0.75f);
+			}
+			
 			if (Tester.GameOver)
 			{
 				

@@ -486,6 +486,11 @@ namespace TestSheet
 			Game1.spriteBatch.End();
 		}
 
+		public static Vector2 GetStringSize(string s)
+		{
+			return Standardfont.MeasureString(s);
+		}
+
 
 
 		private static Random random=new Random();
@@ -541,9 +546,9 @@ namespace TestSheet
 		
 		public static void SetSprite(string s)
 		{
-			mouseLayer.setSprite(s);
+			mouseLayer.SetSprite(s);
 		}
-		public static Point getPos()
+		public static Point GetPos()
 		{
 			return mouseLayer.GetPos();
 		}
@@ -556,9 +561,9 @@ namespace TestSheet
 
 		public static void OldStateUpdate()//클릭 처리 마지막에 행사되어야 OldMouseState가 보존된다.
 		{
-
+	
 			OldMouseState = Mouse.GetState();
-			mouseLayer.SetPos(new Point(OldMouseState.X - Game1.graphics.GraphicsDevice.Viewport.X / 2, OldMouseState.Y - Game1.graphics.GraphicsDevice.Viewport.Y / 2));
+			mouseLayer.SetPos(new Point(OldMouseState.X  - Game1.graphics.GraphicsDevice.Viewport.X / 2, OldMouseState.Y - Game1.graphics.GraphicsDevice.Viewport.Y / 2));
 			/*
 			if(!Game1.GameExit)
 			Standard.SetMouseSpeed((UInt32)(Sensitivity*10));
@@ -586,11 +591,19 @@ namespace TestSheet
 
 		public static bool IsOn(Rectangle r)
 		{
-			return r.Contains(getPos());
+			return r.Contains(GetPos());
+		}
+		public static bool IsOn(IGraphicLayer g)
+		{
+			return g.GetBound().Contains(GetPos());
 		}
 		public static bool IsOn(DrawingLayer d)
 		{
-			return d.GetBound().Contains(getPos());
+			return d.GetBound().Contains(GetPos());
+		}
+		public static bool IsOn(StringLayer s)
+		{
+			return s.GetBound().Contains(GetPos());
 		}
 		// 반드시 MouseUpdate()이전에 쓰여야 함. 그래야 올드스테이트와 현재스테이트가 구분이 된다.
 		// 현재는 스탠다드 내부에서 자동으로 업데이트 되므로 신경쓸 필요는 없음.
@@ -600,12 +613,20 @@ namespace TestSheet
 && OldMouseState.LeftButton != Microsoft.Xna.Framework.Input.ButtonState.Pressed)//올드마우스스테이트는 클릭이 안되어있었어야해. 혹은..
 || GamePad.GetState(PlayerIndex.One).IsButtonDown(Buttons.X);///게임패드의 경우는 X를 누른거야.
 		}
+		public static bool JustdidLeftClick(IGraphicLayer g)
+		{
+			return JustdidLeftClick() && IsOn(g);
+		}
 
 		public static bool JustdidLeftClick(DrawingLayer s)
 		{
-			return JustdidLeftClick() && s.GetBound().Contains(getPos());
+			return JustdidLeftClick() && IsOn(s);
 		}
 
+		public static bool JustdidLeftClick(StringLayer s)
+		{
+			return JustdidLeftClick() && IsOn(s);
+		}
 		public static bool JustdidRightClick()
 		{
 			return (Mouse.GetState().RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed
@@ -615,7 +636,7 @@ namespace TestSheet
 
 		public static bool JustdidRightClick(DrawingLayer s)
 		{
-			return JustdidRightClick() && s.GetBound().Contains(getPos());
+			return JustdidRightClick() && s.GetBound().Contains(GetPos());
 		}
 
 
@@ -686,6 +707,7 @@ namespace TestSheet
 				return base.Load<T>(localizedAssetName);
 			}
 			return base.Load<T>(assetName);
+		
 		}
 
 		// Token: 0x06000009 RID: 9 RVA: 0x00002203 File Offset: 0x00000403
@@ -699,7 +721,7 @@ namespace TestSheet
 		}
 
 		// Token: 0x0600000A RID: 10 RVA: 0x0000221F File Offset: 0x0000041F
-		private bool assetExists(string assetName)
+		public bool assetExists(string assetName)
 		{
 			return File.Exists(Path.Combine(base.RootDirectory, assetName + ".xnb"));
 		}

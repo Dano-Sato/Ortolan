@@ -13,7 +13,7 @@ namespace TestSheet
 	 * 업데이트 함수에서 메뉴들을 연결하고, 마우스가 특정 메뉴위에 있으면 그 메뉴의 인덱스를 저장한다.
 	 * 생성자를 반복 호출하면 메뉴가 정상작동하지 않습니다. 
 	 * */
-	public class Menu : IDrawLayer
+	public class Menu
 	{
 		public DrawingLayer Frame;//메뉴들을 포함하는 프레임.
 		public List<DrawingLayerWithVector> MenuList = new List<DrawingLayerWithVector>();//메뉴들을 벡터로 연결된 리스트 형태로 저장한다.
@@ -51,10 +51,10 @@ namespace TestSheet
 
 		public void SetSprite(string FrameSpriteName, string MenuSpriteName)
 		{
-			Frame.setSprite(FrameSpriteName);
+			Frame.SetSprite(FrameSpriteName);
 			for(int i=0;i<MenuList.Count;i++)
 			{
-				MenuList[i].drawingLayer.setSprite(MenuSpriteName);
+				MenuList[i].drawingLayer.SetSprite(MenuSpriteName);
 			}
 		}
 
@@ -250,10 +250,10 @@ namespace TestSheet
 			{
 				if (isVertical)
 				{
-					Bar.SetPos(Bar.GetPos().X, Cursor.getPos().Y);
+					Bar.SetCenter(new Point(Bar.GetPos().X, Cursor.GetPos().Y));
 				}
 				else
-					Bar.SetPos(Cursor.getPos().X, Bar.GetPos().Y);
+					Bar.SetCenter(new Point(Cursor.GetPos().X, Bar.GetPos().Y));
 			}
 
 			//바가 범위를 벗어나지 않도록 조정.
@@ -334,7 +334,7 @@ namespace TestSheet
 		}
 
 
-		public void Draw(IDrawLayer AttachedDrawLayer)
+		public void Draw(IGraphicLayer AttachedDrawLayer)
 		{
 			OldViewport = Game1.graphics.GraphicsDevice.Viewport;
 			Game1.graphics.GraphicsDevice.Viewport = ScrollViewport;
@@ -394,6 +394,63 @@ namespace TestSheet
 		}
 	}
 
+
+
+	public class Button
+	{
+		public IGraphicLayer ButtonGraphic;
+		public delegate void ButtonEvent();
+		private event ButtonEvent ButtonEvents;
+		private Color AccentColor = Color.Red;
+
+		public Button(IGraphicLayer Graphic, ButtonEvent e)
+		{
+			ButtonGraphic = Graphic;
+			AttachEvent(e);
+		}
+
+
+
+		public void Update()
+		{
+			if (Cursor.JustdidLeftClick(ButtonGraphic) && ButtonEvents != null)
+			{
+				ButtonEvents();
+			}
+		}
+		public void AttachEvent(ButtonEvent e)
+		{
+			ButtonEvents += e;
+		}
+		public void ClearEvent()
+		{
+			ButtonEvents = null;
+		}
+		public void Draw()
+		{
+			if (Cursor.IsOn(ButtonGraphic))
+			{
+				ButtonGraphic.Draw(AccentColor);
+			}
+			else
+			{
+				ButtonGraphic.Draw();
+			}
+		}
+		public void Draw(Color DefaultColor, Color accentColor)
+		{
+			if (Cursor.IsOn(ButtonGraphic))
+			{
+				ButtonGraphic.Draw(accentColor);
+			}
+			else
+			{
+				ButtonGraphic.Draw(DefaultColor);
+			}
+		}
+
+
+	}
 
 
 

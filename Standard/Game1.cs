@@ -108,121 +108,125 @@ namespace TestSheet
 			// TODO: Add your drawing code here
 			tester.Draw();
 			Standard.Draw();
-			Color ScoreColor = Color.White;
-			
-			if(!Tester.IsEndPhase)
+			if(Tester.GamePhase==Tester.Phase.Game)
 			{
-				Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), ScoreColor);
-				/*
-				switch (Checker.Bloodthirst)
+				Color ScoreColor = Color.White;
+
+				if (!Tester.IsEndPhase)
 				{
-					case 1:
-						Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), Color.Red*(float)(Tester.Score/100.0));
-						break;
-					case 2:
-						Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), Color.Red * (float)(Tester.Score%75 / 75.0));
-						break;
-					case 3:
-						Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), Color.Red * (float)(Tester.Score%50 / 50.0));
-						break;
-				}*/
-				Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), Color.Red * (float)(Checker.BloodStack));
+					Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.GetPos().X, Tester.player.GetPos().Y - 20), ScoreColor);
+					/*
+					switch (Checker.Bloodthirst)
+					{
+						case 1:
+							Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), Color.Red*(float)(Tester.Score/100.0));
+							break;
+						case 2:
+							Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), Color.Red * (float)(Tester.Score%75 / 75.0));
+							break;
+						case 3:
+							Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.getPos().X, Tester.player.getPos().Y - 20), Color.Red * (float)(Tester.Score%50 / 50.0));
+							break;
+					}*/
+					Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.GetPos().X, Tester.player.GetPos().Y - 20), Color.Red * (float)(Checker.BloodStack));
 
-
-			}
-			if (Tester.FreezeTimer>=0)
-			{
-				if(Tester.FreezeTimer<150)
-				{
-					Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 1f, Standard.LightMode.Absolute);
-				}
-				/*
-				DrawingLayer DeadEnd = new DrawingLayer("DeadEnd2", MasterInfo.FullScreen);
-				GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
-				if (Tester.FreezeTimer<180)
-					DeadEnd.Draw(Color.DarkRed);
-				if (Tester.FreezeTimer < 130)
-					Standard.DrawAddon(DeadEnd, Color.DarkRed, 1f, "DeadEnd3");
-				if (Tester.FreezeTimer < 80)
-					Standard.DrawAddon(DeadEnd, Color.DarkRed, 1f, "DeadEnd1");
-					*/
-			}
-
-		
-			if(Tester.FreezeTimer<0)
-			{
-				if(Standard.IsKeyDown(Keys.A))
-					Standard.DrawAddon(Tester.player.player, Color.Blue, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "Player_Heart");
-				else
-					Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "Player_Heart");
-			}
-			else if(Tester.FreezeTimer>Tester.FreezeTime-60)
-				Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "HeartBite1");
-			else if (Tester.FreezeTimer > Tester.FreezeTime-110)
-				Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "HeartBite2");
-
-
-			if (Standard.FrameTimer % 60 == 0)
-			{
-				if(!Tester.SlowMode)
-					Standard.PlayFadedSE("HeartBeat", Math.Min((float)Tester.HeartSignal, 1f));
-				else
-					Standard.PlayFadedSE("HeartBeat", 1f);
-			}
-			if(Tester.PressedATimer==10)
-			{
-				Standard.PlayFadedSE("Oveclock", 0.75f);
-			}
-			
-			if (Tester.GameOver)
-			{
-				
-
-				if (Tester.FreezeTimer > Tester.FreezeTime-110&&Tester.KillerZombieIndex != -1)
-				{
-						if (Standard.FrameTimer % 20 <= 10)
-						Standard.DrawAddon(Tester.enemies[Tester.KillerZombieIndex].enemy, Color.White, 1f, "ZombieBite");
-					else
-						Standard.DrawAddon(Tester.enemies[Tester.KillerZombieIndex].enemy, Color.White, 1f, "ZombieBite2");
 
 				}
-
-				if(Tester.FreezeTimer==Tester.FreezeTime-110)
+				if (Tester.FreezeTimer >= 0)
 				{
-					Tester.KillCard = new DrawingLayer("KilldByRock3", new Point(0, 0), 0.8f);
-					double Rnd = Standard.Random();
-					if (Rnd<0.5)
-						Tester.KillCard.setSprite("KilldByRock3");
-					else
-						Tester.KillCard.setSprite("KilldByRock4");
-
-				}
-				if (Tester.FreezeTimer > 0 && Tester.FreezeTimer < Tester.FreezeTime-110)
-				{
+					if (Tester.FreezeTimer < 150)
+					{
+						Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 1f, Standard.LightMode.Absolute);
+					}
+					/*
+					DrawingLayer DeadEnd = new DrawingLayer("DeadEnd2", MasterInfo.FullScreen);
 					GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
-					Tester.KillCard.SetRatio(Math.Min((Tester.FreezeTime-110-Tester.FreezeTimer)*5,75) / 100.0);
-					Tester.KillCard.SetCenter(new Point(500,400));
-					Tester.KillCard.Draw(Color.White,(float)(Tester.FreezeTimer/75.0));
+					if (Tester.FreezeTimer<180)
+						DeadEnd.Draw(Color.DarkRed);
+					if (Tester.FreezeTimer < 130)
+						Standard.DrawAddon(DeadEnd, Color.DarkRed, 1f, "DeadEnd3");
+					if (Tester.FreezeTimer < 80)
+						Standard.DrawAddon(DeadEnd, Color.DarkRed, 1f, "DeadEnd1");
+						*/
 				}
-			}
 
-			bool GhostAnimate = Standard.FrameTimer % 30 < 15;
-			if (!Tester.GameOver&&!Tester.ShowMenu&&Tester.FreezeTimer<0)
-			{
-				for (int i = 0; i < Tester.bludgers.Count; i++)
+
+				if (Tester.FreezeTimer < 0)
 				{
-					Tester.bludgers[i].Draw();
-					if (GhostAnimate)
-						Standard.DrawAddon(Tester.bludgers[i].bludger, Color.LightYellow, 0.1f, "GhostHead_1");
+					if (Standard.IsKeyDown(Keys.A))
+						Standard.DrawAddon(Tester.player.player, Color.Blue, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "Player_Heart");
 					else
-						Standard.DrawAddon(Tester.bludgers[i].bludger, Color.LightYellow, 0.1f, "GhostHead_2");
+						Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "Player_Heart");
+				}
+				else if (Tester.FreezeTimer > Tester.FreezeTime - 60)
+					Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "HeartBite1");
+				else if (Tester.FreezeTimer > Tester.FreezeTime - 110)
+					Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "HeartBite2");
 
-					Standard.DrawAddon(Tester.bludgers[i].bludger, Color.LightYellow, 1f, "BludgerFace");
+
+				if (Standard.FrameTimer % 60 == 0)
+				{
+					if (!Tester.SlowMode)
+						Standard.PlayFadedSE("HeartBeat", Math.Min((float)Tester.HeartSignal, 1f));
+					else
+						Standard.PlayFadedSE("HeartBeat", 1f);
+				}
+				if (Tester.PressedATimer == 10)
+				{
+					Standard.PlayFadedSE("Oveclock", 0.75f);
+				}
+
+				if (Tester.GameOver)
+				{
+
+
+					if (Tester.FreezeTimer > Tester.FreezeTime - 110 && Tester.KillerZombieIndex != -1)
+					{
+						if (Standard.FrameTimer % 20 <= 10)
+							Standard.DrawAddon(Tester.enemies[Tester.KillerZombieIndex].enemy, Color.White, 1f, "ZombieBite");
+						else
+							Standard.DrawAddon(Tester.enemies[Tester.KillerZombieIndex].enemy, Color.White, 1f, "ZombieBite2");
+
+					}
+
+					if (Tester.FreezeTimer == Tester.FreezeTime - 110)
+					{
+						Tester.KillCard = new DrawingLayer("KilldByRock3", new Point(0, 0), 0.8f);
+						double Rnd = Standard.Random();
+						if (Rnd < 0.5)
+							Tester.KillCard.SetSprite("KilldByRock3");
+						else
+							Tester.KillCard.SetSprite("KilldByRock4");
+
+					}
+					if (Tester.FreezeTimer > 0 && Tester.FreezeTimer < Tester.FreezeTime - 110)
+					{
+						GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
+						Tester.KillCard.SetRatio(Math.Min((Tester.FreezeTime - 110 - Tester.FreezeTimer) * 5, 75) / 100.0);
+						Tester.KillCard.SetCenter(new Point(500, 400));
+						Tester.KillCard.Draw(Color.White, (float)(Tester.FreezeTimer / 75.0));
+					}
+				}
+
+				bool GhostAnimate = Standard.FrameTimer % 30 < 15;
+				if (!Tester.GameOver && !Tester.ShowMenu && Tester.FreezeTimer < 0)
+				{
+					for (int i = 0; i < Tester.bludgers.Count; i++)
+					{
+						Tester.bludgers[i].Draw();
+						if (GhostAnimate)
+							Standard.DrawAddon(Tester.bludgers[i].bludger, Color.LightYellow, 0.1f, "GhostHead_1");
+						else
+							Standard.DrawAddon(Tester.bludgers[i].bludger, Color.LightYellow, 0.1f, "GhostHead_2");
+
+						Standard.DrawAddon(Tester.bludgers[i].bludger, Color.LightYellow, 1f, "BludgerFace");
+
+					}
 
 				}
-		
+				Checker.ShowStatus();
 			}
-			Checker.ShowStatus();
+	
 			base.Draw(gameTime);
         }	
     }

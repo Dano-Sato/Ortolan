@@ -7,22 +7,93 @@ using Microsoft.Xna.Framework;
 
 namespace TestSheet
 {
-
-	public interface IDrawLayer
+	public interface IGraphicLayer
 	{
-		void Draw();
 		void SetPos(int x, int y);
 		void SetPos(Point p);
+		string ToString();
 		Point GetPos();
+		Point GetCenter();
+		Rectangle GetBound();
+		void MoveTo(int x, int y, double speed);
+		void Draw();
+		void Draw(Color color);
 	}
 
+	public class StringLayer : IGraphicLayer
+	{
+		private string String;
+		private Vector2 Pos;
+		public StringLayer(string s, Vector2 pos)
+		{
+			String = s;
+			Pos = pos;
+		}
+
+		public override string ToString()
+		{
+			return String;
+		}
+
+		public void SetPos(int x, int y)
+		{
+			Pos = new Vector2(x, y);
+		}
+		public void SetPos(Point p)
+		{
+			SetPos(p.X, p.Y);
+		}
+		public Point GetPos()
+		{
+			return GetBound().Location;
+		}
+		public Point GetCenter()
+		{
+			return GetBound().Center;
+		}
+		public void MoveTo(int x, int y, double speed)//등속운동합니다.
+		{
+			Point p = new Point((int)Pos.X, (int)Pos.Y);
+			double Dx = (x - p.X);
+			double Dy = (y - p.Y);
+			double N = Math.Sqrt(Math.Pow(Dx, 2) + Math.Pow(Dy, 2));//두 물체 사이의 거리이자 노말벡터인자.
+			if (N < speed)//거리가 스피드보다 가까우면 도착.
+			{
+				SetPos(x, y);
+				return;
+			}
+
+			int X_Displacement = (int)(Dx * speed / N);
+			int Y_Displacement = (int)(Dy * speed / N);
+
+			SetPos(p.X + X_Displacement, p.Y + Y_Displacement);
+		}
+
+		public Rectangle GetBound()
+		{
+			return new Rectangle((int)Pos.X, (int)Pos.Y, (int)Standard.GetStringSize(String).X, (int)Standard.GetStringSize(String).Y);
+		}
+		public void Draw()
+		{
+			Standard.DrawString(String, Pos, Color.Black);
+		}
+		public void Draw(Color color)
+		{
+			Standard.DrawString(String, Pos, color);
+		}
+		public void Draw(Color color, float opacity)
+		{
+			Standard.DrawString(String, Pos, color * opacity);
+		}
+
+	}
 
 	/* 드로잉이 행해지는 각 레이어의 클래스를 만들었습니다.
 	 * 스트링 지정을 통해 스프라이트시트를 바꿀 수 있습니다.
 	 * 등속 운동이 지원됩니다.
 	 * 스프라이트 애니메이션이 지원됩니다.
 	 * */
-	public class DrawingLayer : IDrawLayer
+	public class DrawingLayer : IGraphicLayer
 	{
 		private Rectangle Bound;//화면에서 그림이 그려지는 영역을 표시합니다.
 		private Texture2D spriteTexture;
@@ -131,13 +202,13 @@ namespace TestSheet
 			Frame.X = x;
 			Frame.Y = y;
 		}
-		public void setSprite(string s)//스프라이트를 바꿉니다.
+		public void SetSprite(string s)//스프라이트를 바꿉니다.
 		{
 			if (s.Equals(spriteTexture.ToString()))
 				return;
 			spriteTexture = Game1.content.Load<Texture2D>(s);
 		}
-		public void setSprite(string s, SpritePosition spriteSize)//스프라이트를 바꾸면서 동시에 소스영역도 바꿉니다.
+		public void SetSprite(string s, SpritePosition spriteSize)//스프라이트를 바꾸면서 동시에 소스영역도 바꿉니다.
 		{
 			if (s.Equals(spriteTexture.ToString()))
 				return;
@@ -146,7 +217,7 @@ namespace TestSheet
 			int SourceH = spriteTexture.Bounds.Height / (SpriteSize.Y + 1);
 			SourceRect = new Rectangle(0, 0, SourceW, SourceH);
 		}
-		public int getTimer()
+		public int GetTimer()
 		{
 			return FrameTimer;
 		}
@@ -154,7 +225,7 @@ namespace TestSheet
 		/*드로잉 세션*/
 		public void Draw()
 		{
-			if (SpriteSize.isZero())//애니메이션이 없을 경우
+			if (SpriteSize.IsZero())//애니메이션이 없을 경우
 			{
 				Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
 				Game1.spriteBatch.Draw(spriteTexture, Bound, Color.White);
@@ -162,13 +233,13 @@ namespace TestSheet
 				return;
 			}
 			Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-			Game1.spriteBatch.Draw(spriteTexture, Bound, processedSourceRect(), Color.White);
+			Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), Color.White);
 			Game1.spriteBatch.End();
 		}
 
 		public void Draw(Color color)
 		{
-			if (SpriteSize.isZero())//애니메이션이 없을 경우
+			if (SpriteSize.IsZero())//애니메이션이 없을 경우
 			{
 				Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
 				Game1.spriteBatch.Draw(spriteTexture, Bound, color);
@@ -176,13 +247,13 @@ namespace TestSheet
 				return;
 			}
 			Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-			Game1.spriteBatch.Draw(spriteTexture, Bound, processedSourceRect(), color);
+			Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), color);
 			Game1.spriteBatch.End();
 		}
 
 		public void Draw(Color color, float opacity)
 		{
-			if (SpriteSize.isZero())//애니메이션이 없을 경우
+			if (SpriteSize.IsZero())//애니메이션이 없을 경우
 			{
 				Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
 				Game1.spriteBatch.Draw(spriteTexture, Bound, color * opacity);
@@ -190,7 +261,7 @@ namespace TestSheet
 				return;
 			}
 			Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-			Game1.spriteBatch.Draw(spriteTexture, Bound, processedSourceRect(), color * opacity);
+			Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), color * opacity);
 			Game1.spriteBatch.End();
 		}
 
@@ -273,7 +344,7 @@ namespace TestSheet
 				return;//애니메이터는 자러 갑니다.
 			}
 		}
-		private Rectangle processedSourceRect()
+		private Rectangle ProcessedSourceRect()
 		{
 
 			return new Rectangle(SourceRect.Width * Frame.X, SourceRect.Height * Frame.Y, SourceRect.Width, SourceRect.Height);
@@ -283,7 +354,7 @@ namespace TestSheet
 		/* 클릭처리*/
 		public bool MouseIsOnThis()
 		{
-			return Bound.Contains(Cursor.getPos());
+			return Bound.Contains(Cursor.GetPos());
 		}
 
 		public bool MouseJustLeftClickedThis()
@@ -361,7 +432,7 @@ namespace TestSheet
 			Y = y;
 		}
 
-		public bool isZero()
+		public bool IsZero()
 		{
 			if (X == 0 && Y == 0)
 				return true;

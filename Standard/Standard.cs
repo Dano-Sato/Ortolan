@@ -514,7 +514,7 @@ namespace TestSheet
 
 	public class MasterInfo
 	{
-		public static readonly Rectangle PreferredScreen = new Rectangle(0, 0, 1200, 800);
+		public static readonly Rectangle PreferredScreen = new Rectangle(0, 0, 1280, 720);
 		public static readonly Rectangle FullScreen = new Rectangle(0, 0, 1920, 1080);
 		public MasterInfo()
 		{

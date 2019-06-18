@@ -106,6 +106,10 @@ namespace TestSheet
 
 		private double Ratio=1f;
 
+		public DrawingLayer() : this("EmptySpace", new Rectangle(0, 0, 0, 0))
+		{
+			
+		}
 
 		public DrawingLayer(string s, Rectangle boundRect)//애니메이션이 없는 경우의 생성자. 
 		{

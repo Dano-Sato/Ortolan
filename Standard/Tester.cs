@@ -66,7 +66,7 @@ namespace TestSheet
 		public static int Score = 0;
 		public static int ZombieTime = 40;
 		public static double Lightr = 0;//화면이 좀 깜빡거리도록 하기 위해 넣은 변수
-		public static DrawingLayer BloodLayer= new DrawingLayer("Blood", MasterInfo.FullScreen);
+		public static DrawingLayer BloodLayer= new DrawingLayer("Blood", new Rectangle(0,0,1300,1080));
 		public static List<DrawingLayer> DeadBodys = new List<DrawingLayer>();
 		
 		public static int ZombieSpeed = 7;
@@ -344,20 +344,22 @@ namespace TestSheet
 					/*오버클럭 모드 처리*/
 
 
-					if (Standard.IsKeyDown(Keys.A)&&FreezeTimer==-1)
+					if (FreezeTimer==-1)
 					{
-						
-						Gauge = Math.Max(0, Gauge - 0.015);
-						if (Gauge == 0)
-							SlowMode = false;
+						if(Standard.IsKeyDown(Keys.A))
+						{
+							Gauge = Math.Max(0, Gauge - 0.015);
+							if (Gauge == 0)
+								SlowMode = false;
+							else
+								SlowMode = true;
+						}
 						else
-							SlowMode = true;
-					}
-					else
-					{
+						{
 
-						Gauge = Math.Min(1, Gauge + 0.003);
-						SlowMode = false;
+							Gauge = Math.Min(1, Gauge + 0.003);
+							SlowMode = false;
+						}
 					}
 					if (Standard.JustPressed(Keys.T))
 					{
@@ -443,7 +445,7 @@ namespace TestSheet
 							continue;
 						if (j >= 14)
 							j = 0;
-						enemies[i].MoveUpdate(i, RandomInts[j], RandomInts[(j + Standard.FrameTimer) % 14]);
+						enemies[i].MoveUpdate(i, RandomInts[j], RandomInts[(j + Standard.FrameTimer+100) % 14]);
 						j++;
 					}
 
@@ -502,7 +504,7 @@ namespace TestSheet
 					{
 						//Rectangle rectangle = Method2D.RectangleMoveTo(Game1.graphics.GraphicsDevice.Viewport.Bounds, new Point(-player.GetPos().X + ViewportDisplacement.X / 2 + 400, -player.GetPos().Y + ViewportDisplacement.Y / 2 + 400), 5);
 						//Game1.graphics.GraphicsDevice.Viewport = new Viewport(rectangle);
-						Game1.graphics.GraphicsDevice.Viewport = new Viewport(-player.GetPos().X + CursorDisplacement.X / 4 + ViewportDisplacement.X / 2 + 400, -player.GetPos().Y + CursorDisplacement.Y / 4 + ViewportDisplacement.Y / 2 + 400, 1300, MasterInfo.FullScreen.Height);
+						Game1.graphics.GraphicsDevice.Viewport = new Viewport(-player.GetPos().X + CursorDisplacement.X / 4 + ViewportDisplacement.X / 2 + 400, -player.GetPos().Y + CursorDisplacement.Y / 4 + ViewportDisplacement.Y / 2 + 400, 1920, MasterInfo.FullScreen.Height);
 
 					}
 					else
@@ -683,13 +685,11 @@ namespace TestSheet
 			switch (GamePhase)
 			{
 				case Phase.Main:
-					//Standard.DrawString("Game Start", new Vector2(400, 600), Color.White);
+					
 					StartButton.Draw(Color.White,Color.Red);
-					GameExitButton.Draw(Color.White, Color.Red);
-
-					//Standard.DrawString("Exit", new Vector2(700, 600), Color.White);
-					//DrawingLayer Test = new DrawingLayer("CG15", new Point(700,100), 0.35f);
-					//Test.Draw();
+					GameExitButton.Draw(Color.White, Color.Red);					
+					DrawingLayer Test = new DrawingLayer("CG16_Test", new Point(700,100), 0.8f);
+					Test.Draw();
 					break;
 				case Phase.Game:
 					/*배경 드로우. 핏자국, 별들*/
@@ -2560,6 +2560,12 @@ namespace TestSheet
 		}
 	}
 
+
+	public static class BuffAnimation
+	{
+		public static DrawingLayer BuffAnimator=new DrawingLayer();
+
+	}
 
 
 

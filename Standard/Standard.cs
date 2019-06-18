@@ -515,11 +515,16 @@ namespace TestSheet
 	public class MasterInfo
 	{
 		public static readonly Rectangle PreferredScreen = new Rectangle(0, 0, 1280, 720);
-		public static readonly Rectangle FullScreen = new Rectangle(0, 0, 1920, 1080);
+		public static Rectangle FullScreen = new Rectangle(0, 0, 1920, 1080);
 		public MasterInfo()
 		{
 
 		}
+		public static void SetFullScreen(double ratio)
+		{
+			FullScreen = new Rectangle(0, 0, (int)(1920 * ratio), (int)(1080 * ratio));
+		}
+	
 	
 	}
 

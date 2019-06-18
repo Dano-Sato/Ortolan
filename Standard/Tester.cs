@@ -201,7 +201,7 @@ namespace TestSheet
 		{
 			player = new Player();
 			enemies.Add(new Enemy(false));
-			ScrollBar_Sensitivity.Initialize(1.0f / (2.0f - 0.3f));
+			ScrollBar_Sensitivity.Initialize(0.5f);
 			//Room.Number = 1;
 			//Room.Set();
 			Room.Init();
@@ -247,6 +247,7 @@ namespace TestSheet
 				Standard.FadeAnimation(Click, 10, Color.DarkGray);
 			}
 
+			MasterInfo.SetFullScreen(ScrollBar_Sensitivity.Coefficient * 4 + 1f);
 
 			switch (GamePhase)
 			{
@@ -384,7 +385,6 @@ namespace TestSheet
 
 
 
-
 					/*ESC 메뉴 처리*/
 
 					if (ShowMenu)
@@ -393,7 +393,7 @@ namespace TestSheet
 						ScrollBar_Sensitivity.Update();
 						ScrollBar_SongVolume.Update();
 						ScrollBar_SEVolume.Update();
-						Cursor.Sensitivity = ScrollBar_Sensitivity.MapCoefficient(0.5f, 2.0f);
+						
 						if (!IsEndPhase)
 							Standard.SetSongVolume(ScrollBar_SongVolume.Coefficient);
 						Standard.SetSEVolume(ScrollBar_SEVolume.Coefficient);
@@ -741,7 +741,7 @@ namespace TestSheet
 
 					if (!IsEndPhase)
 					{
-						Standard.DrawLight(MasterInfo.FullScreen, Color.White, 1f, Standard.LightMode.Vignette);
+						Standard.DrawLight(new Rectangle(0,0,MasterInfo.PreferredScreen.Width*4, MasterInfo.PreferredScreen.Height*4), Color.White, 1f, Standard.LightMode.Vignette);
 						//스코어 올라갈수록 보라색을 띈다.
 						Standard.DrawLight(MasterInfo.FullScreen, Color.Purple, 0.3f * Math.Min(1.2f, (float)(Score / 100.0)), Standard.LightMode.Absolute);
 
@@ -878,7 +878,7 @@ namespace TestSheet
 						PlayerSight.Draw();
 					}
 
-					Standard.DrawLight(MasterInfo.FullScreen, Color.DarkBlue, (float)(PressedATimer / 100.0), Standard.LightMode.Absolute);
+					Standard.DrawLight(BloodLayer.GetBound(), Color.DarkBlue, (float)(PressedATimer / 100.0), Standard.LightMode.Absolute);
 
 					if (FreezeTimer > 0)
 						Standard.ClearFadeAnimation();
@@ -940,8 +940,8 @@ namespace TestSheet
 						MenuLayer.Draw(Color.Black * 0.7f);
 						Standard.DrawString("Mouse Sensitivity", new Vector2(ScrollBar_Sensitivity.Frame.GetPos().X, ScrollBar_Sensitivity.Frame.GetPos().Y - 20), Color.White);
 						ScrollBar_Sensitivity.Draw();
-						Standard.DrawString(String.Format("{0:0.0}", (ScrollBar_Sensitivity.MapCoefficient(0.3f, 2.0f))), new Vector2(ScrollBar_Sensitivity.Frame.GetPos().X + 500, ScrollBar_Sensitivity.Frame.GetPos().Y), Color.White);
-						Standard.DrawString("(Default:1.0)", new Vector2(ScrollBar_Sensitivity.Frame.GetPos().X + 500, ScrollBar_Sensitivity.Frame.GetPos().Y + 20), Color.White);
+						Standard.DrawString(String.Format("{0:0.0}", ScrollBar_Sensitivity.Coefficient+0.5f), new Vector2(ScrollBar_Sensitivity.Frame.GetPos().X + 500, ScrollBar_Sensitivity.Frame.GetPos().Y), Color.White);
+						Standard.DrawString("(Default:1)", new Vector2(ScrollBar_Sensitivity.Frame.GetPos().X + 500, ScrollBar_Sensitivity.Frame.GetPos().Y + 20), Color.White);
 						ScrollBar_SongVolume.Draw();
 						Standard.DrawString("Song Volume", new Vector2(ScrollBar_SongVolume.Frame.GetPos().X, ScrollBar_SongVolume.Frame.GetPos().Y - 20), Color.White);
 						ScrollBar_SEVolume.Draw();

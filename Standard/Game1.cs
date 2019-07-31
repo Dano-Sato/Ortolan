@@ -104,7 +104,7 @@ namespace TestSheet
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(WallColor);
-			Standard.DrawLight(MasterInfo.FullScreen, Tester.Room.RoomColor, Math.Max(0f,(float)(1-Tester.Score/200.0)), Standard.LightMode.Absolute);
+			Standard.DrawLight(MasterInfo.FullScreen, Tester.Room.RoomColor, Math.Max(0f,(float)(1-Tester.Score.Get() / 200.0)), Standard.LightMode.Absolute);
 			// TODO: Add your drawing code here
 			tester.Draw();
 			Standard.Draw();
@@ -180,6 +180,7 @@ namespace TestSheet
 				{
 
 
+                    /*
 					if (Tester.FreezeTimer > Tester.FreezeTime - 110 && Tester.KillerZombieIndex != -1)
 					{
 						if (Standard.FrameTimer % 20 <= 10)
@@ -188,7 +189,7 @@ namespace TestSheet
 							Standard.DrawAddon(Tester.enemies[Tester.KillerZombieIndex].enemy, Color.White, 1f, "ZombieBite2");
 
 					}
-
+                    */
 					if (Tester.FreezeTimer == Tester.FreezeTime - 110)
 					{
 						Tester.KillCard = new DrawingLayer("KilldByRock3", new Point(0, 0), 0.8f);

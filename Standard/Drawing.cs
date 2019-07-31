@@ -38,6 +38,7 @@ namespace TestSheet
 		public void SetPos(int x, int y)
 		{
 			Pos = new Vector2(x, y);
+			//Pos_Safe=GetHash(x+y); : 현재 포지션의 해시값을 별도로 저장
 		}
 		public void SetPos(Point p)
 		{
@@ -45,6 +46,8 @@ namespace TestSheet
 		}
 		public Point GetPos()
 		{
+			//if(Pos_Safe!=Hash(x+y)) // 현재 변수의 해시값과 저장된 값이 다르면
+			//{throw new Exception}//크래시 냄
 			return GetBound().Location;
 		}
 		public Point GetCenter()
@@ -98,11 +101,14 @@ namespace TestSheet
 		private Rectangle Bound;//화면에서 그림이 그려지는 영역을 표시합니다.
 		private Texture2D spriteTexture;
 		private Rectangle SourceRect;//스프라이트시트에서 소스영역의 크기를 나타냄. X,Y는 안씁니다.
+		private int FrameRate = -1;
 
 		private int FrameTimer = 0;//프레임 교체 타이밍을 재는 타이머.
 								  //SpritePosition은 스프라이트 격자 좌표계상에서 프레임이 위치한 좌표를 난타냅니다.
 		private SpritePosition Frame = new SpritePosition(0, 0);
 		private SpritePosition SpriteSize = new SpritePosition(0, 0);//스프라이트 격자상의 최대 지점을 나타냅니다.
+
+		private List<string> Actions = new List<string>();
 
 		private double Ratio=1f;
 
@@ -196,9 +202,9 @@ namespace TestSheet
 
 			SetCenter(Center);
 		}
-		public Point GetFrame()
+		public SpritePosition GetFrame()
 		{
-			return new Point(Frame.X, Frame.Y);
+			return Frame;
 		}
 
 		public void SetFrame(int x, int y)
@@ -334,9 +340,9 @@ namespace TestSheet
 
 
 		/* 애니메이션*/
-		public void Animate(SpritePosition Frame_Start, SpritePosition Frame_End, int FrameRate)
+		public void LoopedAnimation(SpritePosition Frame_Start, SpritePosition Frame_End, int FrameRate)
 		{
-			if (FrameTimer != 0)
+			if (FrameTimer>0)
 			{
 				FrameTimer--;//일하는 시간이 아닙니다.
 				return;
@@ -346,6 +352,65 @@ namespace TestSheet
 				FrameTimer = FrameRate;//다시 스톱워치를 맞춥니다.
 				Frame.GoLoop(Frame_End, Frame_Start, SpriteSize);//애니메이션을 다음 프레임으로 이동시킵니다.
 				return;//애니메이터는 자러 갑니다.
+			}
+		}
+
+		public void AttachAnimation(int Frame_rate, params string[] Animations)
+		{
+			FrameRate = Frame_rate;
+			foreach(string s in Animations)
+			{
+				Actions.Add("/s " + s);
+			}
+		}
+
+		public void AttachAnimation(int Frame_rate, SpritePosition Frame_Start, SpritePosition Frame_End)
+		{
+			FrameRate = Frame_rate;
+			Actions.Add("/sp " + Frame_Start.X+","+Frame_Start.Y+" "+ Frame_End.X + "," + Frame_End.Y);
+		}
+
+		public void ClearAnimation()
+		{
+			Actions.Clear();
+		}
+
+		public void Animate(bool isLooped)
+		{
+			if (Actions.Count == 0)
+				return;
+			else
+			{
+				if(FrameTimer>0)
+				{
+					FrameTimer--;
+					return;
+				}
+				else
+				{
+					FrameTimer = FrameRate;
+					string[] s = Actions[0].Split(' ');
+					switch (s[0])
+					{
+						case "/s":
+							SetSprite(Actions[0].Substring(3));
+							if (isLooped)
+								Actions.Add(Actions[0]);
+							Actions.RemoveAt(0);
+							break;
+						case "/sp":
+							SpritePosition Frame_Start = new SpritePosition(Int32.Parse(s[1].Split(',')[0]), Int32.Parse(s[1].Split(',')[1]));
+							SpritePosition Frame_End = new SpritePosition(Int32.Parse(s[2].Split(',')[0]), Int32.Parse(s[2].Split(',')[1]));
+							Frame.GoLoop(Frame_Start, Frame_End, SpriteSize);
+							if(GetFrame()==Frame_End)
+							{
+								if (isLooped)
+									Actions.Add(Actions[0]);
+								Actions.RemoveAt(0);
+							}
+							break;
+					}
+				}
 			}
 		}
 		private Rectangle ProcessedSourceRect()

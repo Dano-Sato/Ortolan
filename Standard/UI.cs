@@ -403,7 +403,7 @@ namespace TestSheet
 		private event ButtonEvent ButtonEvents;
 		private Color AccentColor = Color.Red;
 
-		public Button(IGraphicLayer Graphic, ButtonEvent e)
+		public Button(IGraphicLayer Graphic, params ButtonEvent[] e)
 		{
 			ButtonGraphic = Graphic;
 			AttachEvent(e);
@@ -411,16 +411,19 @@ namespace TestSheet
 
 
 
-		public void Update()
+		public void Enable()
 		{
 			if (Cursor.JustdidLeftClick(ButtonGraphic) && ButtonEvents != null)
 			{
 				ButtonEvents();
 			}
 		}
-		public void AttachEvent(ButtonEvent e)
+		public void AttachEvent(params ButtonEvent[] e)
 		{
-			ButtonEvents += e;
+			foreach (ButtonEvent ev in e)
+			{
+				ButtonEvents += ev;
+			}
 		}
 		public void ClearEvent()
 		{

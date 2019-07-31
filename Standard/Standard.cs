@@ -74,6 +74,7 @@ namespace TestSheet
 					FadedSong.Clear();
 				}
 			}
+	
 		}
 		public static void Draw()
 		{
@@ -503,6 +504,10 @@ namespace TestSheet
 		{
 			return random.NextDouble();
 		}
+
+
+
+	
 
 
 	}

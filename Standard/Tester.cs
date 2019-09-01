@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 
 using System.Linq;
 
@@ -98,7 +99,7 @@ namespace TestSheet
         public static bool IsEndPhase=false;
 		public static int FadeTimer = 0;
 		//public static DrawingLayer SaveButton = new DrawingLayer("SaveButton", new Point(400, 200), 1f);
-		public static Button NextStageButton = new Button(new DrawingLayer("SaveButton", new Point(400, 200), 1f),StartNextStage);
+		public static Button NextStageButton = new Button(new DrawingLayer("Ladder3", new Point(500, 0), 1f),StartNextStage);
 		public static int StartStageTimer = 0;
 		public static List<Bludger> bludgers=new List<Bludger>();
 		//public static int KillerZombieIndex = -1;
@@ -115,11 +116,13 @@ namespace TestSheet
 		public static int FreezeTime = 210;
 
 		public static double TimeCoefficient = 0.5;
-		public static DrawingLayer KillCard = new DrawingLayer("KilldByRock3", new Point(0,0), 0.8f);
+		public static DrawingLayer KillCard = new DrawingLayer("SDead_1", new Point(0,0), 0.8f);
 
 		public static List<Card> Rewards = new List<Card>();
 
 		public static List<int> MonsterDeck = new List<int>();
+
+        public static DrawingLayer TutorialCard = new DrawingLayer("Tutorial01", new Point(0, 0), 0.67f);
 
 		/*오버클럭 처리용 변수*/
 		public static int PressedATimer;
@@ -130,10 +133,14 @@ namespace TestSheet
 		public static Phase GamePhase = Phase.Main;
 
 		
-		public enum Phase { Main, Game};
+		public enum Phase { Main, Tutorial, Game, Ending, Dead};
 
-		public static Button StartButton = new Button(new StringLayer("Game Start", new Vector2(400, 600)), GameInit);
+        public static Button StartButton = new Button(new StringLayer("Game Start", new Vector2(400, 600)), () => GamePhase = Phase.Tutorial);
 		public static Button GameExitButton = new Button(new StringLayer("Exit", new Vector2(700, 600)), Exit);
+
+        public static Button RetryButton = new Button(new StringLayer("Retry", new Vector2(600, 600)), () => GamePhase = Phase.Main);
+
+        public static bool LiteMode = true;
 
 
 		//public static int PressedATimer = 0;
@@ -154,6 +161,12 @@ namespace TestSheet
 
 		public static void StartNextStage()
 		{
+            /*
+            if(true)
+            {
+                GamePhase = Phase.Dead;
+                return;
+            }*/
 			Room.Number = MonsterDeck[0];
 			MonsterDeck.RemoveAt(0);
 			StartStageTimer = 200;
@@ -188,10 +201,12 @@ namespace TestSheet
 			MonsterDeck.Add(5);
 			MonsterDeck.Add(77);
 			MonsterDeck.Add(66);
+            /*
 			MonsterDeck.Add(4);
 			MonsterDeck.Add(6);
 			MonsterDeck.Add(777);
 			MonsterDeck.Add(666);
+            */
 
 			IsEndPhase = true;
 
@@ -204,12 +219,16 @@ namespace TestSheet
 		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
 		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
-			player = new Player();
+            TutorialCard.SetSprite("EmptySpace");
+        player = new Player();
 			enemies.Add(new Enemy(false));
 			ScrollBar_Sensitivity.Initialize(0.5f);
-			//Room.Number = 1;
-			//Room.Set();
-			Room.Init();
+            ScrollBar_SongVolume.Initialize(0f);
+            ScrollBar_SEVolume.Initialize(0f);
+
+            //Room.Number = 1;
+            //Room.Set();
+            Room.Init();
 			AddCard(0);
 			AddCard(1);
 			AddCard(3);
@@ -234,14 +253,16 @@ namespace TestSheet
 
 			UpdateScore();
 
-			/*커서 애니메이션 처리*/
-			string ClickSprite;
+            #region 커서 애니메이션 처리
+            /*커서 애니메이션 처리*/
+            string ClickSprite;
 			if (Standard.FrameTimer % 30 < 15)
 				ClickSprite = "Click";
 			else
 				ClickSprite = "Click2";
 			DrawingLayer Click = new DrawingLayer(ClickSprite, new Rectangle(Cursor.GetPos().X - 15, Cursor.GetPos().Y - 15, 30, 30));
-			if (!IsEndPhase)
+			if (!IsEndPhase||GamePhase==Phase.Ending)
+                
 			{
 				Standard.FadeAnimation(Click, 10, Color.OrangeRed);
 				Standard.FadeAnimation(Click, 10, Color.AliceBlue);
@@ -251,8 +272,9 @@ namespace TestSheet
 				Standard.FadeAnimation(Click, 10, Color.Black);
 				Standard.FadeAnimation(Click, 10, Color.DarkGray);
 			}
+            #endregion
 
-			MasterInfo.SetFullScreen(ScrollBar_Sensitivity.Coefficient * 4 + 1f);
+            MasterInfo.SetFullScreen(ScrollBar_Sensitivity.Coefficient * 4 + 1f);
 
 			switch (GamePhase)
 			{
@@ -262,19 +284,37 @@ namespace TestSheet
 						Standard.PlayLoopedSong("TitleSong");
 					}
 					Room.RoomColor = Color.Black;
-					if (Standard.IsKeyDown(Keys.S))
+					if (Standard.Pressing(Keys.S))
 					{
 						GameInit();
 					
 
 
 					}
-					if (Standard.IsKeyDown(Keys.Escape))
+					if (Standard.Pressing(Keys.Escape))
 						Game1.GameExit = true;
 					StartButton.Enable();
 					GameExitButton.Enable();
 					break;
-				case Phase.Game:
+                case Phase.Tutorial:
+                    if (Standard.SongName != "TutorialSong")
+                    {
+                        Standard.PlayLoopedSong("TutorialSong");
+                    }
+                    if (Cursor.JustdidLeftClick())
+                    {
+                        if (TutorialCard.GetSpriteName() == "EmptySpace")
+                            TutorialCard.SetSprite("Tutorial01");
+                        else if (TutorialCard.GetSpriteName() == "Tutorial01")
+                            TutorialCard.SetSprite("Tutorial02");
+                        else if (TutorialCard.GetSpriteName() == "Tutorial02")
+                        {
+                            TutorialCard.SetSprite("EmptySpace");
+                            GameInit();
+                        }                    
+                    }
+                    break;
+                case Phase.Game:
 
 
 
@@ -306,7 +346,8 @@ namespace TestSheet
 					{
 						if (Checker.Hearts == 0)
 						{
-							GamePhase = Phase.Main;
+                            //GamePhase = Phase.Main;
+                            GamePhase = Phase.Dead;
 							Standard.FrameTimer = 0;
 							return;
 						}
@@ -328,13 +369,35 @@ namespace TestSheet
 						DeadBodys.RemoveAt(0);
 					}
 
-				
 
 
-					/*키보드 입력 처리*/
 
+                    /*키보드 입력 처리*/
+                    if(Standard.JustPressed(Keys.H))
+                    {
+                        int w = Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth;
+                        int h = Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight;
 
-					if (Standard.JustPressed(Keys.C))//핏자국 청소
+                        //force a frame to be drawn (otherwise back buffer is empty) 
+                        //Game1.spriteBatch.Draw(new GameTime());
+
+                        //pull the picture from the buffer 
+                        int[] backBuffer = new int[w * h];
+                        Game1.graphics.GraphicsDevice.GetBackBufferData(backBuffer);
+
+                        //copy into a texture 
+                        Texture2D texture = new Texture2D(Game1.graphics.GraphicsDevice, w, h, false, Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat);
+                        texture.SetData(backBuffer);
+
+                        //save to disk 
+                        Stream stream = File.OpenWrite("TestGameCapture" + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss")+".jpg");
+
+                        texture.SaveAsJpeg(stream, w, h);
+                        stream.Dispose();
+                        texture.Dispose();
+                    }
+
+                    if (Standard.JustPressed(Keys.C))//핏자국 청소
 					{
 						for (int i = 0; i < DeadBodys.Count; i++)
 						{
@@ -342,7 +405,7 @@ namespace TestSheet
 						}
 						DeadBodys.Clear();
 					}
-					if (Standard.JustPressed(Keys.Escape))//세팅으로
+					if (Standard.JustPressed(Keys.Escape)||Cursor.JustDidScrollButton())//세팅으로
 					{
 						ShowMenu = !ShowMenu;
 					}
@@ -350,9 +413,9 @@ namespace TestSheet
 					/*오버클럭 모드 처리*/
 
 
-					if (FreezeTimer==-1)
+					if (FreezeTimer==-1&&!ShowMenu)
 					{
-						if(Standard.IsKeyDown(Keys.A))
+						if((Cursor.IsLeftClickingNow()||Cursor.IsRightClickingNow())&&!IsEndPhase)
 						{
 							Gauge = Math.Max(0, Gauge - 0.015);
 							if (Gauge == 0)
@@ -390,9 +453,9 @@ namespace TestSheet
 
 
 
-					/*ESC 메뉴 처리*/
+                    /*ESC 메뉴 처리*/
 
-					if (ShowMenu)
+                    if (ShowMenu)
 					{
 
 						ScrollBar_Sensitivity.Update();
@@ -410,7 +473,6 @@ namespace TestSheet
 							IsEndPhase = true;
 							Room.RoomColor = Color.AntiqueWhite;
 							Room.StarColor = Color.Yellow;
-
 							Standard.DisposeSE();
 							Standard.DisposeSong();
 							//Standard.PlayLoopedSE("WindOfTheDawn");
@@ -430,18 +492,16 @@ namespace TestSheet
 					HeartSignal = 0;
 
                     RandomInts.Clear();
-					for (int i = 0; i < 15; i++)
-					{
-						RandomInts.Add(Standard.Random(-300, 300));
-					}
+                    for(int i=0;i<15;i++)
+                    {
+                        RandomInts.Add(Standard.Random(-300, 300));
+                    }
 					RandomIntCounter = 0;
-					for (int i = 0; i < enemies.Count; i++)
-					{					
-						double r = Method2D.Distance(enemies[i].enemy.GetPos(), player.GetPos());
-						HeartSignal += (1600.0 / (r * r));
-					}
                 
                     Parallel.For(0, enemies.Count, (i) => {
+                        double r = Method2D.Distance(enemies[i].enemy.GetPos(), player.GetPos());
+                        HeartSignal += (1600.0 / (r * r));
+
                         if (i == player.getAttackIndex())
                             return;
                         if (RandomIntCounter >= 14)
@@ -458,8 +518,11 @@ namespace TestSheet
 						ZombieTime = Math.Max(10 - Score.Get() / 10, 5) + 20;//좀비 생성 시간은 스코어가 높을수록 빨라진다.
 					if (Room.Number == 0)
 						ZombieTime = 20 - Score.Get() / 10;
+                    if (Room.Number == 0&&LiteMode)
+                        ZombieTime = 30 - Score.Get() / 10;
 
-					if (Standard.FrameTimer % ZombieTime == 0)
+
+                    if (Standard.FrameTimer % ZombieTime == 0)
 					{
 						if (!(Score.Get() < 10 && enemies.Count > 10))
 							enemies.Add(new Enemy(false));
@@ -501,19 +564,14 @@ namespace TestSheet
 					OldPlayerDisplacementVector = PlayerDisPlacementVector;
 
 					if (SlowMode)
-					{
-						//Rectangle rectangle = Method2D.RectangleMoveTo(Game1.graphics.GraphicsDevice.Viewport.Bounds, new Point(-player.GetPos().X + ViewportDisplacement.X / 2 + 400, -player.GetPos().Y + ViewportDisplacement.Y / 2 + 400), 5);
-						//Game1.graphics.GraphicsDevice.Viewport = new Viewport(rectangle);
+					{						
 						Game1.graphics.GraphicsDevice.Viewport = new Viewport(-player.GetPos().X + CursorDisplacement.X / 4 + ViewportDisplacement.X / 2 + 400, -player.GetPos().Y + CursorDisplacement.Y / 4 + ViewportDisplacement.Y / 2 + 400, 
 							1300, 1000);
-
 					}
 					else
 					{
-
 						Game1.graphics.GraphicsDevice.Viewport = new Viewport(-player.GetPos().X + CursorDisplacement.X / 4 + ViewportDisplacement.X / 2 + 400, -player.GetPos().Y + CursorDisplacement.Y / 4 + ViewportDisplacement.Y / 2 + 400, 
 							1300, 1000);
-
 					}
 
 
@@ -533,9 +591,6 @@ namespace TestSheet
 
 						FadeTimer = 100;
 						ScoreStack = 0;
-						/*
-						if(ScoreStack==0||ScoreStack>2)
-							ScoreStack=1;*/
 						Rewards.Clear();
 						for (int i = 0; i < Room.ClearRewardCount(); i++)
 						{
@@ -551,7 +606,6 @@ namespace TestSheet
 						if (FadeTimer > 0)
 						{
 							FadeTimer--;
-							//Standard.FadeSong((float)(FadeTimer / 100.0));
 						}
 						if (enemies.Count > 0)
 							RemoveEnemy(0, Color.LightGoldenrodYellow);
@@ -618,35 +672,73 @@ namespace TestSheet
 			
 
 					break;//Game Phase Update
+                case Phase.Ending:
+                    if (Standard.SongName != "EndingSong")
+                    {
+                        Standard.PlayLoopedSong("EndingSong");
+                    }
+                    break;
+                case Phase.Dead:
+                    if (Standard.SongName != "GameOverSong")
+                    {
+                        Standard.PlayLoopedSong("GameOverSong");
+                    }
+                    RetryButton.Enable();
+
+                    break;
+
 			}
 	
 
 		}
 
+   
 		//Game1.Class 내에 Tester.Draw()로 추가될 드로우 액션문입니다. 다양한 드로잉을 시험할 수 있습니다.
 		public void Draw()
 		{
-			switch (GamePhase)
+        
+            switch (GamePhase)
 			{
 				case Phase.Main:
-					
+                    DrawingLayer s = new DrawingLayer("Title3",new Point(0,0),0.67f);
+                    s.Draw();
 					StartButton.Draw(Color.White,Color.Red);
-					GameExitButton.Draw(Color.White, Color.Red);					
-					//DrawingLayer Test = new DrawingLayer("CG16_Test", new Point(700,100), 0.8f);
-					//Test.Draw();
+					GameExitButton.Draw(Color.White, Color.Red);
+                    Standard.DrawLight(MasterInfo.FullScreen, Color.Black, (float)(Math.Abs(90 - Standard.FrameTimer % 180)/500.0)+0.2f, Standard.LightMode.Absolute);
 					break;
+                case Phase.Tutorial:
+                    TutorialCard.Draw();
+                    if (Standard.FrameTimer % 10 == 0)
+                    {
+                        Lightr = Standard.Random() / 10.0;
+                    }
+
+                    if(TutorialCard.GetSpriteName()=="EmptySpace")
+                    {
+                        DrawingLayer Choice = new DrawingLayer("Choice", new Point(0, 0), 0.8f);
+                        Choice.Draw();
+                    }
+                    else
+                    {
+                        Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 0.05f + (float)Lightr, Standard.LightMode.Absolute);
+                        Standard.DrawLight(MasterInfo.FullScreen, Color.DarkBlue, 0.05f, Standard.LightMode.Absolute);
+
+
+                        Standard.DrawLight(new Rectangle(0, 0, MasterInfo.PreferredScreen.Width * 4, MasterInfo.PreferredScreen.Height * 4), Color.White, 1f, Standard.LightMode.Vignette);
+                        //스코어 올라갈수록 보라색을 띈다.
+                        Standard.DrawLight(MasterInfo.FullScreen, Color.Purple, 0.05f, Standard.LightMode.Absolute);
+                    }
+                    break;
 				case Phase.Game:
 					/*배경 드로우. 핏자국, 별들*/
 					BloodLayer.Draw(Room.StarColor, Math.Min(10, Score.Get()) * 0.1f);
 					for (int i = 0; i < DeadBodys.Count; i++)
 					{
-
 						if (!IsEndPhase)
 						{
 							DeadBodys[i].MoveByVector(Wind, ZombieSpeed);
 							if (DeadBodys[i].GetPos().Y > MasterInfo.FullScreen.Height)
 								DeadBodys[i].SetPos(DeadBodys[i].GetPos().X, 0);
-							//DeadBodys[i].Draw(Color.Aquamarine, Math.Min(10, Score) * 0.1f);
 							DeadBodys[i].Draw(Room.StarColor, Math.Min(10, Score.Get()) * 0.1f);
 						}
 						else
@@ -659,16 +751,12 @@ namespace TestSheet
 								i--;
 							}
 						}
-
-
-
 					}
 
 					if (!IsEndPhase)
 					{
 						if (YouDieLayer.GetSpriteName() != "Youdie")
 							YouDieLayer = new DrawingLayer("Youdie", new Point(200, 500), 1.0f);
-						//YouDieLayer.Draw(Color.Aquamarine);
 					}
 					else
 					{
@@ -687,20 +775,28 @@ namespace TestSheet
 						//스코어 올라갈수록 보라색을 띈다.
 						Standard.DrawLight(MasterInfo.FullScreen, Color.Purple, 0.3f * Math.Min(1.2f, (float)(Score.Get() / 100.0)), Standard.LightMode.Absolute);
 
-					}
-					player.Draw();
+                    }
+                    if (IsEndPhase)
+                    {
+                        NextStageButton.Draw();
+                        for (int i = 0; i < Rewards.Count; i++)
+                        {
+                            Rewards[i].Draw();
+                        }
+
+                    }
+                    player.Draw();
 					player.DrawAttack();
 
 
 
 
 
-			
-					for (int i = 0; i < enemies.Count; i++)
+
+                    for (int i = 0; i < enemies.Count; i++)
 					{
 						enemies[i].Draw();
-                        enemies[i].DrawAddOn();
-					
+                        enemies[i].DrawAddOn();					
 					}
 
 					for (int i = 0; i < bludgers.Count; i++)
@@ -713,11 +809,8 @@ namespace TestSheet
 						Lightr = Standard.Random() / 10.0;
 					}
 
-
-
-
-					/*플레이어 사망시 물어뜯는 연출*/
-					if (GameOver)
+                    /*플레이어 사망시 물어뜯는 연출*/
+                    if (GameOver)
 					{
 						if (FreezeTimer < 50)
 						{
@@ -726,7 +819,6 @@ namespace TestSheet
 								enemies[i].enemy.MoveTo(player.GetPos().X + Standard.Random(-30, 30), player.GetPos().Y + Standard.Random(-30, 30), Standard.Random(5, 15));
 							}
 						}
-
 					}
 
 					if (!IsEndPhase)
@@ -784,8 +876,8 @@ namespace TestSheet
 
 
 
-					/*시야 처리*/
-					if (!ShowMenu)
+                    #region 시야처리
+                    if (!ShowMenu)
 					{
 						for (int i = 0; i < enemies.Count; i++)
 						{
@@ -814,59 +906,12 @@ namespace TestSheet
 
 					if (FreezeTimer > 0)
 						Standard.ClearFadeAnimation();
+				
+					Standard.DrawAddon(BloodLayer, Room.RoomColor, 1f, "Wall3");               
+                    #endregion
 
-					if (IsEndPhase)
-					{
-						NextStageButton.Draw();
-						/*
-						SaveButton.Draw(Color.White, (float)((100 - FadeTimer) / 100.0));
-						if (SaveButton.MouseIsOnThis())
-						{
-							SaveButton.Draw(Color.Red);
-						}*/
-						/*
-						Standard.DrawString(RoomKeys[Room.Number], new Vector2(100, 600), Color.Black);
-						string stars = "";
-						for (int i = 0; i < RoomDifficulties[Room.Number]; i++)
-							stars = stars + "*";
-						Standard.DrawString("Difficulty: " + stars, new Vector2(100, 650), Color.Black);	
-						*/
-
-
-						for (int i = 0; i < Rewards.Count; i++)
-						{
-							Rewards[i].Draw();
-						}
-
-						/*
-						for (int i = 0; i < Cards.Count; i++)
-						{
-							Cards[i].Draw();
-							if(i==MouseIsOnCardsIndex())
-							{
-								Standard.DrawLight(Cards[i], Color.White, (float)( 0.5f*(Math.Min(Standard.FrameTimer%100,100- Standard.FrameTimer % 100 )/ 100.0)), Standard.LightMode.Absolute);
-							}
-						}
-						if(!ShowCard||MouseIsOnCardsIndex()==-1||StartStageTimer>0)
-						{
-							for (int i = 0; i < Cards.Count; i++)
-							{
-								if(Room.Number== Int32.Parse(Cards[i].GetSpriteName().Substring(9)))
-								{
-									Cards[i].Draw();
-								}
-							}
-						}
-						*/
-
-
-
-					}
-					Standard.DrawAddon(BloodLayer, Game1.WallColor, 1f, "Wall");
-
-
-					/*세팅화면 처리*/
-					if (ShowMenu)
+                    #region 세팅화면 처리
+                    if (ShowMenu)
 					{
 						Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
 						MenuLayer.Draw(Color.Black * 0.7f);
@@ -884,33 +929,29 @@ namespace TestSheet
 						RestartButton.Draw();
 						if (RestartButton.MouseIsOnThis())
 							RestartButton.Draw(Color.DarkRed);
+                        DrawingLayer SCGSample = new DrawingLayer("SCGSample", new Point(600,0), 0.5f);
+                        if (Checker.Hearts < 5)
+                        {
+                            SCGSample.SetSprite("SCG_Dying");
+                        }
+                        else if (Checker.Hearts < 25)
+                            SCGSample.SetSprite("SCGSample");
+                        else
+                            SCGSample.SetSprite("SCG_Happy");
+
+                        SCGSample.Draw();
 						Standard.FrameTimer--;
 					}
+                    #endregion
 
-					/*좀비의 얼굴 그리기*/
-					if (!GameOver && !ShowMenu)
+                    #region 좀비의 얼굴 그리기
+                    if (!GameOver && !ShowMenu)
 					{
-                        for(int i=0; i<enemies.Count;i++)
-                        enemies[i].DrawAddOn();
-                        /*
-						for (int i = 0; i < enemies.Count; i++)
-						{
-					
-						}*/
+                       for(int i=0; i<enemies.Count;i++)
+                       enemies[i].DrawAddOn();
 					}
                     if (GameOver)
                     {
-                        /*
-						if (KillerZombieIndex != -1)
-						{
-							Standard.DrawAddon(enemies[KillerZombieIndex].enemy, Color.Black, 1f, "Player");
-							if (Standard.FrameTimer % 20 <= 10)
-								Standard.DrawAddon(enemies[KillerZombieIndex].enemy, Color.White, 1f, "ZombieBite");
-							else
-								Standard.DrawAddon(enemies[KillerZombieIndex].enemy, Color.White, 1f, "ZombieBite2");
-
-						}*/
-
                         for (int i = 0; i < enemies.Count; i++)
                         {
                             if(enemies[i].ThisIsTheKiller)
@@ -920,16 +961,16 @@ namespace TestSheet
                                     Standard.DrawAddon(enemies[i].enemy, Color.White, 1f, "ZombieBite");
                                 else
                                     Standard.DrawAddon(enemies[i].enemy, Color.White, 1f, "ZombieBite2");
-
                             }
                         }
 
 					}
+                    #endregion
 
 
-					/*스테이지 시작시 연출*/
+                    /*스테이지 시작시 연출*/
 
-					if (StartStageTimer > 80 && StartStageTimer < 120)
+                    if (StartStageTimer > 80 && StartStageTimer < 120)
 					{
 						Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 1f, Standard.LightMode.Absolute);
 					}
@@ -938,16 +979,59 @@ namespace TestSheet
 					{
 						Standard.DrawString("BigFont", Room.Name(), new Vector2(-Game1.graphics.GraphicsDevice.Viewport.X + 400, -Game1.graphics.GraphicsDevice.Viewport.Y + 300), Color.White * (float)(StartStageTimer / 100.0));
 					}
-					//Standard.DrawString("BigFont", Hearts.ToString(), new Vector2(-Game1.graphics.GraphicsDevice.Viewport.X + 50, -Game1.graphics.GraphicsDevice.Viewport.Y + 50), Color.White);
-
-					break;//Game Phase Draw
-			}
-
 			
-		}
+					break;//Game Phase Draw
+                case Phase.Ending:
+
+                    Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
+                    DrawingLayer EndingCut = new DrawingLayer("Ending2", new Point(-200,-100), 0.80f);                  
+                    EndingCut.Draw();
+                    Standard.DrawLight(EndingCut, Color.AliceBlue, (float)((Math.Max(250 - Standard.FrameTimer % 250, Standard.FrameTimer % 250)-100 )/ 450.0), Standard.LightMode.Absolute);
+
+                    break;
+                case Phase.Dead:
+                    Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
+                    DrawingLayer DeadCut = new DrawingLayer("Dead_1", new Point(0, 0), 0.67f);
+                    int Checkpoint = 1000;
+                    if(Standard.FrameTimer < Checkpoint)
+                    {
+                        if (Standard.FrameTimer % 250 < 125)
+                            DeadCut.SetSprite("Dead_2");
+                    }
+                    else
+                    {
+                        int Interval = 50;
+                        if (Standard.FrameTimer < Checkpoint + Interval)
+                            DeadCut.SetSprite("Dead_3");
+                        else if (Standard.FrameTimer < Checkpoint + 2*Interval)
+                            DeadCut.SetSprite("Dead_4");
+                        else if (Standard.FrameTimer < Checkpoint + 3 * Interval)
+                            DeadCut.SetSprite("Dead_5");
+                        else if (Standard.FrameTimer < Checkpoint + 4 * Interval)
+                            DeadCut.SetSprite("Dead_6");
+                        else
+                            DeadCut.SetSprite("Dead_7");
+                    }
 
 
-		public class Player
+                    DeadCut.Draw();
+                    Standard.DrawLight(DeadCut, Color.Black, (float)((Math.Max(250 - Standard.FrameTimer % 250, Standard.FrameTimer % 250) - 100) / 450.0), Standard.LightMode.Absolute);
+                    RetryButton.Draw(Color.White,Color.Red);
+
+                    break;               
+            }
+            #region Debug Setting
+            if (Standard.Pressing(Keys.LeftControl,Keys.Q))
+                Standard.DrawString(Cursor.GetPos().X.ToString() + "," + Cursor.GetPos().Y.ToString(), new Vector2(Cursor.GetPos().X-20, Cursor.GetPos().Y-30), Color.White);
+            if (Standard.Pressing(Keys.LeftControl, Keys.W))
+                Standard.DrawString(Standard.FrameTimer.ToString(), new Vector2(Cursor.GetPos().X - 20, Cursor.GetPos().Y - 30), Color.White);
+
+            #endregion
+
+        }
+
+
+        public class Player
 		{
 			public DrawingLayer player;
 			private Point MovePoint=new Point(0,0);
@@ -991,12 +1075,7 @@ namespace TestSheet
 				MovePoint = new Point(0, 0);
 				AttackTimer = 0;
 				AttackIndex = -1;
-				isAttacking = false;
-				/*
-				for (int i = 0; i < DeadBodys.Count; i++)
-				{
-					Standard.FadeAnimation(DeadBodys[i], 30,Color.LightSeaGreen);
-				}*/
+				isAttacking = false;         
 				DeadBodys.Clear();
 			}
 
@@ -1046,21 +1125,8 @@ namespace TestSheet
 			}
 
 			public void Draw()
-			{
-			
-				player.Draw(Color.White);
-				/*
-				for (int i = 0; i < 7; i++)
-				{
-					wand.SetPos(Method2D.DivPoint(player.GetBound().Center, direction.GetBound().Center, i / 10.0));
-					wand.SetPos(wand.GetPos().X - 2, wand.GetPos().Y - 2);
-					wand.Draw(Color.Aqua);
-				}
-				direction.Draw(Color.White);*/
-				/*
-				if (isAttacking)
-					player.Draw(MasterInfo.PlayerColor*(float)((float)AttackTimer/AttackSpeed));
-				*/
+			{			
+				player.Draw(Color.White);				
 			}
 
 			public void MoveUpdate()
@@ -1083,8 +1149,7 @@ namespace TestSheet
 							return;
 						}
 					}
-					MovePoint = Cursor.GetPos();
-				
+					MovePoint = Cursor.GetPos();				
 					return;
 				}
 				if(!IsEndPhase&&StartStageTimer==0)
@@ -1093,7 +1158,6 @@ namespace TestSheet
 					{
 						if (enemies[i].getBound().Contains(Cursor.GetPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range)
 						{
-
 							AttackIndex = i;
 							isAttacking = true;
 							AttackTimer = AttackSpeed;
@@ -1102,13 +1166,8 @@ namespace TestSheet
 						}
 
 					}
-				}
-			
-			
-					MovePoint = Cursor.GetPos();
-				
-			
-				
+				}			
+				MovePoint = Cursor.GetPos();	
 				if (MovePoint.X!=0||MovePoint.Y!=0)
 					player.MoveTo(MovePoint.X - 40, MovePoint.Y - 40,MoveSpeed+Checker.Swiftness * 1.0/3.0);
 			}
@@ -1139,7 +1198,6 @@ namespace TestSheet
 								RemoveEnemy(AttackIndex, Color.DarkRed);
 						}
 						ScoreStack++;
-
 
 						isAttacking = false;
 						AttackIndex = -1;
@@ -1185,7 +1243,7 @@ namespace TestSheet
             private event Action MoveAction;
             private event Action DrawAction;
             private event Action DrawAddonAction;
-
+            private event Action SDeadAction;
 
             public Point GetPos()
 			{
@@ -1201,8 +1259,6 @@ namespace TestSheet
 			{
 				return enemy.GetBound();
 			}
-
-
 			public Enemy(bool isGhost)
 			{
 				IsGhost = isGhost;
@@ -1214,6 +1270,7 @@ namespace TestSheet
 					GhostAngle = Standard.Random() * 3;
                     MoveAction += Ghost_MoveAction;
                     DrawAction += Ghost_DrawAction;
+                    SDeadAction += () => Tester.KillCard = new DrawingLayer("SDead_22", new Point(0, 0), 0.6f);
                     DrawAddonAction += () =>
                     {
                         if (Standard.FrameTimer % 50 < 25)
@@ -1229,7 +1286,6 @@ namespace TestSheet
                                 Standard.FadeAnimation(new DrawingLayer("GhostHead_2", enemy.GetBound()), 10, Color.CornflowerBlue);
                         }
                     };
-
                 }
 				else
 				{
@@ -1248,28 +1304,23 @@ namespace TestSheet
 						enemy = new DrawingLayer("Player_V6", new Rectangle(x, y, 100, 100));
 					else
 						enemy = new DrawingLayer("Player_V6", new Rectangle(x+200, y+200, 100, 100));
+                    SDeadAction += () => Tester.KillCard = new DrawingLayer("SDead_1", new Point(0, 0), 0.6f);
                     MoveAction += Rock_MoveAction;
-                    DrawAction += Rock_DrawAction;
-                   
+                    DrawAction += Rock_DrawAction;                   
                 }
-			}
-
-	
-
+			}	
 			public void Draw() => DrawAction();
             public void DrawAddOn() => DrawAddonAction();
 
             public void Ghost_DrawAction()
             {
-                enemy.Draw(Color.PaleTurquoise);
-             
+                enemy.Draw(Color.PaleTurquoise);             
             }
             
             public void Rock_DrawAction()
             {
                 enemy.Draw(Room.RoomColor);
             }
-
             public void Ghost_MoveAction()
             {
                 if (GhostDistance > 3)
@@ -1285,13 +1336,12 @@ namespace TestSheet
                     enemy.SetCenter(player.GetCenter());
                 }
             }
-
             public void Rock_MoveAction()
             {
                 if (SlowMode)
-                    enemy.MoveTo(player.GetPos().X + RandomInts[RandomIntCounter % 14], player.GetPos().Y + RandomInts[(RandomIntCounter + Standard.FrameTimer + 100) % 14], ZombieSpeed * TimeCoefficient);
+                    enemy.MoveTo(player.GetPos().X + RandomInts[Math.Abs(RandomIntCounter) % 14], player.GetPos().Y + RandomInts[(RandomIntCounter + Standard.FrameTimer + 100) % 14], ZombieSpeed * TimeCoefficient);
                 else
-                    enemy.MoveTo(player.GetPos().X + RandomInts[RandomIntCounter % 14], player.GetPos().Y + RandomInts[(RandomIntCounter + Standard.FrameTimer + 100) % 14], ZombieSpeed);
+                    enemy.MoveTo(player.GetPos().X + RandomInts[Math.Abs(RandomIntCounter) % 14], player.GetPos().Y + RandomInts[(RandomIntCounter + Standard.FrameTimer + 100) % 14], ZombieSpeed);
 
                 int Dis;
 
@@ -1317,7 +1367,10 @@ namespace TestSheet
 					if(!Checker.LuckCheck())
 					{
                         ThisIsTheKiller = true;
-						//KillerZombieIndex = Index;
+                        //KillerZombieIndex = Index;
+                        //Need to change dead scene sprite
+                        if(SDeadAction!=null)
+                            Game1.AttachDeadScene(SDeadAction);
 						GameOver = true;
 						Checker.Hearts--;
 					}
@@ -1363,20 +1416,6 @@ namespace TestSheet
 					v = Method2D.Deduct(player.GetPos(), bludger.GetPos());
 				}
 
-				
-			
-				
-				/*
-				if(bludger.MouseIsOnThis()&&Method2D.Distance(player.GetPos(),bludger.GetPos())<player.getRange())
-				{
-					Vector2 V1 = new Vector2(v.X, v.Y);
-					V1.Normalize();
-					Vector2 V2 = new Vector2(bludger.GetPos().X - player.GetPos().X, bludger.GetPos().Y - player.GetPos().Y);
-					V2.Normalize();
-					Vector2 result = (V1 + V2) * 100;
-					v = new Point((int)result.X, (int)result.Y);
-				}*/
-
 				if(SlowMode)
 					bludger.MoveByVector(v, BludgerSpeed*TimeCoefficient);
 				else
@@ -1388,8 +1427,9 @@ namespace TestSheet
 					
 					if(!Checker.LuckCheck())
 					{
-						//KillerZombieIndex = -1;
-						GameOver = true;
+                        Game1.AttachDeadScene(() => Tester.KillCard = new DrawingLayer("SDead_33", new Point(0, 0), 0.6f));
+                        //KillerZombieIndex = -1;
+                        GameOver = true;
 						Checker.Hearts--;
 					}
 
@@ -1406,7 +1446,6 @@ namespace TestSheet
 				bludger.Draw(Color.IndianRed,0.5f);
 				if(!ShowMenu&&!GameOver&&Standard.FrameTimer%3==0)
 				{
-					//Standard.FadeAnimation(new DrawingLayer("Player_AfterImage", new Rectangle(bludger.GetPos(), new Point(80, 80))), 15, Color.IndianRed);
 					if(Standard.FrameTimer%30<15)
 						Standard.FadeAnimation(new DrawingLayer("BludgerFire", new Rectangle(bludger.GetPos(), new Point(100, 100))), 8, Color.IndianRed);
 					else
@@ -1426,7 +1465,7 @@ namespace TestSheet
 			public static Dictionary<int, string> RoomKeys = new Dictionary<int, string>();
 			public static Dictionary<int, int> RoomDifficulties = new Dictionary<int, int>();
 
-			/* ROOM INDEX*
+            /* ROOM INDEX*
 			 * 000: Room of Rock				*
 			 * 001: Room of Fire				**
 			 * 002: Room of Ice					**
@@ -1443,7 +1482,8 @@ namespace TestSheet
 			 * 66: Inferno						*****
 			 * 666: Inferno(EX)					*******
 			 * */
-			public static void Init()
+
+            public static void Init()
 			{
 				RoomKeys.Add(0, "Room of Rocks");
 				RoomDifficulties.Add(0, 1);
@@ -1529,13 +1569,22 @@ namespace TestSheet
 						TheIceRoom = false;
 						break;
 					case 1:
-						SetFireRoom(20, 1500);
-						break;
+                        if (!LiteMode)
+                            SetFireRoom(10, 500);
+                        else
+                            SetFireRoom(3, 500);
+                        //SetFireRoom(20, 1500);
+                        break;
 					case 2:
 						SetIceRoom();
 						break;
 					case 3:
-						SetFireRoom(30, 1000);
+                        if (!LiteMode)
+                            SetFireRoom(20, 1500);
+                        else
+                            SetFireRoom(5, 1500);
+
+                        //SetFireRoom(30, 1000);
 						break;
 					case 4:
 						SetFireRoom(40, 30000 / 40);
@@ -1548,20 +1597,35 @@ namespace TestSheet
 						break;
 
 					case 13:
-						SetFireAndIceRoom(18, 1500);
+                        if (!LiteMode)
+                            SetFireAndIceRoom(8, 500);
+                        else
+                            SetFireAndIceRoom(2, 500);
+
 						break;
 
 					case 14:
-						SetFireRoom(2, 500);
-						break;
+                        if(!LiteMode)
+    						SetFireRoom(2, 500);
+                        else
+                            SetFireRoom(1, 500);
+                        break;
 					case 15:
 						SetIceRoom();
 						break;
 					case 16:
-						SetFireAndIceRoom(2,500);
-						break;
+                        if (!LiteMode)
+                            SetFireAndIceRoom(2, 500);
+                        else
+                            SetFireAndIceRoom(1, 500);
+                        break;
 					case 77:
-						RoomColor = Color.MediumPurple;
+                        if (!LiteMode)
+                            SetFireAndIceRoom(16, 500);
+                        else
+                            SetFireAndIceRoom(4, 500);
+                        break;
+                        RoomColor = Color.MediumPurple;
 						StarColor = Color.Aquamarine;
 						TheIceRoom = true;
 						Standard.PlayLoopedSong("FireAndIce2");
@@ -1611,18 +1675,38 @@ namespace TestSheet
 				
 
 					case 2:
-						if (Standard.FrameTimer % 40 == 0)//아이스(=고스트좀비) 생성
-						{
-							enemies.Add(new Enemy(true));
-						}
-						break;
+                        if (!LiteMode)
+                        {
+                            if (Standard.FrameTimer % 40 == 0)//아이스(=고스트좀비) 생성
+                            {
+                                enemies.Add(new Enemy(true));
+                            }
+                        }
+                        else
+                        {
+                            if (Standard.FrameTimer % 60 == 0)//아이스(=고스트좀비) 생성
+                            {
+                                enemies.Add(new Enemy(true));
+                            }
+                        }
+                        break;
 
 					case 5:
-						if (Standard.FrameTimer % 30 == 0)//아이스(=고스트좀비) 생성
-						{
-							enemies.Add(new Enemy(true));
-						}
-						break;
+                        if (!LiteMode)
+                        {
+                            if (Standard.FrameTimer % 30 == 0)//아이스(=고스트좀비) 생성
+                            {
+                                enemies.Add(new Enemy(true));
+                            }
+                        }
+                        else
+                        {
+                            if (Standard.FrameTimer % 45 == 0)//아이스(=고스트좀비) 생성
+                            {
+                                enemies.Add(new Enemy(true));
+                            }
+                        }
+                        break;
 					case 6:
 						if (Standard.FrameTimer % 22 == 0)//아이스(=고스트좀비) 생성
 						{
@@ -1636,23 +1720,58 @@ namespace TestSheet
 						}
 						break;
 					case 15:
-						if (Standard.FrameTimer % 60 == 0)//아이스(=고스트좀비) 생성
-						{
-							enemies.Add(new Enemy(true));
-						}
-						break;
+                        if(!LiteMode)
+                        {
+                            if (Standard.FrameTimer % 60 == 0)//아이스(=고스트좀비) 생성
+                            {
+                                enemies.Add(new Enemy(true));
+                            }
+                        }
+                        else
+                        {
+                            if (Standard.FrameTimer % 90 == 0)//아이스(=고스트좀비) 생성
+                            {
+                                enemies.Add(new Enemy(true));
+                            }
+                        }
+                        break;
 					case 16:
-						if (Standard.FrameTimer % 55 == 0)//아이스(=고스트좀비) 생성
-						{
-							enemies.Add(new Enemy(true));
-						}
-						break;
+                        if (!LiteMode)
+                        {
+                            if (Standard.FrameTimer % 60 == 0)//아이스(=고스트좀비) 생성
+                            {
+                                enemies.Add(new Enemy(true));
+                            }
+                        }
+                        else
+                        {
+                            if (Standard.FrameTimer % 90 == 0)//아이스(=고스트좀비) 생성
+                            {
+                                enemies.Add(new Enemy(true));
+                            }
+                        }
+                        break;
 					case 77:
-						if (Standard.FrameTimer % 45 == 0)//아이스(=고스트좀비) 생성
+                        if (!LiteMode)
+                        {
+                            if (Standard.FrameTimer % 45 == 0)//아이스(=고스트좀비) 생성
+                            {
+                                enemies.Add(new Enemy(true));
+                            }
+                        }
+                        else
+                        {
+                            if (Standard.FrameTimer % 60 == 0)//아이스(=고스트좀비) 생성
+                            {
+                                enemies.Add(new Enemy(true));
+                            }
+                        }
+                        /*
+                        if (Standard.FrameTimer % 45 == 0)//아이스(=고스트좀비) 생성
 						{
 							enemies.Add(new Enemy(true));
 
-						}
+						}*/
 						break;
 					case 777:
 						if (Standard.FrameTimer % 37 == 0)//아이스(=고스트좀비) 생성
@@ -1669,24 +1788,13 @@ namespace TestSheet
 								bludgers[i].bludger.SetPos(-500, -500);
 
 							}
-						}
-						/*
-						if (Standard.FrameTimer % 500 == 0)
-						{
-							for (int i = 0; i < bludgers.Count; i++)
-							{
-								//bludgers[i].bludger.SetPos(i*500, Standard.Random(-50, 50));
-								bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 15)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 15)));
-
-							}
-						}*/
+						}					
 
 						if (Standard.FrameTimer % 2000 == 0)
 						{
 							double Rnd = Standard.Random();
 							for (int i = 0; i < bludgers.Count; i++)
 							{
-								//bludgers[i].bludger.SetPos(i*500, Standard.Random(-50, 50));
 								bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 25 + Rnd)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 25 + Rnd)));
 
 							}
@@ -1695,7 +1803,6 @@ namespace TestSheet
 						{
 							for (int i = 0; i < bludgers.Count; i++)
 							{
-								//bludgers[i].bludger.SetPos(i*500, Standard.Random(-50, 50));
 								bludgers[i].bludger.SetPos(i * 200, 0);
 
 							}
@@ -1704,7 +1811,6 @@ namespace TestSheet
 						{
 							for (int i = 0; i < bludgers.Count; i++)
 							{
-								//bludgers[i].bludger.SetPos(i*500, Standard.Random(-50, 50));
 								bludgers[i].bludger.SetPos(i * 200, 1300);
 
 							}
@@ -1718,8 +1824,6 @@ namespace TestSheet
 									bludgers[i].bludger.SetPos(0, i * 300);
 								else
 									bludgers[i].bludger.SetPos(2300, (i - bludgers.Count / 2 - 5) * 400);
-
-
 							}
 						}
 
@@ -1729,38 +1833,22 @@ namespace TestSheet
 						{
 							for (int i = 0; i < bludgers.Count; i++)
 							{
-								//bludgers[i].bludger.SetPos(i*500, Standard.Random(-50, 50));
 								bludgers[i].bludger.SetPos(-500, -500);
-
 							}
 						}
-						/*
-						if (Standard.FrameTimer % 500 == 0)
-						{
-							double Rnd = Standard.Random();
-							for (int i = 0; i < bludgers.Count; i++)
-							{
-								//bludgers[i].bludger.SetPos(i*500, Standard.Random(-50, 50));
-								bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 25+Rnd)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 25+Rnd)));
-
-							}
-						}*/
-
+              
 						if (Standard.FrameTimer %2000==0)
 						{
 							double Rnd = Standard.Random();
 							for (int i = 0; i < bludgers.Count; i++)
 							{
-								//bludgers[i].bludger.SetPos(i*500, Standard.Random(-50, 50));
 								bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 35 + Rnd)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 35 + Rnd)));
-
 							}
 						}
 						if (Standard.FrameTimer %2000 == 500)
 						{
 							for (int i = 0; i < bludgers.Count; i++)
 							{
-								//bludgers[i].bludger.SetPos(i*500, Standard.Random(-50, 50));
 								bludgers[i].bludger.SetPos(i*150,0);
 
 							}
@@ -1769,9 +1857,7 @@ namespace TestSheet
 						{
 							for (int i = 0; i < bludgers.Count; i++)
 							{
-								//bludgers[i].bludger.SetPos(i*500, Standard.Random(-50, 50));
 								bludgers[i].bludger.SetPos(i * 150, 1300);
-
 							}
 						}
 
@@ -1848,47 +1934,19 @@ namespace TestSheet
 		public static void Update()
 		{
 			if (LuckTimer > 0)
-				LuckTimer--;
-			/*
-			if (Tester.FadeTimer==99&&(Checker.Bloodthirst == 1 || Checker.Bloodthirst == 3))
-			{
-				Standard.PlaySE("Bloodthirst");
-				Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
-			}*/
+				LuckTimer--;		
 			if (Tester.ScoreStack != 0)
 			{
 				switch (Checker.Bloodthirst)
 				{
 					case 1:
 						BloodStack += 0.01;
-						/*
-						if (Tester.Score % 100 == 99)
-						{
-							GetHeart();
-							Standard.PlaySE("Bloodthirst");
-							Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
-						}*/
 						break;
 					case 2:
 						BloodStack += 1.0/75;
-						/*
-						if (Tester.Score % 75 == 74)
-						{
-							GetHeart();
-							Standard.PlaySE("Bloodthirst");
-
-							Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
-						}*/
 						break;
 					case 3:
 						BloodStack += 0.02;
-						/*
-						if (Tester.Score % 50 == 49)
-						{
-							GetHeart();
-							Standard.PlaySE("Bloodthirst");
-							Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
-						}*/
 						break;
 
 				}
@@ -2012,7 +2070,6 @@ namespace TestSheet
 					Menual.Draw(Color.White);
 				else
 					Menual.Draw(Color.Goldenrod);
-				//(float)(Math.Min(Standard.FrameTimer % 120, 120 - Standard.FrameTimer % 120) / 120.0 + 0.5f)
 			}
 
 
@@ -2039,19 +2096,6 @@ namespace TestSheet
 		public static void ShowBuffString(Status status)
 		{
 			int checker=-1;
-			/*
-			switch (status)
-			{
-				case Status.Swiftness:
-					checker = Swiftness;
-					break;
-				case Status.Bloodthirst:
-					checker = Bloodthirst;
-					break;
-				case Status.Luck:
-					checker = Luck;
-					break;
-			}*/
 			Type type = typeof(Checker);
 			FieldInfo FInfo=type.GetField(status.ToString());
 			checker = (int)FInfo.GetValue(null);

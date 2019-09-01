@@ -8,6 +8,8 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Drawing;
+
 
 
 namespace TestSheet
@@ -30,6 +32,14 @@ namespace TestSheet
 		public static bool ActivationChecker = true;
 
 		public static Color WallColor = Color.Black;
+
+        public static event Action DeadSceneEvent;
+
+        public static void AttachDeadScene(Action a)
+        {
+            DeadSceneEvent = null;
+            DeadSceneEvent += a;
+        }
 
 	
 		public Game1()
@@ -93,7 +103,11 @@ namespace TestSheet
 			Standard.OldViewport = GraphicsDevice.Viewport;
 			Handler = Window.Handle;
 			ActivationChecker = IsActive;
-			base.Update(gameTime);
+            KeyboardState stat = Keyboard.GetState();
+         
+
+
+            base.Update(gameTime);
 		
 		}
 
@@ -153,7 +167,7 @@ namespace TestSheet
 
 				if (Tester.FreezeTimer < 0)
 				{
-					if (Standard.IsKeyDown(Keys.A))
+					if (Standard.Pressing(Keys.A))
 						Standard.DrawAddon(Tester.player.player, Color.Blue, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "Player_Heart");
 					else
 						Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "Player_Heart");
@@ -192,20 +206,25 @@ namespace TestSheet
                     */
 					if (Tester.FreezeTimer == Tester.FreezeTime - 110)
 					{
-						Tester.KillCard = new DrawingLayer("KilldByRock3", new Point(0, 0), 0.8f);
+                        /*
+						Tester.KillCard = new DrawingLayer("SDSample", new Point(0, 0), 0.6f);
 						double Rnd = Standard.Random();
 						if (Rnd < 0.5)
-							Tester.KillCard.SetSprite("KilldByRock3");
+							Tester.KillCard.SetSprite("SDSample");
 						else
-							Tester.KillCard.SetSprite("KilldByRock4");
+							Tester.KillCard.SetSprite("SDSample");
+                            */
+                        DeadSceneEvent();
 
 					}
 					if (Tester.FreezeTimer > 0 && Tester.FreezeTimer < Tester.FreezeTime - 110)
 					{
 						GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
-						Tester.KillCard.SetRatio(Math.Min((Tester.FreezeTime - 110 - Tester.FreezeTimer) * 5, 75) / 100.0);
+						Tester.KillCard.SetRatio(Math.Min((Tester.FreezeTime - 110 - Tester.FreezeTimer) * 6, 75) / 120.0);
 						Tester.KillCard.SetCenter(new Point(500, 400));
 						Tester.KillCard.Draw(Color.White, (float)(Tester.FreezeTimer / 75.0));
+                        if(Tester.KillCard.GetSpriteName()=="SDead_1")
+                            Standard.DrawAddon(Tester.KillCard, Tester.Room.RoomColor, (float)(Tester.FreezeTimer / 75.0), "SDAddon");
 					}
 				}
 

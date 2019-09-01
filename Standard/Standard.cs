@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Globalization;
 using System.IO;
 using System.Threading;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace TestSheet
@@ -46,9 +47,7 @@ namespace TestSheet
 			FadeAnimationInit();
 			Standardfont = Game1.content.Load<SpriteFont>("StandardFont");
 			RootMouseSpeed = GetMouseSpeed();
-			Mouse.SetPosition(400, 400);
-			
-			
+			Mouse.SetPosition(400, 400);					
 		}
 		//Update, Draw 함수는 Game1.cs에서  각각 이름이 일치하는 함수의 마지막 줄로 집어넣어주면 됩니다.
 		//커서, 키보드의 올드 스테이트 업데이트 및 드로잉은 가장 마지막에 행해져야 하기 때문입니다.
@@ -95,25 +94,24 @@ namespace TestSheet
 
 		public static KeyboardState OldkeyboardState;
 
-		public static bool KeyInputOccurs()
-		{
-			return Keyboard.GetState() != OldkeyboardState;
-		}
-
-		public static bool IsKeyDown(Keys k)
-		{
-			return Keyboard.GetState().IsKeyDown(k);
-		}
-		public static Keys[] GetPressedKeys()
-		{
-			return Keyboard.GetState().GetPressedKeys();
-		}
+		public static bool KeyInputOccurs() => Keyboard.GetState() != OldkeyboardState;
+		private static bool pressing(Keys k) => Keyboard.GetState().IsKeyDown(k);
+        public static bool Pressing(params Keys[] k)
+        {
+            foreach(Keys key in k)
+            {
+                if(!pressing(key))
+                {
+                    return false;
+                }
+            }
+            return true;         
+        }
+		public static Keys[] GetPressedKeys() =>Keyboard.GetState().GetPressedKeys();
 
 		//유저가 막 key를 눌렀을 때를 체크하는 함수.
-		public static bool JustPressed(Keys k)
-		{
-			return IsKeyDown(k) && !OldkeyboardState.IsKeyDown(k);
-		}
+		public static bool JustPressed(Keys k) => pressing(k) && !OldkeyboardState.IsKeyDown(k);
+
 
 
 		/*사운드 관련 파트*/
@@ -174,8 +172,7 @@ namespace TestSheet
 		}
 		public static void SetSEVolume(float volume)//사운드의 기본 볼륨을 정한다.
 		{
-			SEVolume = volume;
-	
+			SEVolume = volume;	
 		}
 
 	
@@ -623,7 +620,12 @@ namespace TestSheet
 && OldMouseState.LeftButton != Microsoft.Xna.Framework.Input.ButtonState.Pressed)//올드마우스스테이트는 클릭이 안되어있었어야해. 혹은..
 || GamePad.GetState(PlayerIndex.One).IsButtonDown(Buttons.X);///게임패드의 경우는 X를 누른거야.
 		}
-		public static bool JustdidLeftClick(IGraphicLayer g)
+        public static bool JustDidScrollButton()
+        {
+            return (Mouse.GetState().MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed //레프트버튼이 클릭되었고
+&& OldMouseState.MiddleButton != Microsoft.Xna.Framework.Input.ButtonState.Pressed);///게임패드의 경우는 X를 누른거야.
+        }
+        public static bool JustdidLeftClick(IGraphicLayer g)
 		{
 			return JustdidLeftClick() && IsOn(g);
 		}

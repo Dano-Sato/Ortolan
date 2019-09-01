@@ -95,6 +95,7 @@ namespace TestSheet
 	 * 스트링 지정을 통해 스프라이트시트를 바꿀 수 있습니다.
 	 * 등속 운동이 지원됩니다.
 	 * 스프라이트 애니메이션이 지원됩니다.
+	 * 스프라이트 애니메이션이 지원됩니다.
 	 * */
 	public class DrawingLayer : IGraphicLayer
 	{

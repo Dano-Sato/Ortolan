@@ -28,6 +28,8 @@ namespace TestSheet
 			{
 				ScoreStack--;
 				Score++;
+                if (LiteMode && Score.Get() % 4 == 2)
+                    Score++;
 			}
 		}
 
@@ -141,10 +143,12 @@ namespace TestSheet
         public static Button RetryButton = new Button(new StringLayer("Retry", new Vector2(600, 600)), () => GamePhase = Phase.Main);
 
         public static bool LiteMode = true;
+        public static Button ChoiceButton01 = new Button(new DrawingLayer("Choice011", new Point(50, 50), 0.9f), () => LiteMode = true);
+        public static Button ChoiceButton02 = new Button(new DrawingLayer("Choice022", new Point(ChoiceButton01.ButtonGraphic.GetBound().X, ChoiceButton01.ButtonGraphic.GetBound().Y+ChoiceButton01.ButtonGraphic.GetBound().Height+50), 0.9f), () => LiteMode = false);
 
 
-		//public static int PressedATimer = 0;
-		public void AddCard(int i)
+        //public static int PressedATimer = 0;
+        public void AddCard(int i)
 		{
 			Cards.Add(new DrawingLayer("RoomCard_" + i, CardPos, 0.75f));
 		}
@@ -161,12 +165,12 @@ namespace TestSheet
 
 		public static void StartNextStage()
 		{
-            /*
-            if(true)
+            
+            if(MonsterDeck.Count==0)
             {
-                GamePhase = Phase.Dead;
+                GamePhase = Phase.Ending;
                 return;
-            }*/
+            }
 			Room.Number = MonsterDeck[0];
 			MonsterDeck.RemoveAt(0);
 			StartStageTimer = 200;
@@ -208,7 +212,13 @@ namespace TestSheet
 			MonsterDeck.Add(666);
             */
 
-			IsEndPhase = true;
+            if (LiteMode)
+                Bludger.BludgerSpeed = 13;
+            else
+                Bludger.BludgerSpeed = 14;
+
+
+            IsEndPhase = true;
 
 			Checker.Init();
 			Table.Init();
@@ -301,10 +311,20 @@ namespace TestSheet
                     {
                         Standard.PlayLoopedSong("TutorialSong");
                     }
+                    if (TutorialCard.GetSpriteName() == "EmptySpace")
+                    {
+                        ChoiceButton01.Enable();
+                        ChoiceButton02.Enable();
+                    }
+
+
                     if (Cursor.JustdidLeftClick())
                     {
                         if (TutorialCard.GetSpriteName() == "EmptySpace")
-                            TutorialCard.SetSprite("Tutorial01");
+                        {
+                            if(Cursor.IsOn(ChoiceButton01.ButtonGraphic) || Cursor.IsOn(ChoiceButton02.ButtonGraphic))
+                                TutorialCard.SetSprite("Tutorial01");
+                        }
                         else if (TutorialCard.GetSpriteName() == "Tutorial01")
                             TutorialCard.SetSprite("Tutorial02");
                         else if (TutorialCard.GetSpriteName() == "Tutorial02")
@@ -715,8 +735,8 @@ namespace TestSheet
 
                     if(TutorialCard.GetSpriteName()=="EmptySpace")
                     {
-                        DrawingLayer Choice = new DrawingLayer("Choice", new Point(0, 0), 0.8f);
-                        Choice.Draw();
+                        ChoiceButton01.Draw(Color.AntiqueWhite*0.6f, Color.White);
+                        ChoiceButton02.Draw(Color.AntiqueWhite * 0.6f, Color.White);
                     }
                     else
                     {
@@ -728,6 +748,18 @@ namespace TestSheet
                         //스코어 올라갈수록 보라색을 띈다.
                         Standard.DrawLight(MasterInfo.FullScreen, Color.Purple, 0.05f, Standard.LightMode.Absolute);
                     }
+                    DrawingLayer TolSCG = new DrawingLayer("ChoiceSCG01",new Point(300,0),1f);
+                    if(Cursor.IsOn(ChoiceButton01.ButtonGraphic))                        
+                    {
+                        TolSCG.SetSprite("ChoiceSCG02");
+                    }
+                    else if(Cursor.IsOn(ChoiceButton02.ButtonGraphic))
+                    {
+                        TolSCG.SetSprite("ChoiceSCG03");
+                    }
+                    if (TutorialCard.GetSpriteName() == "EmptySpace")
+                        TolSCG.Draw();
+
                     break;
 				case Phase.Game:
 					/*배경 드로우. 핏자국, 별들*/
@@ -992,6 +1024,7 @@ namespace TestSheet
                 case Phase.Dead:
                     Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
                     DrawingLayer DeadCut = new DrawingLayer("Dead_1", new Point(0, 0), 0.67f);
+                    DrawingLayer DeadCutWord = new DrawingLayer("GameOverWord", new Point(0,200), 0.8f);
                     int Checkpoint = 1000;
                     if(Standard.FrameTimer < Checkpoint)
                     {
@@ -1015,6 +1048,7 @@ namespace TestSheet
 
 
                     DeadCut.Draw();
+                    DeadCutWord.Draw();
                     Standard.DrawLight(DeadCut, Color.Black, (float)((Math.Max(250 - Standard.FrameTimer % 250, Standard.FrameTimer % 250) - 100) / 450.0), Standard.LightMode.Absolute);
                     RetryButton.Draw(Color.White,Color.Red);
 

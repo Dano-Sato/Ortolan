@@ -73,8 +73,22 @@ namespace TestSheet
 					FadedSong.Clear();
 				}
 			}
-	
-		}
+            if(DisposedSong.Count>0)
+            {
+                foreach (SoundEffectInstance s in DisposedSong.Keys.ToList())
+                {
+                    DisposedSong[s]--;
+                    s.Volume = (float)DisposedSong[s]*SongVolume / (float)SongFadeTime;
+                    if (DisposedSong[s] == 0)
+                    {
+                        s.Stop();
+                        DisposedSong.Remove(s);
+                    }
+                }
+
+            }
+
+        }
 		public static void Draw()
 		{
 			FadeAnimationDraw();
@@ -114,9 +128,63 @@ namespace TestSheet
 
 
 
-		/*사운드 관련 파트*/
+        /*사운드 관련 파트*/
 
-		public static SoundEffect soundEffect;
+        private class BGM
+        {
+            public static readonly int DefaultFTime = 100;
+
+            private SoundEffectInstance s;
+            private int FadeTimer
+            {
+                get { return FadeTimer; }
+                set
+                {
+                    FadeTimer = value;
+                    Equalize();
+                }
+            }
+            public int DivFadeTimer;
+
+            public BGM(string SongName)
+            {
+                soundEffect = Game1.content.Load<SoundEffect>(SongName);
+                s = soundEffect.CreateInstance();
+                s.Volume = SEVolume;
+                DivFadeTimer = DefaultFTime;
+                s.Play();
+            }
+
+            public bool Fade_in()
+            {
+                if (FadeTimer == DivFadeTimer)
+                    return true;
+                else
+                {
+                    FadeTimer++;
+                    return false;
+                }
+            }
+
+            public bool Fade_out()
+            {
+                if (FadeTimer == 0)
+                    return true;
+                else
+                {
+                    FadeTimer--;
+                    return false;
+                }
+            }
+
+            public void Equalize()
+            {
+                s.Volume = (SongVolume * FadeTimer) / DivFadeTimer;
+            }
+
+        }
+
+        public static SoundEffect soundEffect;
 		public static List<String> SongCatalog = new List<string>();
 		public static int SongIndex=-1;
 		public static int SongFadeTimer = 0;
@@ -127,8 +195,10 @@ namespace TestSheet
 		public static List<SoundEffectInstance> SoundInstanceList=new List<SoundEffectInstance>();
 		public static List<SoundEffectInstance> Song= new List<SoundEffectInstance>();
 		public static List<SoundEffectInstance> FadedSong= new List<SoundEffectInstance>();
+        public static Dictionary<SoundEffectInstance, int> DisposedSong = new Dictionary<SoundEffectInstance, int>();
+        public static readonly int SongFadeTime=100;
 
-		public static string SongName;
+        public static string SongName;
 
 
 		// * Make your own song Name List;
@@ -180,12 +250,8 @@ namespace TestSheet
 		{
 			if (SongName == songName)
 				return;
-			if (Song.Count > 0)
-			{
-				Song[0].Stop();
-				Song.Clear();
-			}
-			SongName = songName;
+            DisposeSong();
+            SongName = songName;
 			soundEffect = Game1.content.Load<SoundEffect>(songName);
 			SoundEffectInstance soundEffectInstance = soundEffect.CreateInstance();
 			soundEffectInstance.Volume = SEVolume;
@@ -197,11 +263,7 @@ namespace TestSheet
 		{
 			if (SongName == songName)
 				return;
-			if (Song.Count > 0)
-			{
-				Song[0].Stop();
-				Song.Clear();
-			}
+            DisposeSong();
 			SongName = songName;
 			soundEffect = Game1.content.Load<SoundEffect>(songName);
 			SoundEffectInstance soundEffectInstance = soundEffect.CreateInstance();
@@ -223,8 +285,8 @@ namespace TestSheet
 			SongName = "";
 			if (Song.Count > 0)
 			{
-				Song[0].Stop();
-				Song.Clear();
+                DisposedSong.Add(Song[0], SongFadeTime);
+                Song.Clear();
 			}
 		}
 		public static void PlayFadedSong(int songIndex, bool Repeat,float Coefficient)

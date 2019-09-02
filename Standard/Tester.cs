@@ -101,7 +101,7 @@ namespace TestSheet
         public static bool IsEndPhase=false;
 		public static int FadeTimer = 0;
 		//public static DrawingLayer SaveButton = new DrawingLayer("SaveButton", new Point(400, 200), 1f);
-		public static Button NextStageButton = new Button(new DrawingLayer("Ladder3", new Point(500, 0), 1f),StartNextStage);
+		public static Button NextStageButton = new Button(new DrawingLayer("Ladder5", new Point(500, 50), 1f),StartNextStage);
 		public static int StartStageTimer = 0;
 		public static List<Bludger> bludgers=new List<Bludger>();
 		//public static int KillerZombieIndex = -1;
@@ -147,6 +147,60 @@ namespace TestSheet
         public static Button ChoiceButton02 = new Button(new DrawingLayer("Choice022", new Point(ChoiceButton01.ButtonGraphic.GetBound().X, ChoiceButton01.ButtonGraphic.GetBound().Y+ChoiceButton01.ButtonGraphic.GetBound().Height+50), 0.9f), () => LiteMode = false);
 
 
+        public static class Monolog
+        {
+            private static StringLayer Script=new StringLayer("", new Vector2(0, 0));
+            private static readonly int FadeTimer_Max=120;
+            private static readonly int FadeTimer_FadeOut=20;
+            private static readonly int FadeTimer_FadeIn= FadeTimer_Max - 60;
+            private static int FadeTimer_Count=0;
+
+            public static void Update()
+            {
+                Script.SetPos(player.GetPos().X+40, player.GetPos().Y-30);
+            }
+
+            public static void Attach(params string[] s)
+            {
+                int c = s.Length;
+                double r = Standard.Random();
+                double m = 1.0 / c;
+
+                for (int i=0;i<c;i++)
+                {
+                    Script = new StringLayer(s[i], new Vector2(0, 0));
+                    if (r >= m * i && r < m * (i + 1))
+                        break;
+                }
+                FadeTimer_Count = FadeTimer_Max;
+            }
+
+
+            public static void Draw()
+            {
+                if(!IsEndPhase)
+                {
+                    return;
+                }
+                if (FadeTimer_Count == 0)
+                    return;
+                FadeTimer_Count--;
+                if(FadeTimer_FadeIn<FadeTimer_Count)
+                {
+                    Script.Draw(Color.Black * (1f-(float)(FadeTimer_Count - FadeTimer_FadeIn) / (FadeTimer_Max - FadeTimer_FadeIn)));
+                }
+                else if(FadeTimer_Count<FadeTimer_FadeOut)
+                {
+                    Script.Draw(Color.Black * (1f-(float)(FadeTimer_FadeOut - FadeTimer_Count) / (FadeTimer_FadeOut)));
+                }
+                else
+                {
+                    Script.Draw(Color.Black);
+                }
+
+            }
+        }
+ 
         //public static int PressedATimer = 0;
         public void AddCard(int i)
 		{
@@ -326,8 +380,8 @@ namespace TestSheet
                                 TutorialCard.SetSprite("Tutorial01");
                         }
                         else if (TutorialCard.GetSpriteName() == "Tutorial01")
-                            TutorialCard.SetSprite("Tutorial02");
-                        else if (TutorialCard.GetSpriteName() == "Tutorial02")
+                            TutorialCard.SetSprite("Tutorial022");
+                        else if (TutorialCard.GetSpriteName() == "Tutorial022")
                         {
                             TutorialCard.SetSprite("EmptySpace");
                             GameInit();
@@ -335,7 +389,6 @@ namespace TestSheet
                     }
                     break;
                 case Phase.Game:
-
 
 
 					/* 게임오버 처리*/
@@ -601,7 +654,9 @@ namespace TestSheet
 
 
 
-					/*엔드페이즈 처리*/
+                    /*엔드페이즈 처리*/
+
+                    Monolog.Update();
 					if (Score.Get() == 100)
 					{
 						IsEndPhase = true;
@@ -733,7 +788,9 @@ namespace TestSheet
                         Lightr = Standard.Random() / 10.0;
                     }
 
-                    if(TutorialCard.GetSpriteName()=="EmptySpace")
+                    Monolog.Attach("I don't wanna die...", "Let me out...", "It's so cold..");
+
+                    if (TutorialCard.GetSpriteName()=="EmptySpace")
                     {
                         ChoiceButton01.Draw(Color.AntiqueWhite*0.6f, Color.White);
                         ChoiceButton02.Draw(Color.AntiqueWhite * 0.6f, Color.White);
@@ -749,14 +806,16 @@ namespace TestSheet
                         Standard.DrawLight(MasterInfo.FullScreen, Color.Purple, 0.05f, Standard.LightMode.Absolute);
                     }
                     DrawingLayer TolSCG = new DrawingLayer("ChoiceSCG01",new Point(300,0),1f);
-                    if(Cursor.IsOn(ChoiceButton01.ButtonGraphic))                        
+                    if (Cursor.IsOn(ChoiceButton01.ButtonGraphic))
                     {
                         TolSCG.SetSprite("ChoiceSCG02");
                     }
-                    else if(Cursor.IsOn(ChoiceButton02.ButtonGraphic))
+                    else if (Cursor.IsOn(ChoiceButton02.ButtonGraphic))
                     {
                         TolSCG.SetSprite("ChoiceSCG03");
                     }
+                    else if (Cursor.IsOn(new Rectangle(816, 138, 171, 117)))
+                        TolSCG.SetSprite("ChoiceSCG04");
                     if (TutorialCard.GetSpriteName() == "EmptySpace")
                         TolSCG.Draw();
 
@@ -806,7 +865,6 @@ namespace TestSheet
 						Standard.DrawLight(new Rectangle(0,0,MasterInfo.PreferredScreen.Width*4, MasterInfo.PreferredScreen.Height*4), Color.White, 1f, Standard.LightMode.Vignette);
 						//스코어 올라갈수록 보라색을 띈다.
 						Standard.DrawLight(MasterInfo.FullScreen, Color.Purple, 0.3f * Math.Min(1.2f, (float)(Score.Get() / 100.0)), Standard.LightMode.Absolute);
-
                     }
                     if (IsEndPhase)
                     {
@@ -815,7 +873,7 @@ namespace TestSheet
                         {
                             Rewards[i].Draw();
                         }
-
+                        Monolog.Draw();
                     }
                     player.Draw();
 					player.DrawAttack();
@@ -1601,6 +1659,7 @@ namespace TestSheet
 						StarColor = Color.LightSalmon;
 						Standard.PlayLoopedSong("YouDieTheme8");
 						TheIceRoom = false;
+                        Monolog.Attach("God, what do you want from me?");
 						break;
 					case 1:
                         if (!LiteMode)
@@ -1677,10 +1736,13 @@ namespace TestSheet
 						RoomColor = Color.MonoGameOrange;
 						StarColor = Color.Orange;
 						Standard.PlayLoopedSong("Inferno_Final");
-						for (int i = 0; i < 25; i++)
+                        int InfernoCount = 25;
+                        if (LiteMode)
+                            InfernoCount = 12;
+						for (int i = 0; i < InfernoCount; i++)
 						{
 							bludgers.Add(new Bludger(new Point(i + 1, 1)));
-							bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 25)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 25)));
+							bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / InfernoCount)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / InfernoCount)));
 						}
 
 						break;
@@ -1814,7 +1876,12 @@ namespace TestSheet
 						}
 						break;
 					case 66:
-						if (Standard.FrameTimer % 500 > 430)
+                        int InfernoCount = 25;
+                        if (LiteMode)
+                            InfernoCount = 12;
+
+
+                        if (Standard.FrameTimer % 500 > 430)
 						{
 							for (int i = 0; i < bludgers.Count; i++)
 							{
@@ -1829,7 +1896,7 @@ namespace TestSheet
 							double Rnd = Standard.Random();
 							for (int i = 0; i < bludgers.Count; i++)
 							{
-								bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 25 + Rnd)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 25 + Rnd)));
+								bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / InfernoCount + Rnd)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / InfernoCount + Rnd)));
 
 							}
 						}
@@ -2333,42 +2400,49 @@ namespace TestSheet
 			{
 				case 0:
 					Checker.GetHeart();
+                    Tester.Monolog.Attach("I could feel my heartbeat.", "...It's warm.", "My blood is flowing.");
 					break;
 				case 1:
 					Checker.GetHeart(2);
-					break;
+                    Tester.Monolog.Attach("I could feel my heartbeat.", "...It's warm.", "My blood is flowing.");
+                    break;
 				case 2:
 					Checker.GetHeart(3);
-					break;
+                    Tester.Monolog.Attach("I could feel my heartbeat.", "...It's warm.", "My blood is flowing.");
+                    break;
 				case 3:
 					if (Checker.Swiftness < 1)
 						Checker.Swiftness = 1;
 					Tester.player.SetAttackSpeed(14);
-					break;
+                    Tester.Monolog.Attach("Everything looks much slower.", "Feather-light.");
+                    break;
 				case 4:
 					if (Checker.Swiftness < 2)
 						Checker.Swiftness = 2;
 					Tester.player.SetAttackSpeed(13);
-
-					break;
+                    Tester.Monolog.Attach("Everything looks much slower.", "Feather-light.");
+                    break;
 				case 5:
 					if (Checker.Swiftness < 3)
 						Checker.Swiftness = 3;
 					Tester.player.SetAttackSpeed(12);
-
-					break;
+                    Tester.Monolog.Attach("Everything looks much slower.", "Feather-light.");
+                    break;
 				case 6:
 					if (Checker.Bloodthirst < 1)
 						Checker.Bloodthirst = 1;
+                    Tester.Monolog.Attach("There is an urge inside me.", "It desires me to kill.");
 					break;
 				case 7:
 					if (Checker.Bloodthirst < 2)
 						Checker.Bloodthirst = 2;
-					break;
+                    Tester.Monolog.Attach("There is an urge inside me.", "It desires me to kill.");
+                    break;
 				case 8:
 					if (Checker.Bloodthirst < 3)
 						Checker.Bloodthirst = 3;
-					break;
+                    Tester.Monolog.Attach("There is an urge inside me.", "It desires me to kill.");
+                    break;
 				case 9:
 					if (Checker.Luck < 1)
 						Checker.Luck = 1;

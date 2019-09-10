@@ -91,7 +91,7 @@ namespace TestSheet
 		public static ScrollBar ScrollBar_Sensitivity = new ScrollBar(new DrawingLayer("BarFrame2",new Rectangle(200,400,500,50)), "Bar2", 50, false);
 		public static ScrollBar ScrollBar_SongVolume = new ScrollBar(new DrawingLayer("BarFrame2", new Rectangle(200, 220, 500, 50)), "Bar2", 50, false);
 		public static ScrollBar ScrollBar_SEVolume= new ScrollBar(new DrawingLayer("BarFrame2", new Rectangle(200, 290, 500, 50)), "Bar2", 50, false);
-		public static DrawingLayer YouDieLayer = new DrawingLayer("Youdie", new Point(200, 500), 1.0f);
+		public static DrawingLayer YouDieLayer = new DrawingLayer("Dream", new Point(200, 500), 1.0f);
 		public static DrawingLayer ExitButton = new DrawingLayer("Exit", new Point(850, 650), 1.0f);
 		public static DrawingLayer RestartButton = new DrawingLayer("Restart", new Point(650, 650), 1.0f);
 
@@ -140,11 +140,101 @@ namespace TestSheet
         public static Button StartButton = new Button(new StringLayer("Game Start", new Vector2(400, 600)), () => GamePhase = Phase.Tutorial);
 		public static Button GameExitButton = new Button(new StringLayer("Exit", new Vector2(700, 600)), Exit);
 
-        public static Button RetryButton = new Button(new StringLayer("Retry", new Vector2(600, 600)), () => GamePhase = Phase.Main);
+        public static Button RetryButton = new Button(new StringLayer("Retry", new Vector2(640, 600)), () => GamePhase = Phase.Main);
 
         public static bool LiteMode = true;
-        public static Button ChoiceButton01 = new Button(new DrawingLayer("Choice011", new Point(50, 50), 0.9f), () => LiteMode = true);
-        public static Button ChoiceButton02 = new Button(new DrawingLayer("Choice022", new Point(ChoiceButton01.ButtonGraphic.GetBound().X, ChoiceButton01.ButtonGraphic.GetBound().Y+ChoiceButton01.ButtonGraphic.GetBound().Height+50), 0.9f), () => LiteMode = false);
+        public static Button ChoiceButton01 = new Button(new DrawingLayer("Choice011", new Point(50, 50), 0.9f), () =>
+        {
+            LiteMode = true;
+            MadMoonSelected = false;
+        });
+        public static Button ChoiceButton02 = new Button(new DrawingLayer("Choice022", new Point(ChoiceButton01.ButtonGraphic.GetBound().X, ChoiceButton01.ButtonGraphic.GetBound().Y+ChoiceButton01.ButtonGraphic.GetBound().Height+50), 0.9f), () => {
+            LiteMode = false;
+            MadMoonSelected = false;
+            });
+
+        public static Button TutorialButton01 = new Button(new DrawingLayer("Range", new Rectangle(60, 600, 80, 80)), () => TutorialCard.SetSprite("Tutorial01"));
+        public static Button TutorialButton02 = new Button(new DrawingLayer("Range", new Rectangle(160, 600, 80, 80)), () => TutorialCard.SetSprite("Tutorial022"));
+        public static Button TutorialButton03 = new Button(new DrawingLayer("InitButton", new Rectangle(460, 510, 80, 80)), () =>
+        {
+            if(!MadMoonSelected)
+            {
+                TutorialCard.SetSprite("EmptySpace");
+                GameInit();
+            }
+            else
+            {
+                TutorialCard.SetSprite("EmptySpace");
+                Nightmare_GameInit();
+            }
+        });
+
+        public static int MadMoonGauge = 0;
+        public static int SCGClickTimer = 0;
+        public static bool MadMoonSelected = false;
+        public static readonly int SCGClickTimer_Interval = 30;
+        public static DrawingLayer TolSCG = new DrawingLayer("ChoiceSCG01", new Point(300, 0), 1f);
+        public static DrawingLayer MadMoonLittle = new DrawingLayer("Choice_MadMoon_LittleBit", new Point(1160, -20), 1.3f);
+        public static Button MadMoonButton = new Button(new DrawingLayer("Choice_MadMoon", new Point(600, 200), 1.2f), () => {
+            MadMoonSelected = true;
+            LiteMode = false;
+            TutorialCard.SetSprite("Tutorial01");
+        });
+
+        public static bool RoomVoiceEnable = false;
+
+        public static int StopTimer = 0;
+
+
+        public static class BuffBubble
+        {
+            public static int BubbleTimer = 0;
+            public static readonly int BubbleTimer_Interval = 15;
+            public static DrawingLayer BubbleLayer = new DrawingLayer("EmptySpace", new Rectangle(0, 0, 130, 130));
+
+            public static char GetNumber()
+            {
+                return BubbleLayer.GetSpriteName().Last();                    
+            }
+            public static string GetSecondNumber()
+            {
+                string temp = BubbleLayer.GetSpriteName();
+                return temp.Replace('1','2');
+            }
+            public static void Update()
+            {
+                BubbleLayer.SetPos(player.GetPos().X + 40, player.GetPos().Y - 110);
+                if (BubbleTimer > 0)
+                    BubbleTimer--;
+                else
+                {
+                    BubbleTimer = BubbleTimer_Interval;
+                    if (GetNumber() == '1')
+                    {
+                        BubbleLayer.SetSprite(GetSecondNumber());
+                    }
+                    else
+                    {
+                        BubbleLayer.SetSprite("EmptySpace");
+                    }
+                }
+            }
+            public static void Draw()
+            {
+                BubbleLayer.Draw();
+            }
+
+            public static void Init(string SpriteName)
+            {
+                BubbleLayer.SetSprite(SpriteName);
+                BubbleTimer = BubbleTimer_Interval;
+            }
+        }
+
+
+
+        public static int BubbleTimer = 0;
+        public static readonly int BubbleTimer_Max = 60;
 
 
         public static class Monolog
@@ -245,6 +335,7 @@ namespace TestSheet
 
 		public static void GameInit()
 		{
+            MadMoonGauge = 0;
 			Rewards.Clear();
 			MonsterDeck.Clear();
 			MonsterDeck.Add(0);
@@ -265,6 +356,7 @@ namespace TestSheet
 			MonsterDeck.Add(777);
 			MonsterDeck.Add(666);
             */
+            Checker.Weapon_Melee = 0;
 
             if (LiteMode)
                 Bludger.BludgerSpeed = 13;
@@ -274,14 +366,33 @@ namespace TestSheet
 
             IsEndPhase = true;
 
+            
 			Checker.Init();
 			Table.Init();
 			Standard.PlayLoopedSong("WindOfTheDawn");
 			GamePhase = Phase.Game;
 		}
 
-		//이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
-		public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
+        public static void Nightmare_GameInit()
+        {
+            Rewards.Clear();
+            MonsterDeck.Clear();
+            MonsterDeck.Add(4);
+            MonsterDeck.Add(6);
+            MonsterDeck.Add(777);
+            MonsterDeck.Add(666);
+            IsEndPhase = true;
+
+            Checker.Init();
+            Table.Init();
+            Standard.PlayLoopedSong("WindOfTheDawn");
+            GamePhase = Phase.Game;
+            Checker.Bloodthirst = 3;
+            Checker.Hearts = 1;
+        }
+
+        //이후 마음대로 인수 혹은 콘텐츠들을 여기 추가할 수 있습니다.
+        public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
             TutorialCard.SetSprite("EmptySpace");
         player = new Player();
@@ -325,7 +436,10 @@ namespace TestSheet
 			else
 				ClickSprite = "Click2";
 			DrawingLayer Click = new DrawingLayer(ClickSprite, new Rectangle(Cursor.GetPos().X - 15, Cursor.GetPos().Y - 15, 30, 30));
-			if (!IsEndPhase||GamePhase==Phase.Ending)
+
+           
+
+            if (!IsEndPhase||GamePhase==Phase.Ending)
                 
 			{
 				Standard.FadeAnimation(Click, 10, Color.OrangeRed);
@@ -361,18 +475,51 @@ namespace TestSheet
 					GameExitButton.Enable();
 					break;
                 case Phase.Tutorial:
-                    if (Standard.SongName != "TutorialSong")
+                    if (Standard.SongName != "TutorialSong"&&MadMoonGauge<=10)
                     {
                         Standard.PlayLoopedSong("TutorialSong");
+                    }
+                    if (Standard.SongName != "DamnTutorialSong"&&MadMoonGauge>10)
+                    {
+                        Standard.PlayLoopedSong("DamnTutorialSong");
                     }
                     if (TutorialCard.GetSpriteName() == "EmptySpace")
                     {
                         ChoiceButton01.Enable();
                         ChoiceButton02.Enable();
+                        if (MadMoonGauge<=5&&Cursor.JustdidLeftClick(TolSCG))
+                        {
+                            if (MadMoonGauge == 5)
+                                Standard.PlaySE("HorrorDoor");
+                                MadMoonGauge++;
+                            SCGClickTimer = SCGClickTimer_Interval;
+                        }
+                        if(MadMoonGauge>5&&Cursor.JustdidLeftClick(TolSCG))
+                        {
+                            MadMoonGauge++;
+                            Standard.PlaySE("Rattle");
+                            MadMoonLittle.MoveTo(1110, 5);
+                            if (MadMoonGauge == 11)
+                            {
+                                SCGClickTimer = 40;
+                                Standard.PlaySE("RIP");
+                                Standard.PlaySE("RIP_Blood");                              
+                            }
+                        }
+                        if (MadMoonGauge > 10&&SCGClickTimer==0)
+                        {
+                            MadMoonButton.Enable();
+                        }
+                    }
+                    else
+                    {
+                        TutorialButton01.Enable();
+                        TutorialButton02.Enable();
+                        TutorialButton03.Enable();
                     }
 
 
-                    if (Cursor.JustdidLeftClick())
+                    if (Cursor.JustdidLeftClick() && !Cursor.IsOn(TutorialButton01.ButtonGraphic) && !Cursor.IsOn(TutorialButton02.ButtonGraphic) && !Cursor.IsOn(TutorialButton03.ButtonGraphic)) 
                     {
                         if (TutorialCard.GetSpriteName() == "EmptySpace")
                         {
@@ -384,7 +531,10 @@ namespace TestSheet
                         else if (TutorialCard.GetSpriteName() == "Tutorial022")
                         {
                             TutorialCard.SetSprite("EmptySpace");
-                            GameInit();
+                            if (!MadMoonSelected)
+                                GameInit();
+                            else
+                                Nightmare_GameInit();
                         }                    
                     }
                     break;
@@ -425,9 +575,20 @@ namespace TestSheet
 							return;
 						}
 						FreezeTimer = -1;
-						Standard.FadeAnimation(new DrawingLayer("YouDied", new Rectangle(200, 350, 400, 200)), 90, Color.DarkRed);
-						Standard.FadeAnimation(new DrawingLayer("Tip", new Rectangle(500, 350, 400, 200)), 150, Color.DarkRed);
-						Room.Set();
+                        if(Standard.Random()<0.5)
+    						Standard.FadeAnimation(new DrawingLayer("Dream", new Rectangle(200, 350, 600, 200)), 90, Color.DarkRed);
+                        else
+                            Standard.FadeAnimation(new DrawingLayer("Dream2", new Rectangle(200, 350, 600, 200)), 90, Color.DarkRed);
+                        //Standard.FadeAnimation(new DrawingLayer("Tip", new Rectangle(500, 350, 400, 200)), 150, Color.DarkRed);
+                        if (!RoomVoiceEnable)
+                        {
+                            double r = Standard.Random();
+                            if(r<0.5)
+                               Standard.PlaySE("Voice6");
+                            else
+                                Standard.PlaySE("Voice7");
+                        }
+                        Room.Set();
 					}
 
 
@@ -486,9 +647,35 @@ namespace TestSheet
 					/*오버클럭 모드 처리*/
 
 
-					if (FreezeTimer==-1&&!ShowMenu)
+					if (FreezeTimer==-1&&!ShowMenu&&!IsEndPhase)
 					{
-						if((Cursor.IsLeftClickingNow()||Cursor.IsRightClickingNow())&&!IsEndPhase)
+                        /*
+
+                        if (Method2D.Distance(player.GetCenter(), Cursor.GetPos()) < 40)
+                        {
+                            StopTimer++;
+                        }
+                        else
+                        {
+                            StopTimer = 0;
+                        }
+                        if (StopTimer > 10)
+                        {
+                            Gauge = Math.Max(0, Gauge - 0.015);
+                            if (Gauge == 0)
+                                SlowMode = false;
+                            else
+                                SlowMode = true;
+                        }
+                        else
+                        {
+                            Gauge = Math.Min(1, Gauge + 0.005);
+                            SlowMode = false;
+                        }
+                        */
+                        
+
+                        if ((Cursor.IsLeftClickingNow()||Cursor.IsRightClickingNow())&&!IsEndPhase)
 						{
 							Gauge = Math.Max(0, Gauge - 0.015);
 							if (Gauge == 0)
@@ -502,7 +689,11 @@ namespace TestSheet
 							Gauge = Math.Min(1, Gauge + 0.003);
 							SlowMode = false;
 						}
-					}
+                    }
+                    else
+                    {
+                        SlowMode = false;
+                    }
 					if (Standard.JustPressed(Keys.T))
 					{
 						Score.Set(95);
@@ -592,7 +783,7 @@ namespace TestSheet
 					if (Room.Number == 0)
 						ZombieTime = 20 - Score.Get() / 10;
                     if (Room.Number == 0&&LiteMode)
-                        ZombieTime = 30 - Score.Get() / 10;
+                        ZombieTime =25 - Score.Get() / 10;
 
 
                     if (Standard.FrameTimer % ZombieTime == 0)
@@ -603,6 +794,7 @@ namespace TestSheet
 							enemies.RemoveAt(0);
 					}
 
+                    BuffBubble.Update();
 
 					/*플레이어가 손뗐나 확인*/
 					if (OldPlayerPos == player.GetPos() && !ShowMenu)
@@ -671,7 +863,12 @@ namespace TestSheet
 						{
 							AddReward();
 						}
-					}
+                        if(!LiteMode)
+                        {
+                            AddReward();
+                            AddReward();
+                        }
+                    }
 					if (IsEndPhase && StartStageTimer == 0)
 					{
 						bludgers.Clear();
@@ -716,6 +913,7 @@ namespace TestSheet
 							Standard.DisposeSE();
 							Standard.DisposeSong();
 							IsEndPhase = false;
+                            RoomVoiceEnable = true;
 							Room.Set();
 
 						}
@@ -728,6 +926,8 @@ namespace TestSheet
 							Fear -= 10;
 						}
 						Standard.FadeSong(Math.Max(0, (float)(1 - StartStageTimer / 100.0)));
+                        if (StartStageTimer == 1)
+                            Room.PlaySong();
 
 					}
 
@@ -788,24 +988,50 @@ namespace TestSheet
                         Lightr = Standard.Random() / 10.0;
                     }
 
-                    Monolog.Attach("I don't wanna die...", "Let me out...", "It's so cold..");
+                    Monolog.Attach("I don't wanna die...", "Let me out...", "It's so cold..", "It's dark... Fearful...");
 
                     if (TutorialCard.GetSpriteName()=="EmptySpace")
                     {
                         ChoiceButton01.Draw(Color.AntiqueWhite*0.6f, Color.White);
                         ChoiceButton02.Draw(Color.AntiqueWhite * 0.6f, Color.White);
+                        if(MadMoonGauge>10)
+                        {
+                            ChoiceButton01.Draw(Color.Red*0.6f, Color.Red);
+                            ChoiceButton02.Draw(Color.Red * 0.6f, Color.Red);
+                        }
+                        DrawingLayer lSelect = new DrawingLayer("LevelSelect", new Point(950, 20), 0.8f);
+                        lSelect.Draw();
+                        if (MadMoonGauge > 10)
+                            lSelect.Draw(Color.Red*0.6f);
                     }
                     else
                     {
                         Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 0.05f + (float)Lightr, Standard.LightMode.Absolute);
                         Standard.DrawLight(MasterInfo.FullScreen, Color.DarkBlue, 0.05f, Standard.LightMode.Absolute);
-
-
-                        Standard.DrawLight(new Rectangle(0, 0, MasterInfo.PreferredScreen.Width * 4, MasterInfo.PreferredScreen.Height * 4), Color.White, 1f, Standard.LightMode.Vignette);
+                        if(MadMoonSelected)
+                        {
+                            Standard.DrawLight(MasterInfo.FullScreen, Color.DarkRed, 0.3f, Standard.LightMode.Absolute);
+                            Standard.DrawLight(new Rectangle(0, 0, MasterInfo.PreferredScreen.Width * 4, MasterInfo.PreferredScreen.Height * 4), Color.White, 0.5f, Standard.LightMode.Vignette);
+                        }
+                        Standard.DrawLight(new Rectangle(0, 0, MasterInfo.PreferredScreen.Width * 4, MasterInfo.PreferredScreen.Height * 4), Color.White, 0.5f, Standard.LightMode.Vignette);
                         //스코어 올라갈수록 보라색을 띈다.
                         Standard.DrawLight(MasterInfo.FullScreen, Color.Purple, 0.05f, Standard.LightMode.Absolute);
+                        if (TutorialCard.GetSpriteName() == "Tutorial01")
+                        {
+                            TutorialButton01.Draw(Color.AntiqueWhite * 0.8f, Color.White);
+                            TutorialButton02.Draw(Color.AntiqueWhite * 0.3f, Color.White);
+                            TutorialButton03.Draw(Color.Red * 0.3f, Color.Red);
+                        }
+                        else
+                        {
+                            TutorialButton01.Draw(Color.AntiqueWhite * 0.3f, Color.White);
+                            TutorialButton02.Draw(Color.AntiqueWhite * 0.8f, Color.White);
+                            TutorialButton03.Draw(Color.Red * 0.3f, Color.Red);
+                        }
+
+
                     }
-                    DrawingLayer TolSCG = new DrawingLayer("ChoiceSCG01",new Point(300,0),1f);
+                    TolSCG.SetSprite("ChoiceSCG01");
                     if (Cursor.IsOn(ChoiceButton01.ButtonGraphic))
                     {
                         TolSCG.SetSprite("ChoiceSCG02");
@@ -816,8 +1042,39 @@ namespace TestSheet
                     }
                     else if (Cursor.IsOn(new Rectangle(816, 138, 171, 117)))
                         TolSCG.SetSprite("ChoiceSCG04");
+                    if (MadMoonGauge > 10)
+                    {
+                        TolSCG.SetSprite("ChoiceSCG_Blood");
+
+                    }
+
+
+
                     if (TutorialCard.GetSpriteName() == "EmptySpace")
+                    {
                         TolSCG.Draw();
+                        if (SCGClickTimer > 0&&TolSCG.GetSpriteName()!="ChoiceSCG_Blood")
+                        {
+                            SCGClickTimer--;
+                            Standard.DrawAddon(TolSCG, Color.White, 1f, "ChoiceSCG_Touch");
+                        }
+                        if (SCGClickTimer > 0)
+                            SCGClickTimer--;
+                        if (MadMoonGauge > 5&&MadMoonGauge<=10)
+                        {
+                            Standard.DrawAddon(TolSCG, Color.White, 1f, "ChoiceSCG_Horror");
+                            MadMoonLittle.MoveTo(1100, 0, 3);
+                            MadMoonLittle.Draw();
+                            if (Cursor.IsOn(MadMoonLittle))
+                                MadMoonLittle.Draw(Color.Red);
+                        }                       
+                        if(MadMoonGauge>10)
+                            MadMoonButton.Draw(Color.Red*0.6f, Color.Red);
+
+
+                    }
+
+
 
                     break;
 				case Phase.Game:
@@ -846,13 +1103,13 @@ namespace TestSheet
 
 					if (!IsEndPhase)
 					{
-						if (YouDieLayer.GetSpriteName() != "Youdie")
-							YouDieLayer = new DrawingLayer("Youdie", new Point(200, 500), 1.0f);
+						if (YouDieLayer.GetSpriteName() != "Dream")
+							YouDieLayer = new DrawingLayer("Dream", new Point(200, 500), 1.0f);
 					}
 					else
 					{
-						if (YouDieLayer.GetSpriteName() != "Stage1")
-							YouDieLayer = new DrawingLayer("Stage1", new Point(200, 500), 1.5f);
+						if (YouDieLayer.GetSpriteName() != "EmptySpace")
+							YouDieLayer = new DrawingLayer("EmptySpace", new Point(200, 500), 1.5f);
 						YouDieLayer.Draw(Color.LightGoldenrodYellow, (float)(2 * FadeTimer / 100.0));
 						YouDieLayer.SetPos(-Game1.graphics.GraphicsDevice.Viewport.X + 100, -Game1.graphics.GraphicsDevice.Viewport.Y + 300);
 					}
@@ -865,6 +1122,7 @@ namespace TestSheet
 						Standard.DrawLight(new Rectangle(0,0,MasterInfo.PreferredScreen.Width*4, MasterInfo.PreferredScreen.Height*4), Color.White, 1f, Standard.LightMode.Vignette);
 						//스코어 올라갈수록 보라색을 띈다.
 						Standard.DrawLight(MasterInfo.FullScreen, Color.Purple, 0.3f * Math.Min(1.2f, (float)(Score.Get() / 100.0)), Standard.LightMode.Absolute);
+                       
                     }
                     if (IsEndPhase)
                     {
@@ -877,9 +1135,7 @@ namespace TestSheet
                     }
                     player.Draw();
 					player.DrawAttack();
-
-
-
+                    
 
 
 
@@ -916,10 +1172,11 @@ namespace TestSheet
 						Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 0.2f + (float)Lightr, Standard.LightMode.Absolute);
 						Standard.DrawLight(MasterInfo.FullScreen, Color.DarkBlue, 0.3f, Standard.LightMode.Absolute);
 					}
+                    if (MadMoonSelected)
+                        Standard.DrawLight(MasterInfo.FullScreen, Color.Red, 0.1f, Standard.LightMode.Absolute);
 
-
-					/*스프라이트 바꾸기 장난*/
-
+                    /*스프라이트 바꾸기 장난*/
+                    /*
 					if (ScoreStack != 0 && Score.Get() > 10)
 					{
 						if (Score.Get() % 30 == 23 || Score.Get() % 30 == 24)
@@ -963,7 +1220,7 @@ namespace TestSheet
 
 
 					}
-
+                    */
 
 
                     #region 시야처리
@@ -1028,7 +1285,8 @@ namespace TestSheet
                             SCGSample.SetSprite("SCGSample");
                         else
                             SCGSample.SetSprite("SCG_Happy");
-
+                        if (MadMoonGauge>10)
+                            SCGSample.SetSprite("SCG_Crazy");
                         SCGSample.Draw();
 						Standard.FrameTimer--;
 					}
@@ -1067,22 +1325,25 @@ namespace TestSheet
 
 					if (StartStageTimer > 0 && StartStageTimer < 100)
 					{
-						Standard.DrawString("BigFont", Room.Name(), new Vector2(-Game1.graphics.GraphicsDevice.Viewport.X + 400, -Game1.graphics.GraphicsDevice.Viewport.Y + 300), Color.White * (float)(StartStageTimer / 100.0));
-					}
-			
-					break;//Game Phase Draw
+                        Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 1f * (float)(StartStageTimer / 100.0), Standard.LightMode.Absolute);
+                        Standard.DrawString("BigFont", Room.Name(), new Vector2(-Game1.graphics.GraphicsDevice.Viewport.X + 400, -Game1.graphics.GraphicsDevice.Viewport.Y + 300), Color.White * (float)(StartStageTimer / 100.0));
+                        Standard.DrawString("BigFont", Room.Name(), new Vector2(-Game1.graphics.GraphicsDevice.Viewport.X + 400, -Game1.graphics.GraphicsDevice.Viewport.Y + 300), Color.Red * 0.2f*(float)(StartStageTimer / 100.0));
+                    }
+
+
+                    break;//Game Phase Draw
                 case Phase.Ending:
 
                     Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
-                    DrawingLayer EndingCut = new DrawingLayer("Ending2", new Point(-200,-100), 0.80f);                  
+                    DrawingLayer EndingCut = new DrawingLayer("Ending01", new Point(0,0), 0.67f);                  
                     EndingCut.Draw();
                     Standard.DrawLight(EndingCut, Color.AliceBlue, (float)((Math.Max(250 - Standard.FrameTimer % 250, Standard.FrameTimer % 250)-100 )/ 450.0), Standard.LightMode.Absolute);
 
                     break;
                 case Phase.Dead:
                     Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
-                    DrawingLayer DeadCut = new DrawingLayer("Dead_1", new Point(0, 0), 0.67f);
-                    DrawingLayer DeadCutWord = new DrawingLayer("GameOverWord", new Point(0,200), 0.8f);
+                    DrawingLayer DeadCut = new DrawingLayer("Dead_1", new Point(-40, 0), 0.72f);
+                    DrawingLayer DeadCutWord = new DrawingLayer("GameOverWord", new Point(260,200), 0.8f);
                     int Checkpoint = 1000;
                     if(Standard.FrameTimer < Checkpoint)
                     {
@@ -1127,7 +1388,7 @@ namespace TestSheet
 		{
 			public DrawingLayer player;
 			private Point MovePoint=new Point(0,0);
-			private int Range=150;
+			private int Range=130;
 			private int MoveSpeed=6;
 			private int AttackSpeed = 15;
 			private int AttackTimer = 0;
@@ -1210,10 +1471,12 @@ namespace TestSheet
 				Range = i;
 			}
 
+      
+
 			public Player()
 			{
-				player = new DrawingLayer("Player_V6",new Rectangle(400,400,70,70));
-				player.AttachAnimation(30, "Player_Ani1", "Player_Ani2");
+				player = new DrawingLayer("Player_V6",new Rectangle(400,400,90,90));
+				player.AttachAnimation(30, "Player_Ani11", "Player_Ani12");
 			}
 
 			public void Draw()
@@ -1354,8 +1617,7 @@ namespace TestSheet
 			public Enemy(bool isGhost)
 			{
 				IsGhost = isGhost;
-                DrawAddonAction += () => Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie");
-                DrawAddonAction += () => Standard.DrawAddon(enemy, Color.Cornsilk, 0.3f, "NormalZombie");
+        
                 if (IsGhost)
 				{
 					enemy = new DrawingLayer("Player_V6", new Rectangle(0,0, 100, 100));
@@ -1393,12 +1655,52 @@ namespace TestSheet
 					else
 						y = Standard.Random(720, 800);
 					if(Method2D.Distance(player.GetPos(),new Point(x,y))>80)
-						enemy = new DrawingLayer("Player_V6", new Rectangle(x, y, 100, 100));
+						enemy = new DrawingLayer("Enemy", new Rectangle(x, y, 100, 100));
 					else
-						enemy = new DrawingLayer("Player_V6", new Rectangle(x+200, y+200, 100, 100));
-                    SDeadAction += () => Tester.KillCard = new DrawingLayer("SDead_1", new Point(0, 0), 0.6f);
+						enemy = new DrawingLayer("Enemy", new Rectangle(x+200, y+200, 100, 100));
+                    SDeadAction += () => Tester.KillCard = new DrawingLayer("SDead_11", new Point(0, 0), 0.6f);
                     MoveAction += Rock_MoveAction;
-                    DrawAction += Rock_DrawAction;                   
+                    DrawAction += Rock_DrawAction;
+                    if (Room.Number != 66)
+                    {
+                        DrawAddonAction += () =>
+                        {
+                            /*
+                            if (Score.Get() % 30 == 23)
+                            {
+                                Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie_2");
+                            }
+                            else if (Score.Get() % 30 == 24)
+                            {
+                                Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie_3");
+                            }
+                            else if (Score.Get() % 30 == 25)
+                            {
+                                Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie_4");
+                            }
+                            else
+                            {
+                                Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie");
+                            }*/
+
+                            if (Score.Get() % 3 == 0)
+                                Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie");
+                            else if (Score.Get() % 3 == 1)
+                                Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie_3");
+                            else
+                                Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie_4");
+                        };
+                    }
+                    else
+                    {
+                        DrawAddonAction += () =>
+                        {
+                            if (Score.Get() % 2 == 0)
+                                Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie_4");
+                            else
+                                Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie_3");
+                        };
+                    }
                 }
 			}	
 			public void Draw() => DrawAction();
@@ -1459,6 +1761,7 @@ namespace TestSheet
 					if(!Checker.LuckCheck())
 					{
                         ThisIsTheKiller = true;
+
                         //KillerZombieIndex = Index;
                         //Need to change dead scene sprite
                         if(SDeadAction!=null)
@@ -1524,6 +1827,10 @@ namespace TestSheet
                         GameOver = true;
 						Checker.Hearts--;
 					}
+                    else
+                    {
+
+                    }
 
 					/* 현재 블러저 처리에 관한 두가지 안
 					 * 1. 맞으면 사망
@@ -1557,6 +1864,8 @@ namespace TestSheet
 			public static Dictionary<int, string> RoomKeys = new Dictionary<int, string>();
 			public static Dictionary<int, int> RoomDifficulties = new Dictionary<int, int>();
 
+            public static event Action SongEvent;
+
             /* ROOM INDEX*
 			 * 000: Room of Rock				*
 			 * 001: Room of Fire				**
@@ -1575,37 +1884,42 @@ namespace TestSheet
 			 * 666: Inferno(EX)					*******
 			 * */
 
+            public static void AttachSong(string s)
+            {
+                SongEvent=()=> Standard.PlayLoopedSong(s);
+            }
+            public static void PlaySong() => SongEvent();
             public static void Init()
 			{
-				RoomKeys.Add(0, "Room of Rocks");
+				RoomKeys.Add(0, "Hello, Ortolan");
 				RoomDifficulties.Add(0, 1);
-				RoomKeys.Add(1, "Room of Fire");
+				RoomKeys.Add(1, "You die.");
 				RoomDifficulties.Add(1, 2);
-				RoomKeys.Add(2, "Room of Ice");
+				RoomKeys.Add(2, "It's icy cold.");
 				RoomDifficulties.Add(2, 2);
-				RoomKeys.Add(3, "Room of Fire(Hard)");
+				RoomKeys.Add(3, "I will be your bad dream.");
 				RoomDifficulties.Add(3, 3);
-				RoomKeys.Add(4, "Room of Fire(EX)");
+				RoomKeys.Add(4, "Tonight, Ortolan joins the hunt...");
 				RoomDifficulties.Add(4, 4);
-				RoomKeys.Add(5, "Room of Ice(Hard)");
+				RoomKeys.Add(5, "Well, I don't like you.");
 				RoomDifficulties.Add(5, 3);
-				RoomKeys.Add(6, "Room of Ice(EX)");
+				RoomKeys.Add(6, "Does the nightmare never ends?");
 				RoomDifficulties.Add(6, 4);
-				RoomKeys.Add(13, "Room of Fire and Ice");
+				RoomKeys.Add(13, "Watch your Colorful Death.");
 				RoomDifficulties.Add(13, 3);
-				RoomKeys.Add(77, "Room of Fire and Ice(Hard)");
+				RoomKeys.Add(77, "Death, It's your Destiny.");
 				RoomDifficulties.Add(77, 5);
 				RoomKeys.Add(777, "Room of Fire and Ice(EX)");
 				RoomDifficulties.Add(777, 7);
-				RoomKeys.Add(66, "Inferno");
+				RoomKeys.Add(66, "See What's Inferno, your worst nightmare");
 				RoomDifficulties.Add(66, 5);
 				RoomKeys.Add(666, "Inferno(EX)");
 				RoomDifficulties.Add(666, 7);
-				RoomKeys.Add(14, "Room of Fire(Easy)");
+				RoomKeys.Add(14, "Fire!");
 				RoomDifficulties.Add(14, 1);
-				RoomKeys.Add(15, "Room of Ice(Easy)");
+				RoomKeys.Add(15, "It's bit cold. Isn't it?");
 				RoomDifficulties.Add(15, 1);
-				RoomKeys.Add(16, "Room of Fire and Ice(Easy)");
+				RoomKeys.Add(16, "Dance with fire and ice.");
 				RoomDifficulties.Add(16, 2);
 
 			}
@@ -1622,8 +1936,9 @@ namespace TestSheet
 				RoomColor = Color.MonoGameOrange;
 				StarColor = Color.Orange;
 				TheIceRoom = false;
-				Standard.PlayLoopedSong("GhostTown");
-				for (int i = 0; i < FireCount; i++)
+                AttachSong("GhostTown");
+                //Standard.PlayLoopedSong("GhostTown");
+                for (int i = 0; i < FireCount; i++)
 				{
 					bludgers.Add(new Bludger(new Point(i + 1, 1)));
 					bludgers[i].bludger.SetPos(i * Interval, 0);
@@ -1634,14 +1949,16 @@ namespace TestSheet
 				RoomColor = Color.LightSkyBlue;
 				StarColor = Color.AliceBlue;
 				TheIceRoom = true;
-				Standard.PlayLoopedSong("Stage2_Youdie");
+                AttachSong("Stage2_Youdie");
+				//Standard.PlayLoopedSong("Stage2_Youdie");
 			}
 			public static void SetFireAndIceRoom(int FireCount, int Interval)
 			{
 				RoomColor = Color.MediumPurple;
 				StarColor = Color.Aquamarine;
 				TheIceRoom = true;
-				Standard.PlayLoopedSong("FireAndIce2");
+                AttachSong("FireAndIce2");
+				//Standard.PlayLoopedSong("FireAndIce2");
 
 				for (int i = 0; i < FireCount; i++)
 				{
@@ -1651,17 +1968,45 @@ namespace TestSheet
 			}
 			public static void Set()
 			{
-				ResetGame();
+				ResetGame();                
 				switch (Number)
 				{
 					case 0:
 						RoomColor = Color.LightGray;
 						StarColor = Color.LightSalmon;
-						Standard.PlayLoopedSong("YouDieTheme8");
+                        AttachSong("YoudieTheme8");
+						//Standard.PlayLoopedSong("YouDieTheme8");
 						TheIceRoom = false;
+                        Monolog.Attach("...What was that?");
+                       
+                       if(RoomVoiceEnable)
+                            Standard.PlaySE("Voice1");
+                        break;
+                    case 14:
+                        if (!LiteMode)
+                            SetFireRoom(2, 500);
+                        else
+                            SetFireRoom(1, 500);
+                        Monolog.Attach("I'm alive...");
+                        if (RoomVoiceEnable)
+                            Standard.PlaySE("Voice4");
+                        break;
+                    case 15:
+                        SetIceRoom();
+                        Monolog.Attach("I don't want to see that again.");
+                        if (RoomVoiceEnable)
+                            Standard.PlaySE("Voice2");
+                        break;
+                    case 16:
+                        if (!LiteMode)
+                            SetFireAndIceRoom(2, 500);
+                        else
+                            SetFireAndIceRoom(1, 500);
                         Monolog.Attach("God, what do you want from me?");
-						break;
-					case 1:
+                        if (RoomVoiceEnable)
+                            Standard.PlaySE("Voice3");
+                        break;
+                    case 1:
                         if (!LiteMode)
                             SetFireRoom(10, 500);
                         else
@@ -1676,9 +2021,11 @@ namespace TestSheet
                             SetFireRoom(20, 1500);
                         else
                             SetFireRoom(5, 1500);
+                        if (RoomVoiceEnable)
+                            Standard.PlaySE("Voice5");
 
                         //SetFireRoom(30, 1000);
-						break;
+                        break;
 					case 4:
 						SetFireRoom(40, 30000 / 40);
 						break;
@@ -1697,21 +2044,7 @@ namespace TestSheet
 
 						break;
 
-					case 14:
-                        if(!LiteMode)
-    						SetFireRoom(2, 500);
-                        else
-                            SetFireRoom(1, 500);
-                        break;
-					case 15:
-						SetIceRoom();
-						break;
-					case 16:
-                        if (!LiteMode)
-                            SetFireAndIceRoom(2, 500);
-                        else
-                            SetFireAndIceRoom(1, 500);
-                        break;
+					
 					case 77:
                         if (!LiteMode)
                             SetFireAndIceRoom(16, 500);
@@ -1738,7 +2071,7 @@ namespace TestSheet
 						Standard.PlayLoopedSong("Inferno_Final");
                         int InfernoCount = 25;
                         if (LiteMode)
-                            InfernoCount = 12;
+                            InfernoCount = 17;
 						for (int i = 0; i < InfernoCount; i++)
 						{
 							bludgers.Add(new Bludger(new Point(i + 1, 1)));
@@ -1760,7 +2093,7 @@ namespace TestSheet
 
 
 				}
-				
+                RoomVoiceEnable = false;
 
 			}
 
@@ -1991,25 +2324,117 @@ namespace TestSheet
 
 
 
-	public static class Checker
-	{
-		public static int Hearts = 10;
-		public static int HeartStack = 0;
-		public static int HeartTimer = 0;
+    public static class Checker
+    {
+        public static int Hearts = 10;
+        public static int HeartStack = 0;
+        public static int HeartTimer = 0;
 
-		public static int Bloodthirst = 0;
-		public static int Luck=0;
-		public static int Swiftness = 0;
-		public static int LuckTimer;
+        public static int Bloodthirst = 0;
+        public static int Luck = 0;
+        public static int Swiftness = 0;
+        public static int LuckTimer;
 
-		public static Vector2 InfoVector;
-		public static DrawingLayer StringBackGround;
+        public static Vector2 InfoVector;
+        public static DrawingLayer StringBackGround;
 
-		public static double BloodStack = 0;
-		
+        public static double BloodStack = 0;
+        public static readonly int Default_AttackSpeed = 15;
+        private static int weapon_Melee;
+        public static int Weapon_Melee
+        {
+            get
+            {
+                return weapon_Melee;
+            }
+            set
+            {
+                GetWeapon_Melee(value);
+                weapon_Melee = value;
+            }
+        }
 
-		//본 열거자의 이름은 실제 변수명과 일치해야 한다.(리플렉션 활용)
-		public enum Status { Swiftness, Bloodthirst, Luck };
+        private static void WeaponSetter(int Range, double attackSpeed_coefficient, string Ani1, string Ani2)
+        {
+            Tester.player.setRange(Range);
+            Checker.AttackSpeed_Coefficient_Weapon = attackSpeed_coefficient;
+            Tester.player.player.ClearAnimation();
+            Tester.player.player.AttachAnimation(30, Ani1, Ani2);
+
+        }
+
+        public static void GetWeapon_Melee(int WeaponCode)
+        {
+            switch (WeaponCode)
+            {
+                case 0:
+                    WeaponSetter(130, 1, "Player_Ani11", "Player_Ani12");
+                    /*
+                    Tester.player.setRange(130);
+                    Checker.AttackSpeed_Coefficient_Weapon = 1;
+                    Tester.player.player.ClearAnimation();
+                    Tester.player.player.AttachAnimation(30, "Player_Ani11", "Player_Ani12");*/
+                    break;
+                case 12:
+                    WeaponSetter(150, 1.15 / 1.0, "Player_Ani_SH01", "Player_Ani_SH02");
+                    /*
+                    Tester.player.setRange(150);
+                    Checker.AttackSpeed_Coefficient_Weapon = 1.15/1.0;
+                    Tester.player.player.ClearAnimation();
+                    Tester.player.player.AttachAnimation(30, "Player_SH01", "Player_SH02");*/
+                    break;
+                case 13:
+                    WeaponSetter(150, 1, "Player_Ani_TH01", "Player_Ani_TH02");
+                    break;
+                case 14:
+                    WeaponSetter(140, 1, "Player_Ani_K01", "Player_Ani_K02");
+                    break;
+                case 15:
+                    WeaponSetter(120, 0.5, "Player_Ani_S01", "Player_Ani_S02");
+                    break;
+
+
+            }
+
+        }
+        //Knife=0;
+        //Soul Harvester = 12;
+        private static double attackSpeed_Coefficient_Swiftness;
+        public static double AttackSpeed_Coefficient_Swiftness
+        {
+            get
+            {
+                return attackSpeed_Coefficient_Swiftness;
+            }
+            set
+            {
+                attackSpeed_Coefficient_Swiftness = value;
+                SetPlayerAttackSpeed();
+
+            }
+        }
+        private static double attackSpeed_Coefficient_Weapon;
+        public static double AttackSpeed_Coefficient_Weapon 
+        {
+            get
+            {
+                return attackSpeed_Coefficient_Weapon;
+            }
+            set
+            {
+                attackSpeed_Coefficient_Weapon = value;
+                SetPlayerAttackSpeed();
+            }
+        }
+
+        public static void SetPlayerAttackSpeed()
+        {
+            Tester.player.SetAttackSpeed((int)Math.Round(Default_AttackSpeed * AttackSpeed_Coefficient_Swiftness * AttackSpeed_Coefficient_Weapon));
+        }
+
+
+        //본 열거자의 이름은 실제 변수명과 일치해야 한다.(리플렉션 활용)
+        public enum Status { Swiftness, Bloodthirst, Luck };
 
 
 		public static void Init()
@@ -2019,9 +2444,11 @@ namespace TestSheet
 			Checker.Luck = 0;
 			Checker.Bloodthirst = 0;
 			Checker.BloodStack = 0;
-		}
+            AttackSpeed_Coefficient_Swiftness = 1.0;
+            AttackSpeed_Coefficient_Weapon = 1.0;
+        }
 
-		public static void GetHeart()
+        public static void GetHeart()
 		{
 			HeartStack++;
 			HeartTimer = 30;
@@ -2042,13 +2469,19 @@ namespace TestSheet
 				{
 					case 1:
 						BloodStack += 0.01;
+                        if (Weapon_Melee == 12)
+                            BloodStack += 0.01;
 						break;
 					case 2:
 						BloodStack += 1.0/75;
-						break;
+                        if (Weapon_Melee == 12)
+                            BloodStack += 1.0/75;
+                        break;
 					case 3:
 						BloodStack += 0.02;
-						break;
+                        if (Weapon_Melee == 12)
+                            BloodStack += 0.02;
+                        break;
 
 				}
 
@@ -2058,6 +2491,7 @@ namespace TestSheet
 					GetHeart();
 					Standard.PlaySE("Bloodthirst");
 					Standard.FadeAnimation(Tester.player.player, 30, Color.Red);
+                    Tester.BuffBubble.Init("Bubble_Blood01");
 				}
 
 			}
@@ -2227,7 +2661,8 @@ namespace TestSheet
 					{
 						Standard.FadeAnimation(Tester.player.player, 30, Color.Green);
 						Standard.PlaySE("GetHeart");
-						LuckTimer = 30;
+                        Tester.BuffBubble.Init("Bubble_Luck01");
+                        LuckTimer = 30;
 						return true;
 					}
 					break;
@@ -2236,7 +2671,8 @@ namespace TestSheet
 					{
 						Standard.FadeAnimation(Tester.player.player, 30, Color.Green);
 						Standard.PlaySE("GetHeart");
-						LuckTimer = 30;
+                        Tester.BuffBubble.Init("Bubble_Luck01");
+                        LuckTimer = 30;
 
 						return true;
 					}
@@ -2247,7 +2683,8 @@ namespace TestSheet
 					{
 						Standard.FadeAnimation(Tester.player.player, 30, Color.Green);
 						Standard.PlaySE("GetHeart");
-						LuckTimer = 30;
+                        Tester.BuffBubble.Init("Bubble_Luck01");
+                        LuckTimer = 30;
 						return true;
 					}
 					break;
@@ -2335,7 +2772,14 @@ namespace TestSheet
 					case 11:
 						InfoString = "Luck 3:\n\nChance of avoiding death: 15%";
 						break;
-					default:
+                    case 12:
+                        InfoString = "Soul Harvester:\n\nRange+2, AttackSpeed-15%\n\n <Blood Flow Acceleration> : Get doubled bloodthirst effect.";
+                        break;
+                    case 15:
+                        InfoString = "Moonlight:\n\nRange-1\n\n<Sheer Celerity> : Get doubled attack-speed. ";
+                        break;
+
+                    default:
 						InfoString = "Preparing..";
 						break;
 				}
@@ -2400,63 +2844,83 @@ namespace TestSheet
 			{
 				case 0:
 					Checker.GetHeart();
-                    Tester.Monolog.Attach("I could feel my heartbeat.", "...It's warm.", "My blood is flowing.");
+                    Tester.Monolog.Attach("I could feel my heartbeat.", "...It's warm.", "My blood is flowing.", "Could I live more?");
 					break;
 				case 1:
 					Checker.GetHeart(2);
-                    Tester.Monolog.Attach("I could feel my heartbeat.", "...It's warm.", "My blood is flowing.");
+                    Tester.Monolog.Attach("I could feel my heartbeat.", "...It's warm.", "My blood is flowing.", "Could I live more?");
                     break;
 				case 2:
 					Checker.GetHeart(3);
-                    Tester.Monolog.Attach("I could feel my heartbeat.", "...It's warm.", "My blood is flowing.");
+                    Tester.Monolog.Attach("I could feel my heartbeat.", "...It's warm.", "My blood is flowing.", "Could I live more?");
                     break;
 				case 3:
 					if (Checker.Swiftness < 1)
 						Checker.Swiftness = 1;
-					Tester.player.SetAttackSpeed(14);
+                    //Tester.player.SetAttackSpeed(14);
+                    Checker.AttackSpeed_Coefficient_Swiftness = 14.0 / 15.0;
                     Tester.Monolog.Attach("Everything looks much slower.", "Feather-light.");
                     break;
 				case 4:
 					if (Checker.Swiftness < 2)
 						Checker.Swiftness = 2;
-					Tester.player.SetAttackSpeed(13);
+					//Tester.player.SetAttackSpeed(13);
+                    Checker.AttackSpeed_Coefficient_Swiftness = 13.0 / 15.0;
                     Tester.Monolog.Attach("Everything looks much slower.", "Feather-light.");
                     break;
 				case 5:
 					if (Checker.Swiftness < 3)
 						Checker.Swiftness = 3;
-					Tester.player.SetAttackSpeed(12);
+					//Tester.player.SetAttackSpeed(12);
+                    Checker.AttackSpeed_Coefficient_Swiftness = 12.0 / 15.0;
                     Tester.Monolog.Attach("Everything looks much slower.", "Feather-light.");
                     break;
 				case 6:
 					if (Checker.Bloodthirst < 1)
 						Checker.Bloodthirst = 1;
-                    Tester.Monolog.Attach("There is an urge inside me.", "It desires me to kill.");
+                    Tester.Monolog.Attach("I felt some URGE inside me.", "It desires me to kill.");
 					break;
 				case 7:
 					if (Checker.Bloodthirst < 2)
 						Checker.Bloodthirst = 2;
-                    Tester.Monolog.Attach("There is an urge inside me.", "It desires me to kill.");
+                    Tester.Monolog.Attach("I felt some URGE inside me.", "It desires me to kill.");
                     break;
 				case 8:
 					if (Checker.Bloodthirst < 3)
 						Checker.Bloodthirst = 3;
-                    Tester.Monolog.Attach("There is an urge inside me.", "It desires me to kill.");
+                    Tester.Monolog.Attach("I felt some URGE inside me.", "It desires me to kill.");
                     break;
 				case 9:
 					if (Checker.Luck < 1)
 						Checker.Luck = 1;
-					break;
+                    Tester.Monolog.Attach("I found a clover.", "Is this helpful?");
+                    break;
 				case 10:
 					if (Checker.Luck < 2)
 						Checker.Luck = 2;
-					break;
+                    Tester.Monolog.Attach("I found a clover.", "Is this helpful?");
+                    break;
 				case 11:
 					if (Checker.Luck < 3)
 						Checker.Luck = 3;
-					break;
-			}
-		}
+                    Tester.Monolog.Attach("I found a clover.", "Is this helpful?");
+                    break;
+                case 12:                 
+                    Checker.Weapon_Melee = 12;                
+                    break;
+                case 13:                 
+                    Checker.Weapon_Melee = 13;                
+                    break;
+                case 14:               
+                    Checker.Weapon_Melee = 14;                  
+                    break;
+                case 15:
+                    Checker.Weapon_Melee = 15;
+                    break;
+
+
+            }
+        }
 		public void Draw()
 		{
 			if (RemoveTimer < 30 && RemoveTimer > 5)
@@ -2515,6 +2979,7 @@ namespace TestSheet
 		{
 			ValueTable.Clear();
 			DropTable.Clear();
+            //Card 추가는 여기에서. Add Card.
 			ValueTable.Add(0, 1);
 			ValueTable.Add(1, 3);
 			ValueTable.Add(2, 5);
@@ -2527,8 +2992,12 @@ namespace TestSheet
 			ValueTable.Add(9, 5);
 			ValueTable.Add(10, 10);
 			ValueTable.Add(11, 15);
-		
-			foreach(KeyValuePair<int,double> v in ValueTable)
+            ValueTable.Add(12, 30);
+            ValueTable.Add(13, 20);
+            ValueTable.Add(14, 10);
+            ValueTable.Add(15, 60);
+
+            foreach (KeyValuePair<int,double> v in ValueTable)
 			{
 				DropTable.Add(v.Key, v.Value);
 			}
@@ -2600,12 +3069,24 @@ namespace TestSheet
 							RemoveDrop(10);
 							RemoveDrop(11);
 							break;
+                        case 12:
+                            RemoveDrop(12);
+                            break;
+                        case 13:
+                            RemoveDrop(13);
+                            break;
+                        case 14:
+                            RemoveDrop(14);
+                            break;
+                        case 15:
+                            RemoveDrop(15);
+                            break;
 
 
 
-					}
-				
-					return v.Key;
+                    }
+
+                    return v.Key;
 				}
 			}
 			return -1;

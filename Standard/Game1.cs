@@ -143,10 +143,9 @@ namespace TestSheet
 							break;
 					}*/
 					Standard.DrawString("Bigfont", Tester.Score.ToString() + "/100", new Vector2(Tester.player.GetPos().X, Tester.player.GetPos().Y - 20), Color.Red * (float)(Checker.BloodStack));
-
-
 				}
-				if (Tester.FreezeTimer >= 0)
+                Tester.BuffBubble.Draw();
+                if (Tester.FreezeTimer >= 0)
 				{
 					if (Tester.FreezeTimer < 150)
 					{
@@ -190,7 +189,15 @@ namespace TestSheet
 					Standard.PlayFadedSE("Oveclock", 0.75f);
 				}
 
-				if (Tester.GameOver)
+                if(!Tester.GameOver)
+                {
+                    if (Tester.player.player.GetSpriteName() == "Player_Ani_S01")
+                        Standard.DrawAddon(Tester.player.player, Color.White, 1f, "MoonLight02");
+                    if (Tester.player.player.GetSpriteName() == "Player_Ani_S02")
+                        Standard.DrawAddon(Tester.player.player, Color.White, 1f, "MoonLight01");
+                }
+
+                if (Tester.GameOver)
 				{
 
 
@@ -223,8 +230,8 @@ namespace TestSheet
 						Tester.KillCard.SetRatio(Math.Min((Tester.FreezeTime - 110 - Tester.FreezeTimer) * 6, 75) / 120.0);
 						Tester.KillCard.SetCenter(new Point(500, 400));
 						Tester.KillCard.Draw(Color.White, (float)(Tester.FreezeTimer / 75.0));
-                        if(Tester.KillCard.GetSpriteName()=="SDead_1")
-                            Standard.DrawAddon(Tester.KillCard, Tester.Room.RoomColor, (float)(Tester.FreezeTimer / 75.0), "SDAddon");
+                        if(Tester.KillCard.GetSpriteName()=="SDead_11")
+                            Standard.DrawAddon(Tester.KillCard, Tester.Room.RoomColor, (float)(Tester.FreezeTimer / 75.0), "Sdead_Add");
 					}
 				}
 
@@ -245,9 +252,14 @@ namespace TestSheet
 
 				}
 				Checker.ShowStatus();
-			}
-	
-			base.Draw(gameTime);
-        }	
+            }
+            #region DEMOSTRING
+            Viewport Temp = Game1.graphics.GraphicsDevice.Viewport;
+            Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
+            Standard.DrawString("DEMO PLAY", new Vector2(10, 10), Color.White);
+            Game1.graphics.GraphicsDevice.Viewport = Temp;
+            base.Draw(gameTime);
+            #endregion
+        }
     }
 }

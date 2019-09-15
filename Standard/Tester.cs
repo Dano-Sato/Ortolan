@@ -483,7 +483,7 @@ namespace TestSheet
 			MonsterDeck.Add(777);
 			MonsterDeck.Add(666);
             */
-            Checker.Weapon_Melee = 0;
+            Checker.Weapon_Melee = 17;
 
             if (LiteMode)
                 Bludger.BludgerSpeed = 13;
@@ -565,7 +565,7 @@ namespace TestSheet
 			DrawingLayer Click = new DrawingLayer(ClickSprite, new Rectangle(Cursor.GetPos().X - 15, Cursor.GetPos().Y - 15, 30, 30));
             switch (Checker.Weapon_Melee)
             {
-                case 0:
+                case 17:
                     CursorEffectPair_1 = Color.OrangeRed;
                     CursorEffectPair_2 = Color.AliceBlue;                
                     break;
@@ -687,10 +687,15 @@ namespace TestSheet
                     break;
                 case Phase.Game:
 
+                    if(Checker.Weapon_Melee==16)
+                    {
+                        TimeCoefficient = 0.1;
+                    }
+                    else
+                        TimeCoefficient = 0.5;
+                    /* 게임오버 처리*/
 
-					/* 게임오버 처리*/
-
-					if (GameOver && FreezeTimer == -1)
+                    if (GameOver && FreezeTimer == -1)
 					{
 						FreezeTimer = FreezeTime;
 						Standard.ClearFadeAnimation();
@@ -834,7 +839,11 @@ namespace TestSheet
 						{
 
 							Gauge = Math.Min(1, Gauge + 0.003);
-							SlowMode = false;
+                            if(Checker.Weapon_Melee==16)
+                            {
+                                Gauge = Math.Min(1, Gauge + 0.0015);
+                            }
+                            SlowMode = false;
 						}
                     }
                     else
@@ -909,6 +918,7 @@ namespace TestSheet
                     }
 					RandomIntCounter = 0;
                 
+                    Enemy.WholeGameOver=false;
                     Parallel.For(0, enemies.Count, (i) => {
                         double r = Method2D.Distance(enemies[i].enemy.GetPos(), player.GetPos());
                         HeartSignal += (1600.0 / (r * r));
@@ -1099,15 +1109,29 @@ namespace TestSheet
                         GamePhase = Phase.Ending;
                         Credit.Init();
                         EndCGList.Clear();
-                        EndCGList.Add("FullMoon");
-                        EndCGList.Add("FullMoon_Ani01");
-                        EndCGList.Add("FullMoon_Ani02");
-                        EndCGList.Add("FullMoon_Ani03");
-                        EndCGList.Add("FullMoon_Ani04");
-                        EndCGList.Add("FullMoon_Ani04");
-                        EndCGList.Add("FullMoon_Ani04");
-                        EndCGList.Add("FullMoon_Ani05");
                         BeforeEndTimer = BeforeEndTimer_Max;
+                        if (!LiteMode)
+                        {
+                            EndCGList.Add("FullMoon");
+                            EndCGList.Add("FullMoon_Ani01");
+                            EndCGList.Add("FullMoon_Ani02");
+                            EndCGList.Add("FullMoon_Ani03");
+                            EndCGList.Add("FullMoon_Ani04");
+                            EndCGList.Add("FullMoon_Ani04");
+                            EndCGList.Add("FullMoon_Ani04");
+                            EndCGList.Add("FullMoon_Ani05");
+                        }
+                        else
+                        {
+                            EndCGList.Add("Ending01");
+                            EndCGList.Add("WhiteSpace");
+                            EndCGList.Add("Crescent_Ani01");
+                            EndCGList.Add("WhiteSpace");
+                            EndCGList.Add("Crescent_Ani02");
+                            EndCGList.Add("WhiteSpace");
+                            EndCGList.Add("Crescent_Ani03");
+                            EndCGList.Add("WhiteSpace");
+                        }
                     }
 
 					Room.Update();
@@ -1517,7 +1541,12 @@ namespace TestSheet
                     DrawingLayer EndingCut;
                     
                     EndingCut = new DrawingLayer(EndCGList[0], new Point(0,0), 0.67f);
-                    if(Credit.IsEnded())
+                    int End_Interval;
+                    if (!LiteMode)
+                        End_Interval = 6;
+                    else
+                        End_Interval = 30;
+                    if (Credit.IsEnded())
                     {
                         if (EndTimer > 0)
                             EndTimer--;
@@ -1525,12 +1554,17 @@ namespace TestSheet
                         {
                             if(EndCGList.Count>1)
                                 EndCGList.RemoveAt(0);
-                            EndTimer = 6;
+                            EndTimer = End_Interval;
                         }
 
                     }
                     EndingCut.Draw();
                     Standard.DrawLight(EndingCut, Color.AliceBlue, (float)((Math.Max(250 - Standard.FrameTimer % 250, Standard.FrameTimer % 250)-100 )/ 800.0), Standard.LightMode.Absolute);
+                    if (EndingCut.GetSpriteName() == "WhiteSpace")
+                    {
+                        Standard.PlayFadedSE("HorrorDoor",0.3f);
+                        Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 1f, Standard.LightMode.Absolute);
+                    }
                     Credit.Draw();
                     if(EndCGList.Count==1)
                        GoBackMenu.Draw(Color.White, Color.Red);
@@ -1573,6 +1607,8 @@ namespace TestSheet
                 Standard.DrawString(Cursor.GetPos().X.ToString() + "," + Cursor.GetPos().Y.ToString(), new Vector2(Cursor.GetPos().X-20, Cursor.GetPos().Y-30), Color.White);
             if (Standard.Pressing(Keys.LeftControl, Keys.W))
                 Standard.DrawString(Standard.FrameTimer.ToString(), new Vector2(Cursor.GetPos().X - 20, Cursor.GetPos().Y - 30), Color.White);
+            if (Standard.Pressing(Keys.LeftControl, Keys.E))
+                Standard.DrawString(Table.m.ToString(), new Vector2(Cursor.GetPos().X - 20, Cursor.GetPos().Y - 30), Color.White);
 
             #endregion
 
@@ -1795,6 +1831,7 @@ namespace TestSheet
             private event Action DrawAddonAction;
             private event Action SDeadAction;
 
+            public static bool WholeGameOver=false;
             public Point GetPos()
 			{
 				return enemy.GetPos();
@@ -2263,7 +2300,8 @@ namespace TestSheet
 						TheIceRoom = false;
 						RoomColor = Color.MonoGameOrange;
 						StarColor = Color.Orange;
-						Standard.PlayLoopedSong("Inferno_Final");
+                        AttachSong("Inferno_Final");
+                        //Standard.PlayLoopedSong("Inferno_Final");
                         int InfernoCount = 25;
                         if (LiteMode)
                             InfernoCount = 17;
@@ -2278,8 +2316,9 @@ namespace TestSheet
 						TheIceRoom = false;
 						RoomColor = Color.MonoGameOrange;
 						StarColor = Color.Orange;
-						Standard.PlayLoopedSong("Inferno_Final");
-						for (int i = 0; i < 35; i++)
+                        AttachSong("Inferno_Final");
+                        //Standard.PlayLoopedSong("Inferno_Final");
+                        for (int i = 0; i < 35; i++)
 						{
 							bludgers.Add(new Bludger(new Point(i + 1, 1)));
 							bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 35)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 35)));
@@ -2415,7 +2454,6 @@ namespace TestSheet
 							{
 								//bludgers[i].bludger.SetPos(i*500, Standard.Random(-50, 50));
 								bludgers[i].bludger.SetPos(-500, -500);
-
 							}
 						}					
 
@@ -2562,7 +2600,7 @@ namespace TestSheet
         {
             switch (WeaponCode)
             {
-                case 0:
+                case 17:
                     WeaponSetter(130, 1, "Player_Ani11", "Player_Ani12");
                     /*
                     Tester.player.setRange(130);
@@ -2587,6 +2625,10 @@ namespace TestSheet
                 case 15:
                     WeaponSetter(120, 0.5, "Player_Ani_S01", "Player_Ani_S02");
                     break;
+                case 16:
+                    WeaponSetter(140, 1, "Player_Ani_T01", "Player_Ani_T02");
+                    break;
+
 
 
             }
@@ -2926,8 +2968,10 @@ namespace TestSheet
 			Frame = new DrawingLayer(BackFrameName, Tester.CardPos, 0.75f);
 			Frame.SetCenter(new Point(Tester.CardPos.X+800, Tester.CardPos.Y));
 			FrontFrameName = WhatClass.ToString() + "Card_" + Number;
-		
-			if(WhatClass==CardClass.Reward)
+            if (IsWeapon())
+                BackFrameName = WhatClass.ToString() + "Card"+"_Weapon";
+
+            if (WhatClass==CardClass.Reward)
 			{
 				switch (Number)
 				{
@@ -2999,6 +3043,10 @@ namespace TestSheet
 		{
 			FlipTimer = FlipTime;
 		}
+        public bool IsWeapon()
+        {
+            return GetIndex() >= 12;
+        }
 		public void Update()
 		{
 			if (FlipTimer > 0)
@@ -3015,7 +3063,8 @@ namespace TestSheet
 			}
 			if(FlipTimer==1&&CardOpenEvents!=null)
 			{
-				CardOpenEvents(GetIndex());
+                if(!IsWeapon())
+	    			CardOpenEvents(GetIndex());
 			}
 			
 			if (Cursor.JustdidLeftClick(Frame) && FlipTimer == -1)
@@ -3023,10 +3072,21 @@ namespace TestSheet
 				Open();
 				Standard.PlaySE("CardHandOver");			
 			}
-			if (Cursor.JustdidLeftClick(Frame) && FlipTimer == 0&&RemoveTimer==-1)
+            if (Cursor.JustdidLeftClick(Frame) && FlipTimer == 0 && IsWeapon())
+            {
+
+                Standard.PlaySE("Reload");
+                int temp = Checker.Weapon_Melee;
+                Checker.Weapon_Melee = GetIndex();
+                FrontFrameName = "Reward" + "Card_" + temp;
+                return;
+            }
+
+            if (Cursor.JustdidLeftClick(Frame) && FlipTimer == 0&&RemoveTimer==-1)
 			{
 				RemoveTimer = 30;
 			}
+
 		}
 
 
@@ -3112,6 +3172,12 @@ namespace TestSheet
                 case 15:
                     Checker.Weapon_Melee = 15;
                     break;
+                case 16:
+                    Checker.Weapon_Melee = 16;
+                    break;
+                case 17:
+                    Checker.Weapon_Melee = 17;
+                    break;
 
 
             }
@@ -3133,6 +3199,9 @@ namespace TestSheet
 				Frame.SetSprite(FrontFrameName);
 				Frame.Draw();
 				Standard.DrawAddon(Frame, Color.White, 1f, "CardFrame");
+                if (IsWeapon()&&Cursor.IsOn(Frame))
+                    Standard.DrawLight(Frame, Color.AliceBlue, 0.5f,Standard.LightMode.Absolute);
+                
 			}
 			else
 			{
@@ -3191,6 +3260,7 @@ namespace TestSheet
             ValueTable.Add(13, 15);
             ValueTable.Add(14, 7);
             ValueTable.Add(15, 35);
+            ValueTable.Add(16, 50);
 
             foreach (KeyValuePair<int,double> v in ValueTable)
 			{

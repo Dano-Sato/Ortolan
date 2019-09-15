@@ -185,7 +185,8 @@ namespace TestSheet
 
         public static int StopTimer = 0;
 
-
+        public static Color CursorEffectPair_1 = Color.OrangeRed;
+        public static Color CursorEffectPair_2 = Color.AliceBlue;
         public static class BuffBubble
         {
             public static int BubbleTimer = 0;
@@ -231,6 +232,63 @@ namespace TestSheet
             }
         }
 
+        public class FTimer
+        {
+            private int timer;
+            public enum FTimerState { Fade_In, Show, Fade_Out }
+            private int FadeTimer_Max;
+            private int FadeTimer_FadeOut;
+            private int FadeTimer_FadeIn;
+
+
+            public FTimer() => Set(120, 1.0 / 2.0, 1.0 / 6.0);
+            public FTimer(int Time, double Fade_in_Ratio, double Fade_Out_Ratio) 
+            {
+                Set(Time, Fade_in_Ratio, Fade_Out_Ratio);
+            }
+            public void Set(int Time, double Fade_in_Ratio, double Fade_Out_Ratio)
+            {
+                FadeTimer_Max = Time;
+                FadeTimer_FadeOut = (int)(Time * Fade_Out_Ratio);
+                FadeTimer_FadeIn = Time - (int)(Time * Fade_in_Ratio);
+            }
+
+            public void Start()
+            {
+                timer = FadeTimer_Max;
+            }
+
+            public void Update()
+            {
+                if(timer>0)
+                timer--;
+            }
+
+            public FTimerState State {
+                get
+                {
+                    if (FadeTimer_FadeIn < timer)
+                        return FTimerState.Fade_In;
+                    else if (timer < FadeTimer_FadeOut)
+                        return FTimerState.Fade_Out;
+                    else
+                        return FTimerState.Show;
+                } }
+
+            public float Fader
+            {
+                get
+                {
+                    if (State == FTimerState.Fade_In)
+                        return (1f - (float)(timer - FadeTimer_FadeIn) / (FadeTimer_Max - FadeTimer_FadeIn));
+                    else if(State == FTimerState.Fade_Out)
+                        return (1f - (float)(FadeTimer_FadeOut - timer) / (FadeTimer_FadeOut));
+                    else
+                        return 1f;
+                }
+            }
+
+        }
 
 
         public static int BubbleTimer = 0;
@@ -240,10 +298,12 @@ namespace TestSheet
         public static class Monolog
         {
             private static StringLayer Script=new StringLayer("", new Vector2(0, 0));
+            /*
             private static readonly int FadeTimer_Max=120;
             private static readonly int FadeTimer_FadeOut=20;
             private static readonly int FadeTimer_FadeIn= FadeTimer_Max - 60;
-            private static int FadeTimer_Count=0;
+            private static int FadeTimer_Count=0;*/
+            private static FTimer f=new FTimer();
 
             public static void Update()
             {
@@ -262,7 +322,8 @@ namespace TestSheet
                     if (r >= m * i && r < m * (i + 1))
                         break;
                 }
-                FadeTimer_Count = FadeTimer_Max;
+                f.Start();
+                //FadeTimer_Count = FadeTimer_Max;
             }
 
 
@@ -272,9 +333,13 @@ namespace TestSheet
                 {
                     return;
                 }
+                /*
                 if (FadeTimer_Count == 0)
                     return;
-                FadeTimer_Count--;
+                FadeTimer_Count--;*/
+                f.Update();
+                Script.Draw(Color.Black * f.Fader);
+                /*
                 if(FadeTimer_FadeIn<FadeTimer_Count)
                 {
                     Script.Draw(Color.Black * (1f-(float)(FadeTimer_Count - FadeTimer_FadeIn) / (FadeTimer_Max - FadeTimer_FadeIn)));
@@ -286,7 +351,7 @@ namespace TestSheet
                 else
                 {
                     Script.Draw(Color.Black);
-                }
+                }*/
 
             }
         }
@@ -436,14 +501,34 @@ namespace TestSheet
 			else
 				ClickSprite = "Click2";
 			DrawingLayer Click = new DrawingLayer(ClickSprite, new Rectangle(Cursor.GetPos().X - 15, Cursor.GetPos().Y - 15, 30, 30));
+            switch (Checker.Weapon_Melee)
+            {
+                case 0:
+                    CursorEffectPair_1 = Color.OrangeRed;
+                    CursorEffectPair_2 = Color.AliceBlue;                
+                    break;
+                case 15:
+                    CursorEffectPair_1 = Color.LimeGreen;
+                    CursorEffectPair_2 = Color.GhostWhite;
+                    break;
+                case 12:
+                    CursorEffectPair_1 = Color.PaleVioletRed;
+                    CursorEffectPair_2 = Color.Black;
+                    break;
+                default:
+                    CursorEffectPair_1 = Color.OrangeRed;
+                    CursorEffectPair_2 = Color.AliceBlue;
+                    break;
+            }
 
-           
+
+
 
             if (!IsEndPhase||GamePhase==Phase.Ending)
                 
 			{
-				Standard.FadeAnimation(Click, 10, Color.OrangeRed);
-				Standard.FadeAnimation(Click, 10, Color.AliceBlue);
+				Standard.FadeAnimation(Click, 10, CursorEffectPair_1);
+				Standard.FadeAnimation(Click, 10, CursorEffectPair_2);
 			}
 			else
 			{
@@ -866,6 +951,10 @@ namespace TestSheet
                         if(!LiteMode)
                         {
                             AddReward();
+                            AddReward();
+                        }
+                        else
+                        {
                             AddReward();
                         }
                     }
@@ -1822,7 +1911,7 @@ namespace TestSheet
 					
 					if(!Checker.LuckCheck())
 					{
-                        Game1.AttachDeadScene(() => Tester.KillCard = new DrawingLayer("SDead_33", new Point(0, 0), 0.6f));
+                        Game1.AttachDeadScene(() => Tester.KillCard = new DrawingLayer("SDead_333", new Point(0, 0), 0.6f));
                         //KillerZombieIndex = -1;
                         GameOver = true;
 						Checker.Hearts--;
@@ -2376,7 +2465,7 @@ namespace TestSheet
                     Tester.player.player.AttachAnimation(30, "Player_Ani11", "Player_Ani12");*/
                     break;
                 case 12:
-                    WeaponSetter(150, 1.15 / 1.0, "Player_Ani_SH01", "Player_Ani_SH02");
+                    WeaponSetter(150, 1.10 / 1.0, "Player_Ani_SH01", "Player_Ani_SH02");
                     /*
                     Tester.player.setRange(150);
                     Checker.AttackSpeed_Coefficient_Weapon = 1.15/1.0;
@@ -2993,9 +3082,9 @@ namespace TestSheet
 			ValueTable.Add(10, 10);
 			ValueTable.Add(11, 15);
             ValueTable.Add(12, 30);
-            ValueTable.Add(13, 20);
-            ValueTable.Add(14, 10);
-            ValueTable.Add(15, 60);
+            ValueTable.Add(13, 15);
+            ValueTable.Add(14, 7);
+            ValueTable.Add(15, 35);
 
             foreach (KeyValuePair<int,double> v in ValueTable)
 			{

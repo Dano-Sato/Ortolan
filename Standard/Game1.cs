@@ -119,8 +119,13 @@ namespace TestSheet
         {
             GraphicsDevice.Clear(WallColor);
 			Standard.DrawLight(MasterInfo.FullScreen, Tester.Room.RoomColor, Math.Max(0f,(float)(1-Tester.Score.Get() / 200.0)), Standard.LightMode.Absolute);
-			// TODO: Add your drawing code here
-			tester.Draw();
+            Viewport Temp = Game1.graphics.GraphicsDevice.Viewport;
+            Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
+            if (Tester.BeforeEndTimer<Tester.BeforeEndTimer_Max)
+                Standard.DrawLight(MasterInfo.FullScreen, Color.White, (float)(Tester.BeforeEndTimer_Max - Tester.BeforeEndTimer) / (float)(Tester.BeforeEndTimer_Max), Standard.LightMode.Absolute);
+            Game1.graphics.GraphicsDevice.Viewport = Temp;
+            // TODO: Add your drawing code here
+            tester.Draw();
 			Standard.Draw();
 			if(Tester.GamePhase==Tester.Phase.Game)
 			{
@@ -254,10 +259,10 @@ namespace TestSheet
 				Checker.ShowStatus();
             }
             #region DEMOSTRING
-            Viewport Temp = Game1.graphics.GraphicsDevice.Viewport;
+            Viewport Temp2 = Game1.graphics.GraphicsDevice.Viewport;
             Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
             Standard.DrawString("DEMO PLAY", new Vector2(10, 10), Color.White);
-            Game1.graphics.GraphicsDevice.Viewport = Temp;
+            Game1.graphics.GraphicsDevice.Viewport = Temp2;
             base.Draw(gameTime);
             #endregion
         }

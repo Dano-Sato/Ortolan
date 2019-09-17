@@ -66,13 +66,15 @@ namespace TestSheet
 
 
 
+        public static Point Zoom = new Point(1300, 1000);
+
         public static Player player;
         public static List<Enemy> enemies = new List<Enemy>();
         public static bool GameOver = false;
         public static SafeInt Score = new SafeInt(0);
         public static int ZombieTime = 40;
         public static double Lightr = 0;//화면이 좀 깜빡거리도록 하기 위해 넣은 변수
-        public static DrawingLayer BloodLayer = new DrawingLayer("Blood", new Rectangle(0, 0, 1300, 1000));
+        public static DrawingLayer BloodLayer = new DrawingLayer("Blood", new Rectangle(0, 0, Zoom.X, Zoom.Y));
         public static List<DrawingLayer> DeadBodys = new List<DrawingLayer>();
 
         public static int ZombieSpeed = 7;
@@ -140,7 +142,7 @@ namespace TestSheet
         public static Button StartButton = new Button(new StringLayer("Game Start", new Vector2(400, 600)), () => GamePhase = Phase.Tutorial);
         public static Button GameExitButton = new Button(new StringLayer("Exit", new Vector2(700, 600)), Exit);
 
-        public static Button RetryButton = new Button(new StringLayer("Retry", new Vector2(640, 600)), () => GamePhase = Phase.Main);
+        public static Button RetryButton = new Button(new StringLayer("Retry", new Vector2(640, 600)), GotoMain);
 
         public static bool LiteMode = true;
         public static Button ChoiceButton01 = new Button(new DrawingLayer("Choice011", new Point(50, 50), 0.9f), () =>
@@ -187,6 +189,8 @@ namespace TestSheet
 
         public static Color CursorEffectPair_1 = Color.OrangeRed;
         public static Color CursorEffectPair_2 = Color.AliceBlue;
+
+        public static Camera2D FixedCamera = new Camera2D();
         public static class BuffBubble
         {
             public static int BubbleTimer = 0;
@@ -303,9 +307,18 @@ namespace TestSheet
         public static readonly int BeforeEndTimer_Max = 200;
         public static int BeforeEndTimer = BeforeEndTimer_Max;
         public static List<string> EndCGList = new List<string>();
-        
 
-        public static Button GoBackMenu = new Button(new StringLayer("Go Back to Main Menu", new Vector2(600, 300)), () => {
+        private static float zoom_Coefficient;
+        public static float Zoom_Coefficient { get { return zoom_Coefficient; } set { if (value < 0) zoom_Coefficient = 0;
+                else if(value>0.3f)
+                    zoom_Coefficient = 0.3f;
+                  else
+                    zoom_Coefficient = value;
+            }
+        }
+
+        public static void GotoMain()
+        {
             StartStageTimer = 0;
             IsEndPhase = true;
             Room.RoomColor = Color.AntiqueWhite;
@@ -317,8 +330,11 @@ namespace TestSheet
             ScoreStack = 0;
             ShowMenu = false;
             GamePhase = Phase.Main;
+            FreezeTimer = 0;
             Standard.FrameTimer = 0;
-        });
+        }
+
+        public static Button GoBackMenu = new Button(new StringLayer("Go Back to Main Menu", new Vector2(600, 300)), GotoMain);
         
 
         public static class Monolog
@@ -569,6 +585,10 @@ namespace TestSheet
                     CursorEffectPair_1 = Color.OrangeRed;
                     CursorEffectPair_2 = Color.AliceBlue;                
                     break;
+                case 16:
+                    CursorEffectPair_1 = Color.Silver;
+                    CursorEffectPair_2 = Color.GhostWhite;
+                    break;
                 case 15:
                     CursorEffectPair_1 = Color.LimeGreen;
                     CursorEffectPair_2 = Color.GhostWhite;
@@ -748,7 +768,24 @@ namespace TestSheet
 					{
 						player.MoveUpdate();
 						player.AttackUpdate();
-					}
+                        /*
+                        int x = (player.getAttackSpeed() / 2 - Math.Abs(player.getAttackTimer() - player.getAttackSpeed() / 2));
+                        Standard.StdCamera.Zoom = 1f+(float)(x*x)/500f;*/
+                        if (player.IsAttacking())
+                            Zoom_Coefficient += Math.Max((0.01f - Zoom_Coefficient*Zoom_Coefficient/2f), 0);
+                        else
+                            Zoom_Coefficient -= (Zoom_Coefficient * Zoom_Coefficient + 0.005f);
+                        if (FreezeTimer > 0)
+                            Zoom_Coefficient = 0f;
+ 
+
+
+                        Standard.StdCamera.Zoom = 1f + Zoom_Coefficient;
+                    }
+                    else
+                    {
+                        Standard.StdCamera.Zoom = 1f;
+                    }
 
 					if (DeadBodys.Count > 300)
 					{
@@ -889,18 +926,7 @@ namespace TestSheet
 							Game1.GameExit = true;
 						if (RestartButton.MouseJustLeftClickedThis())
 						{
-							StartStageTimer = 0;
-							IsEndPhase = true;
-							Room.RoomColor = Color.AntiqueWhite;
-							Room.StarColor = Color.Yellow;
-							Standard.DisposeSE();
-							Standard.DisposeSong();
-							//Standard.PlayLoopedSE("WindOfTheDawn");
-							FadeTimer = 100;
-							ScoreStack = 0;
-							ShowMenu = false;
-							GamePhase = Phase.Main;
-							Standard.FrameTimer = 0;
+                            GotoMain();
 						}
 						return;
 					}
@@ -988,12 +1014,12 @@ namespace TestSheet
 					if (SlowMode)
 					{						
 						Game1.graphics.GraphicsDevice.Viewport = new Viewport(-player.GetPos().X + CursorDisplacement.X / 4 + ViewportDisplacement.X / 2 + 400, -player.GetPos().Y + CursorDisplacement.Y / 4 + ViewportDisplacement.Y / 2 + 400, 
-							1300, 1000);
+							Zoom.X, Zoom.Y);
 					}
 					else
 					{
 						Game1.graphics.GraphicsDevice.Viewport = new Viewport(-player.GetPos().X + CursorDisplacement.X / 4 + ViewportDisplacement.X / 2 + 400, -player.GetPos().Y + CursorDisplacement.Y / 4 + ViewportDisplacement.Y / 2 + 400, 
-							1300, 1000);
+							Zoom.X, Zoom.Y);
 					}
 
 
@@ -1443,15 +1469,25 @@ namespace TestSheet
 								Sight = 0;
 						}
 
-						Standard.DrawLight(new Rectangle(0, 0, Math.Max(player.GetCenter().X - Sight, 0), 1300), Color.Black, 1f, Standard.LightMode.Absolute);
-						Standard.DrawLight(new Rectangle(0, 0, 1300, Math.Max(player.GetCenter().Y - Sight, 0)), Color.Black, 1f, Standard.LightMode.Absolute);
-						Standard.DrawLight(new Rectangle(player.GetCenter().X + Sight, 0, 1300, 1300), Color.Black, 1f, Standard.LightMode.Absolute);
-						Standard.DrawLight(new Rectangle(0, player.GetCenter().Y + Sight, 1300, 1300), Color.Black, 1f, Standard.LightMode.Absolute);
+						Standard.DrawLight(new Rectangle(0, 0, Math.Max(player.GetCenter().X - Sight, 0), Zoom.X), Color.Black, 1f, Standard.LightMode.Absolute);
+						Standard.DrawLight(new Rectangle(0, 0, Zoom.X, Math.Max(player.GetCenter().Y - Sight, 0)), Color.Black, 1f, Standard.LightMode.Absolute);
+						Standard.DrawLight(new Rectangle(player.GetCenter().X + Sight, 0, Zoom.X, Zoom.X), Color.Black, 1f, Standard.LightMode.Absolute);
+						Standard.DrawLight(new Rectangle(0, player.GetCenter().Y + Sight, Zoom.X, Zoom.X), Color.Black, 1f, Standard.LightMode.Absolute);
 						DrawingLayer PlayerSight = new DrawingLayer("Sight3", new Rectangle(player.GetCenter().X - Sight, player.GetCenter().Y - Sight, Sight * 2, Sight * 2));
 						PlayerSight.Draw();
-					}
+                        if(Standard.FrameTimer%30<15)
+                        {
+                            Standard.DrawAddon(PlayerSight, Color.White, Zoom_Coefficient * 2, "Con1");
+                            Standard.DrawAddon(PlayerSight, Color.Red*0.3f, Zoom_Coefficient * 2, "Con1");
+                        }
+                        else
+                        {
+                            Standard.DrawAddon(PlayerSight, Color.White, Zoom_Coefficient * 2, "Con2");
+                            Standard.DrawAddon(PlayerSight, Color.Red*0.4f, Zoom_Coefficient * 2, "Con2");
+                        }
+                    }
 
-					Standard.DrawLight(BloodLayer.GetBound(), Color.DarkBlue, (float)(PressedATimer / 100.0), Standard.LightMode.Absolute);
+                    Standard.DrawLight(BloodLayer.GetBound(), Color.DarkBlue, (float)(PressedATimer / 100.0), Standard.LightMode.Absolute);
 
 					if (FreezeTimer > 0)
 						Standard.ClearFadeAnimation();
@@ -1655,7 +1691,7 @@ namespace TestSheet
 			{
 				Cursor.SetPos(450, 480);
 				setPos(450, 480);
-				Game1.graphics.GraphicsDevice.Viewport = new Viewport(-GetPos().X  + 400, -GetPos().Y +  400, 1300, 1300);
+				Game1.graphics.GraphicsDevice.Viewport = new Viewport(-GetPos().X  + 400, -GetPos().Y +  400, Zoom.X, Zoom.X);
 				MovePoint = new Point(0, 0);
 				AttackTimer = 0;
 				AttackIndex = -1;
@@ -2478,7 +2514,7 @@ namespace TestSheet
 						{
 							for (int i = 0; i < bludgers.Count; i++)
 							{
-								bludgers[i].bludger.SetPos(i * 200, 1300);
+								bludgers[i].bludger.SetPos(i * 200, Zoom.X);
 
 							}
 						}
@@ -2524,7 +2560,7 @@ namespace TestSheet
 						{
 							for (int i = 0; i < bludgers.Count; i++)
 							{
-								bludgers[i].bludger.SetPos(i * 150, 1300);
+								bludgers[i].bludger.SetPos(i * 150, Zoom.X);
 							}
 						}
 
@@ -2758,11 +2794,11 @@ namespace TestSheet
 				if (Tester.FreezeTimer < 0)
 				{
 
-					Heart.Draw(HeartColor);
-					Heart.Draw(Color.White * 0.7f);
+					Heart.Draw(Tester.FixedCamera, HeartColor);
+					Heart.Draw(Tester.FixedCamera, Color.White * 0.7f);
 				}
 				else
-					Heart.Draw(HeartColor);
+					Heart.Draw(Tester.FixedCamera, HeartColor);
 			}
 			for (int i = 0; i < LeftHearts; i++)
 			{
@@ -2774,11 +2810,11 @@ namespace TestSheet
 				if (Tester.FreezeTimer < 0)
 				{
 
-					Heart.Draw(HeartColor);
-					Heart.Draw(Color.White * 0.7f);
+					Heart.Draw(Tester.FixedCamera, HeartColor);
+					Heart.Draw(Tester.FixedCamera, Color.White * 0.7f);
 				}
 				else
-					Heart.Draw(HeartColor);
+					Heart.Draw(Tester.FixedCamera, HeartColor);
 			}
 			if (Checker.HeartStack > 0)
 			{
@@ -2800,12 +2836,12 @@ namespace TestSheet
 					if (Tester.FreezeTimer < 0)
 					{
 
-						Heart.Draw(HeartColor);
-						Heart.Draw(Color.White * 0.7f);
+						Heart.Draw(Tester.FixedCamera, HeartColor);
+						Heart.Draw(Tester.FixedCamera, Color.White * 0.7f);
 					}
 					else
-						Heart.Draw(HeartColor);
-					Heart.Draw(Color.Honeydew * (float)(Checker.HeartTimer / 8.0));
+						Heart.Draw(Tester.FixedCamera, HeartColor);
+					Heart.Draw(Tester.FixedCamera, Color.Honeydew * (float)(Checker.HeartTimer / 8.0));
 
 				}
 			}
@@ -2814,19 +2850,19 @@ namespace TestSheet
 				
 				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
 				Heart.SetSprite("Heart_Broken");
-				Heart.Draw(HeartColor);
+				Heart.Draw(Tester.FixedCamera, HeartColor);
 			}
 			else if (Tester.FreezeTimer > Tester.FreezeTime - 110)
 			{
 				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
 				Heart.SetSprite("Heart_Broken2");
-				Heart.Draw(HeartColor);
+				Heart.Draw(Tester.FixedCamera, HeartColor);
 			}
 			else if (Tester.FreezeTimer > 0)
 			{
 				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
 				Heart.SetSprite("Heart_Broken3");
-				Heart.Draw(HeartColor * (float)(Tester.FreezeTimer / (Tester.FreezeTime - 110.0)));
+				Heart.Draw(Tester.FixedCamera, HeartColor * (float)(Tester.FreezeTimer / (Tester.FreezeTime - 110.0)));
 			}
 
 
@@ -2839,9 +2875,9 @@ namespace TestSheet
 				if (Standard.FrameTimer % 60 > 30)
 					Menual.SetSprite("Menual2");
 				if(Standard.FrameTimer%60>30)
-					Menual.Draw(Color.White);
+					Menual.Draw(Tester.FixedCamera, Color.White);
 				else
-					Menual.Draw(Color.Goldenrod);
+					Menual.Draw(Tester.FixedCamera, Color.Goldenrod);
 			}
 
 
@@ -2857,8 +2893,8 @@ namespace TestSheet
 
 			//Show Gauge
 			DrawingLayer gauge = new DrawingLayer("WhiteSpace", new Rectangle(100,300,10, (int)(300 * Tester.Gauge)));
-			gauge.Draw(Color.AliceBlue);
-			gauge.Draw(Color.Red*(float)(1-Tester.Gauge));
+			gauge.Draw(Tester.FixedCamera, Color.AliceBlue);
+			gauge.Draw(Tester.FixedCamera, Color.Red*(float)(1-Tester.Gauge));
 
 
 			//뷰포트 원상복귀.
@@ -2878,8 +2914,8 @@ namespace TestSheet
 				{
 					InfoString = InfoString + "I";
 				}
-				StringBackGround.Draw(Color.Black * 0.5f);
-				Standard.DrawString(InfoString, InfoVector, Color.White * (float)(Math.Min(Standard.FrameTimer % 240, 240 - Standard.FrameTimer % 240) / 120.0 + 0.3f));
+				StringBackGround.Draw(Tester.FixedCamera, Color.Black * 0.5f);
+				Standard.DrawString(Tester.FixedCamera, InfoString, InfoVector, Color.White * (float)(Math.Min(Standard.FrameTimer % 240, 240 - Standard.FrameTimer % 240) / 120.0 + 0.3f));
 				InfoVector += new Vector2(0, 35);
 				StringBackGround.SetBound(new Rectangle(StringBackGround.GetBound().X, StringBackGround.GetBound().Y + 35, StringBackGround.GetBound().Width, StringBackGround.GetBound().Height));
 
@@ -3542,6 +3578,9 @@ namespace TestSheet
 
 
 	}
+
+
+
 
 
 

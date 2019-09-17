@@ -180,6 +180,8 @@ namespace TestSheet
 					Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "HeartBite1");
 				else if (Tester.FreezeTimer > Tester.FreezeTime - 110)
 					Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "HeartBite2");
+                if(Standard.FrameTimer%15==0)
+                Standard.FadeAnimation(new DrawingLayer("Player_Heart", Tester.player.player.GetBound()), 20, Color.Pink);
 
 
 				if (Standard.FrameTimer % 60 == 0)
@@ -234,9 +236,9 @@ namespace TestSheet
 						GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
 						Tester.KillCard.SetRatio(Math.Min((Tester.FreezeTime - 110 - Tester.FreezeTimer) * 6, 75) / 120.0);
 						Tester.KillCard.SetCenter(new Point(500, 400));
-						Tester.KillCard.Draw(Color.White, (float)(Tester.FreezeTimer / 75.0));
+						Tester.KillCard.Draw(Tester.FixedCamera,Color.White, (float)(Tester.FreezeTimer / 75.0));
                         if(Tester.KillCard.GetSpriteName()=="SDead_11")
-                            Standard.DrawAddon(Tester.KillCard, Tester.Room.RoomColor, (float)(Tester.FreezeTimer / 75.0), "Sdead_Add");
+                            Standard.DrawAddon(Tester.FixedCamera, Tester.KillCard, Tester.Room.RoomColor, (float)(Tester.FreezeTimer / 75.0), "Sdead_Add");
 					}
 				}
 
@@ -261,7 +263,7 @@ namespace TestSheet
             #region DEMOSTRING
             Viewport Temp2 = Game1.graphics.GraphicsDevice.Viewport;
             Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
-            Standard.DrawString("DEMO PLAY", new Vector2(10, 10), Color.White);
+            Standard.DrawString(Tester.FixedCamera,"DEMO PLAY", new Vector2(10, 10), Color.White);
             Game1.graphics.GraphicsDevice.Viewport = Temp2;
             base.Draw(gameTime);
             #endregion

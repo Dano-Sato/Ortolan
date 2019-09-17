@@ -238,47 +238,162 @@ namespace TestSheet
 		{
 			if (SpriteSize.IsZero())//애니메이션이 없을 경우
 			{
-				Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-				Game1.spriteBatch.Draw(spriteTexture, Bound, Color.White);
+                Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                        BlendState.AlphaBlend,
+                        null,
+                        null,
+                        null,
+                        null,
+                        Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+                Game1.spriteBatch.Draw(spriteTexture, Bound, Color.White);
 				Game1.spriteBatch.End();
 				return;
 			}
-			Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-			Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), Color.White);
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), Color.White);
 			Game1.spriteBatch.End();
 		}
+
+        public void Draw(Camera2D cam)
+        {
+            if (SpriteSize.IsZero())//애니메이션이 없을 경우
+            {
+                Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                        BlendState.AlphaBlend,
+                        null,
+                        null,
+                        null,
+                        null,
+                        cam.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+                Game1.spriteBatch.Draw(spriteTexture, Bound, Color.White);
+                Game1.spriteBatch.End();
+                return;
+            }
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                     cam.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), Color.White);
+            Game1.spriteBatch.End();
+        }
 
 		public void Draw(Color color)
 		{
 			if (SpriteSize.IsZero())//애니메이션이 없을 경우
 			{
-				Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-				Game1.spriteBatch.Draw(spriteTexture, Bound, color);
+                Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+                Game1.spriteBatch.Draw(spriteTexture, Bound, color);
 				Game1.spriteBatch.End();
 				return;
 			}
-			Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-			Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), color);
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), color);
 			Game1.spriteBatch.End();
 		}
 
-		public void Draw(Color color, float opacity)
+        public void Draw(Camera2D cam, Color color)
+        {
+            if (SpriteSize.IsZero())//애니메이션이 없을 경우
+            {
+                Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    cam.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+                Game1.spriteBatch.Draw(spriteTexture, Bound, color);
+                Game1.spriteBatch.End();
+                return;
+            }
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    cam.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), color);
+            Game1.spriteBatch.End();
+        }
+
+        public void Draw(Color color, float opacity)
 		{
 			if (SpriteSize.IsZero())//애니메이션이 없을 경우
 			{
-				Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-				Game1.spriteBatch.Draw(spriteTexture, Bound, color * opacity);
+                Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+                Game1.spriteBatch.Draw(spriteTexture, Bound, color * opacity);
 				Game1.spriteBatch.End();
 				return;
 			}
-			Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-			Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), color * opacity);
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), color * opacity);
 			Game1.spriteBatch.End();
 		}
 
+        public void Draw(Camera2D cam, Color color, float opacity)
+        {
+            if (SpriteSize.IsZero())//애니메이션이 없을 경우
+            {
+                Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    cam.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+                Game1.spriteBatch.Draw(spriteTexture, Bound, color * opacity);
+                Game1.spriteBatch.End();
+                return;
+            }
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    cam.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), color * opacity);
+            Game1.spriteBatch.End();
+        }
 
-		/* 이동 세션*/
-		public void SetBound(Rectangle r)
+
+
+        /* 이동 세션*/
+        public void SetBound(Rectangle r)
 		{
 			Bound = r;
 		}
@@ -657,4 +772,54 @@ namespace TestSheet
 
 
 	}
+
+
+    public class Camera2D
+    {
+        protected float _zoom; // Camera Zoom
+        public Matrix _transform; // Matrix Transform
+        public Vector2 _pos; // Camera Position
+        protected float _rotation; // Camera Rotation
+
+        public Camera2D()
+        {
+            _zoom = 1.0f;
+            _rotation = 0.0f;
+            _pos = Vector2.Zero;
+        }
+        public float Zoom
+        {
+            get { return _zoom; }
+            set { _zoom = value; if (_zoom < 0.1f) _zoom = 0.1f;
+                get_transformation(Game1.graphics.GraphicsDevice);
+            } // Negative zoom will flip image
+        }
+
+        public float Rotation
+        {
+            get { return _rotation; }
+            set { _rotation = value; }
+        }
+
+        // Auxiliary function to move the camera
+        public void Move(Vector2 amount)
+        {
+            _pos += amount;
+        }
+        // Get set position
+        public Vector2 Pos
+        {
+            get { return _pos; }
+            set { _pos = value; }
+        }
+        public Matrix get_transformation(GraphicsDevice graphicsDevice)
+        {
+            _transform =       // Thanks to o KB o for this solution
+              Matrix.CreateTranslation(new Vector3(-_pos.X, -_pos.Y, 0)) *
+                                         Matrix.CreateRotationZ(Rotation) *
+                                         Matrix.CreateScale(new Vector3(Zoom, Zoom, 1)) *
+                                         Matrix.CreateTranslation(-new Vector3(Game1.graphics.GraphicsDevice.Viewport.Width * (Zoom-1)*0.5f, Game1.graphics.GraphicsDevice.Viewport.Height * (Zoom - 1) *0.5f, 0));
+            return _transform;
+        }
+    }
 }

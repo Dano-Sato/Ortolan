@@ -47,7 +47,8 @@ namespace TestSheet
 			FadeAnimationInit();
 			Standardfont = Game1.content.Load<SpriteFont>("StandardFont");
 			RootMouseSpeed = GetMouseSpeed();
-			Mouse.SetPosition(400, 400);					
+			Mouse.SetPosition(400, 400);
+ 
 		}
 		//Update, Draw 함수는 Game1.cs에서  각각 이름이 일치하는 함수의 마지막 줄로 집어넣어주면 됩니다.
 		//커서, 키보드의 올드 스테이트 업데이트 및 드로잉은 가장 마지막에 행해져야 하기 때문입니다.
@@ -382,16 +383,22 @@ namespace TestSheet
 		}
 
 
+        public static void DrawAddon(Camera2D cam, DrawingLayer d, Color color, float opacity, string LayerName)
+        {
+            DrawingLayer AddonLayer = new DrawingLayer(LayerName, d.GetBound());
+            AddonLayer.Draw(cam, color, opacity);
+        }
 
 
 
 
 
 
-		/*페이드 애니메이션 처리*/
-		/* 컬러 키를 활용하는 까닭에 완전 범용성이 높은 코드는 아닙니다. 정말로 드로잉을 따로 처리해야 될 애니메이션 묶음이 있다면 별도로 AnimationList를 선언해 주세요.*/
 
-		private static Dictionary<Color, AnimationList> FadeAnimationList = new Dictionary<Color, AnimationList>();
+        /*페이드 애니메이션 처리*/
+        /* 컬러 키를 활용하는 까닭에 완전 범용성이 높은 코드는 아닙니다. 정말로 드로잉을 따로 처리해야 될 애니메이션 묶음이 있다면 별도로 AnimationList를 선언해 주세요.*/
+
+        private static Dictionary<Color, AnimationList> FadeAnimationList = new Dictionary<Color, AnimationList>();
 		private static List<Color> FadeAnimation_ColorException=new List<Color>();
 
 		private static void FadeAnimationInit()
@@ -516,37 +523,115 @@ namespace TestSheet
 		private static SpriteFont Temporaryfont;
 		public static void DrawString(string s, Vector2 vector2,Color color)
 		{
-			Game1.spriteBatch.Begin();
-			Game1.spriteBatch.DrawString(Standardfont, s, vector2, color);
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            Game1.spriteBatch.DrawString(Standardfont, s, vector2, color);
 			Game1.spriteBatch.End();
 		}
 
-		//특정 드로잉레이어에 결합되는 형식의 스트링을 그린다. 이때 포지션 벡터는 드로잉레이어의 위치를 기준으로 잡으면 된다.
-		public static void DrawString(string s, DrawingLayer d, Vector2 vector2,Color color)
+        public static void DrawString(Camera2D cam, string s, Vector2 vector2, Color color)
+        {
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    cam.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            Game1.spriteBatch.DrawString(Standardfont, s, vector2, color);
+            Game1.spriteBatch.End();
+        }
+
+        //특정 드로잉레이어에 결합되는 형식의 스트링을 그린다. 이때 포지션 벡터는 드로잉레이어의 위치를 기준으로 잡으면 된다.
+        public static void DrawString(string s, DrawingLayer d, Vector2 vector2,Color color)
 		{
-			Game1.spriteBatch.Begin();
-			Game1.spriteBatch.DrawString(Standardfont, s, vector2 + new Vector2(d.GetPos().X, d.GetPos().Y), color);
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            Game1.spriteBatch.DrawString(Standardfont, s, vector2 + new Vector2(d.GetPos().X, d.GetPos().Y), color);
 			Game1.spriteBatch.End();
 		}
 
+        public static void DrawString(Camera2D cam, string s, DrawingLayer d, Vector2 vector2, Color color)
+        {
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    cam.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            Game1.spriteBatch.DrawString(Standardfont, s, vector2 + new Vector2(d.GetPos().X, d.GetPos().Y), color);
+            Game1.spriteBatch.End();
+        }
 
-		public static void DrawString(string FontName,string s, Vector2 vector2, Color color)
+
+        public static void DrawString(string FontName,string s, Vector2 vector2, Color color)
 		{
 			Temporaryfont = Game1.content.Load<SpriteFont>(FontName);
-			Game1.spriteBatch.Begin();
-			Game1.spriteBatch.DrawString(Temporaryfont, s, vector2, color);
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            Game1.spriteBatch.DrawString(Temporaryfont, s, vector2, color);
 			Game1.spriteBatch.End();
 		}
 
-		public static void DrawString(string FontName, string s, DrawingLayer d, Vector2 vector2, Color color)
+        public static void DrawString(Camera2D cam, string FontName, string s, Vector2 vector2, Color color)
+        {
+            Temporaryfont = Game1.content.Load<SpriteFont>(FontName);
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    cam.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            Game1.spriteBatch.DrawString(Temporaryfont, s, vector2, color);
+            Game1.spriteBatch.End();
+        }
+
+        public static void DrawString(string FontName, string s, DrawingLayer d, Vector2 vector2, Color color)
 		{
 			Temporaryfont = Game1.content.Load<SpriteFont>(FontName);
-			Game1.spriteBatch.Begin();
-			Game1.spriteBatch.DrawString(Temporaryfont, s, vector2 + new Vector2(d.GetPos().X, d.GetPos().Y), color);
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            Game1.spriteBatch.DrawString(Temporaryfont, s, vector2 + new Vector2(d.GetPos().X, d.GetPos().Y), color);
 			Game1.spriteBatch.End();
 		}
 
-		public static Vector2 GetStringSize(string s)
+        public static void DrawString(Camera2D cam, string FontName, string s, DrawingLayer d, Vector2 vector2, Color color)
+        {
+            Temporaryfont = Game1.content.Load<SpriteFont>(FontName);
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+                    BlendState.AlphaBlend,
+                    null,
+                    null,
+                    null,
+                    null,
+                    cam.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            Game1.spriteBatch.DrawString(Temporaryfont, s, vector2 + new Vector2(d.GetPos().X, d.GetPos().Y), color);
+            Game1.spriteBatch.End();
+        }
+
+        public static Vector2 GetStringSize(string s)
 		{
 			return Standardfont.MeasureString(s);
 		}
@@ -566,10 +651,11 @@ namespace TestSheet
 
 
 
-	
+
+        public static Camera2D StdCamera = new Camera2D();
 
 
-	}
+    }
 
 
 
@@ -745,9 +831,10 @@ namespace TestSheet
 
 
 
-	}
 
-	/* 간편한 지역 콘텐트매니저를 활용할 수 있게 하는 클래스. 스탠다드 내에서 구현이 되어 있으므로 아래 지시를 따를 필요는 없다.
+    }
+
+    /* 간편한 지역 콘텐트매니저를 활용할 수 있게 하는 클래스. 스탠다드 내에서 구현이 되어 있으므로 아래 지시를 따를 필요는 없다.
  * LocalizedContentManager.cs 파일을 생성하여 아래 코드로 덮어씌운다.
  * 이후 Game1.cs에 LocalizedContentaManager를 추가한다.
 		public static LocalizedContentManager content;
@@ -757,8 +844,8 @@ namespace TestSheet
  * 로컬 콘텐트 매니저를 사용하는 클래스의 인스턴시에이션은 로드콘텐트 이후에 일어나야 한다.
  * */
 
-	// Token: 0x02000003 RID: 3
-	public class LocalizedContentManager : ContentManager
+    // Token: 0x02000003 RID: 3
+    public class LocalizedContentManager : ContentManager
 	{
 		// Token: 0x06000006 RID: 6 RVA: 0x0000219D File Offset: 0x0000039D
 		public LocalizedContentManager(IServiceProvider serviceProvider, string rootDirectory, CultureInfo currentCulture, string languageCodeOverride) : base(serviceProvider, rootDirectory)
@@ -905,6 +992,7 @@ namespace TestSheet
 			Rec.Location=new Point(Rec.X + X_Displacement, Rec.Y + Y_Displacement);
 			return Rec;
 		}
+
 
 	
 	}

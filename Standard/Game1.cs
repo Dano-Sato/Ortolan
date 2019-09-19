@@ -259,6 +259,8 @@ namespace TestSheet
 
 				}
 				Checker.ShowStatus();
+                if (Tester.BeforeEndTimer < Tester.BeforeEndTimer_Max)
+                    Standard.DrawLight(MasterInfo.FullScreen, Color.White, (float)(Tester.BeforeEndTimer_Max - Tester.BeforeEndTimer) / (float)(Tester.BeforeEndTimer_Max), Standard.LightMode.Absolute);
             }
             #region DEMOSTRING
             Viewport Temp2 = Game1.graphics.GraphicsDevice.Viewport;

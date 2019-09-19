@@ -654,6 +654,14 @@ namespace TestSheet
 
         public static Camera2D StdCamera = new Camera2D();
 
+        public static void ViewportDraw(Viewport v, Action s)
+        {
+            Viewport Temp = Game1.graphics.GraphicsDevice.Viewport;
+            Game1.graphics.GraphicsDevice.Viewport = v;
+            s();
+            Game1.graphics.GraphicsDevice.Viewport = Temp;
+        }
+
 
     }
 

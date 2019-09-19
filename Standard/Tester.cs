@@ -134,7 +134,22 @@ namespace TestSheet
         public static bool SlowMode = false;
         public static bool TimeSleeper = false;//2초에 한번씩 타이머를 멈춰 체감시간과 실제 타이머 작동시간을 맞춘다.
 
-        public static Phase GamePhase = Phase.Main;
+        private static Phase gamePhase;
+        public static Phase GamePhase {
+            get
+            {
+                return gamePhase;
+            }
+            set
+            {
+                if(value==Phase.Main)
+                {
+                    GotoMain();
+                }
+                Zoom_Coefficient = 0f;
+                gamePhase = value;
+            }
+    }
 
 
         public enum Phase { Main, Tutorial, Game, Ending, Dead };
@@ -142,7 +157,7 @@ namespace TestSheet
         public static Button StartButton = new Button(new StringLayer("Game Start", new Vector2(400, 600)), () => GamePhase = Phase.Tutorial);
         public static Button GameExitButton = new Button(new StringLayer("Exit", new Vector2(700, 600)), Exit);
 
-        public static Button RetryButton = new Button(new StringLayer("Retry", new Vector2(640, 600)), GotoMain);
+        public static Button RetryButton = new Button(new StringLayer("Retry", new Vector2(640, 600)), ()=> GamePhase= Phase.Main);
 
         public static bool LiteMode = true;
         public static Button ChoiceButton01 = new Button(new DrawingLayer("Choice011", new Point(50, 50), 0.9f), () =>
@@ -314,6 +329,7 @@ namespace TestSheet
                     zoom_Coefficient = 0.3f;
                   else
                     zoom_Coefficient = value;
+                Standard.StdCamera.Zoom = 1f + Zoom_Coefficient;
             }
         }
 
@@ -328,13 +344,12 @@ namespace TestSheet
             //Standard.PlayLoopedSE("WindOfTheDawn");
             FadeTimer = 100;
             ScoreStack = 0;
-            ShowMenu = false;
-            GamePhase = Phase.Main;
+            ShowMenu = false;           
             FreezeTimer = 0;
             Standard.FrameTimer = 0;
         }
 
-        public static Button GoBackMenu = new Button(new StringLayer("Go Back to Main Menu", new Vector2(600, 300)), GotoMain);
+        public static Button GoBackMenu = new Button(new StringLayer("Go Back to Main Menu", new Vector2(600, 300)), () => GamePhase = Phase.Main);
         
 
         public static class Monolog
@@ -587,7 +602,7 @@ namespace TestSheet
                     break;
                 case 16:
                     CursorEffectPair_1 = Color.Silver;
-                    CursorEffectPair_2 = Color.GhostWhite;
+                    CursorEffectPair_2 = Color.FloralWhite;
                     break;
                 case 15:
                     CursorEffectPair_1 = Color.LimeGreen;
@@ -620,6 +635,9 @@ namespace TestSheet
             #endregion
 
             MasterInfo.SetFullScreen(ScrollBar_Sensitivity.Coefficient * 4 + 1f);
+
+            if (GamePhase != Phase.Game)
+                Zoom_Coefficient = 0f;
 
 			switch (GamePhase)
 			{
@@ -772,7 +790,7 @@ namespace TestSheet
                         int x = (player.getAttackSpeed() / 2 - Math.Abs(player.getAttackTimer() - player.getAttackSpeed() / 2));
                         Standard.StdCamera.Zoom = 1f+(float)(x*x)/500f;*/
                         if (player.IsAttacking())
-                            Zoom_Coefficient += Math.Max((0.01f - Zoom_Coefficient*Zoom_Coefficient/2f), 0);
+                            Zoom_Coefficient += Math.Max((0.007f - Zoom_Coefficient*Zoom_Coefficient/2f), 0);
                         else
                             Zoom_Coefficient -= (Zoom_Coefficient * Zoom_Coefficient + 0.005f);
                         if (FreezeTimer > 0)
@@ -780,11 +798,12 @@ namespace TestSheet
  
 
 
-                        Standard.StdCamera.Zoom = 1f + Zoom_Coefficient;
+                        
+                        
                     }
                     else
                     {
-                        Standard.StdCamera.Zoom = 1f;
+                        Zoom_Coefficient = 0f;
                     }
 
 					if (DeadBodys.Count > 300)
@@ -926,7 +945,7 @@ namespace TestSheet
 							Game1.GameExit = true;
 						if (RestartButton.MouseJustLeftClickedThis())
 						{
-                            GotoMain();
+                            GamePhase = Phase.Main;
 						}
 						return;
 					}
@@ -1477,13 +1496,13 @@ namespace TestSheet
 						PlayerSight.Draw();
                         if(Standard.FrameTimer%30<15)
                         {
-                            Standard.DrawAddon(PlayerSight, Color.White, Zoom_Coefficient * 2, "Con1");
-                            Standard.DrawAddon(PlayerSight, Color.Red*0.3f, Zoom_Coefficient * 2, "Con1");
+                            //Standard.DrawAddon(PlayerSight, Color.White, Zoom_Coefficient * 2, "Con1");
+                            Standard.DrawAddon(PlayerSight, Color.Black, Zoom_Coefficient * 2, "Con1");
                         }
                         else
                         {
-                            Standard.DrawAddon(PlayerSight, Color.White, Zoom_Coefficient * 2, "Con2");
-                            Standard.DrawAddon(PlayerSight, Color.Red*0.4f, Zoom_Coefficient * 2, "Con2");
+                            //Standard.DrawAddon(PlayerSight, Color.White, Zoom_Coefficient * 2, "Con2");
+                            Standard.DrawAddon(PlayerSight, Color.Black, Zoom_Coefficient * 2, "Con2");
                         }
                     }
 
@@ -1567,9 +1586,7 @@ namespace TestSheet
                         Standard.DrawString("BigFont", Room.Name(), new Vector2(-Game1.graphics.GraphicsDevice.Viewport.X + 400, -Game1.graphics.GraphicsDevice.Viewport.Y + 300), Color.White * (float)(StartStageTimer / 100.0));
                         Standard.DrawString("BigFont", Room.Name(), new Vector2(-Game1.graphics.GraphicsDevice.Viewport.X + 400, -Game1.graphics.GraphicsDevice.Viewport.Y + 300), Color.Red * 0.2f*(float)(StartStageTimer / 100.0));
                     }
-                    if (BeforeEndTimer < BeforeEndTimer_Max)
-                        Standard.DrawLight(MasterInfo.FullScreen, Color.White, (float)(BeforeEndTimer_Max - BeforeEndTimer) / (float)(BeforeEndTimer_Max), Standard.LightMode.Absolute);
-
+                
                     break;//Game Phase Draw
                 case Phase.Ending:
 
@@ -2773,132 +2790,131 @@ namespace TestSheet
 
 		public static void ShowStatus()
 		{
+            DrawingLayer Heart = new DrawingLayer("Heart", new Rectangle(50, 50, 60, 60));
+            Color HeartColor = Color.DarkRed;
+            int Hearts_5 = Checker.Hearts / 5;
+            int LeftHearts = Checker.Hearts % 5;
+            DrawingLayer gauge = new DrawingLayer("WhiteSpace", new Rectangle(100, 300, 10, (int)(300 * Tester.Gauge)));
 
-			//뷰포트를 컴퓨터화면에 맞게 세팅한다.
-			Viewport Temp = Game1.graphics.GraphicsDevice.Viewport;
-			Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
+            Standard.ViewportDraw(new Viewport(MasterInfo.FullScreen), () =>
+            {
+                for (int i = 0; i < Hearts_5; i++)
+                {
+                    if ((Standard.FrameTimer + 25) % 60 < 30)
+                        Heart.SetSprite("Heart5");
+                    else
+                        Heart.SetSprite("Heart5_2");
 
-			//Show Hearts
-			DrawingLayer Heart = new DrawingLayer("Heart", new Rectangle(50, 50, 60, 60));
-			Color HeartColor = Color.DarkRed;
-			int Hearts_5 = Checker.Hearts / 5;
-			int LeftHearts = Checker.Hearts % 5;
-			for (int i = 0; i < Hearts_5; i++)
-			{
-				if((Standard.FrameTimer+25)%60<30)
-					Heart.SetSprite("Heart5");
-				else
-					Heart.SetSprite("Heart5_2");
+                    Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+                    if (Tester.FreezeTimer < 0)
+                    {
 
-				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
-				if (Tester.FreezeTimer < 0)
-				{
+                        Heart.Draw(Tester.FixedCamera, HeartColor);
+                        Heart.Draw(Tester.FixedCamera, Color.White * 0.7f);
+                    }
+                    else
+                        Heart.Draw(Tester.FixedCamera, HeartColor);
+                }
+                for (int i = 0; i < LeftHearts; i++)
+                {
+                    if ((Standard.FrameTimer + 25) % 60 < 30)
+                        Heart.SetSprite("Heart");
+                    else
+                        Heart.SetSprite("Heart2");
+                    Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+                    if (Tester.FreezeTimer < 0)
+                    {
 
-					Heart.Draw(Tester.FixedCamera, HeartColor);
-					Heart.Draw(Tester.FixedCamera, Color.White * 0.7f);
-				}
-				else
-					Heart.Draw(Tester.FixedCamera, HeartColor);
-			}
-			for (int i = 0; i < LeftHearts; i++)
-			{
-				if((Standard.FrameTimer + 25) % 60<30)
-					Heart.SetSprite("Heart");
-				else
-					Heart.SetSprite("Heart2");
-				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
-				if (Tester.FreezeTimer < 0)
-				{
+                        Heart.Draw(Tester.FixedCamera, HeartColor);
+                        Heart.Draw(Tester.FixedCamera, Color.White * 0.7f);
+                    }
+                    else
+                        Heart.Draw(Tester.FixedCamera, HeartColor);
+                }
+                if (Checker.HeartStack > 0)
+                {
+                    if (Checker.HeartTimer > 0)
+                        Checker.HeartTimer--;
+                    else
+                    {
+                        Checker.Hearts += Checker.HeartStack;
+                        Checker.HeartStack = 0;
+                    }
+                    for (int i = 0; i < Checker.HeartStack; i++)
+                    {
+                        if (Checker.HeartTimer != 0)
+                            Heart.SetSprite("HeartAni" + (30 - Checker.HeartTimer) / 6);
+                        else
+                            Heart.SetSprite("Heart");
 
-					Heart.Draw(Tester.FixedCamera, HeartColor);
-					Heart.Draw(Tester.FixedCamera, Color.White * 0.7f);
-				}
-				else
-					Heart.Draw(Tester.FixedCamera, HeartColor);
-			}
-			if (Checker.HeartStack > 0)
-			{
-				if (Checker.HeartTimer > 0)
-					Checker.HeartTimer--;
-				else
-				{
-					Checker.Hearts += Checker.HeartStack;
-					Checker.HeartStack = 0;
-				}
-				for (int i = 0; i < Checker.HeartStack; i++)
-				{
-					if (Checker.HeartTimer != 0)
-						Heart.SetSprite("HeartAni" + (30 - Checker.HeartTimer) / 6);
-					else
-						Heart.SetSprite("Heart");
+                        Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+                        if (Tester.FreezeTimer < 0)
+                        {
 
-					Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
-					if (Tester.FreezeTimer < 0)
-					{
+                            Heart.Draw(Tester.FixedCamera, HeartColor);
+                            Heart.Draw(Tester.FixedCamera, Color.White * 0.7f);
+                        }
+                        else
+                            Heart.Draw(Tester.FixedCamera, HeartColor);
+                        Heart.Draw(Tester.FixedCamera, Color.Honeydew * (float)(Checker.HeartTimer / 8.0));
 
-						Heart.Draw(Tester.FixedCamera, HeartColor);
-						Heart.Draw(Tester.FixedCamera, Color.White * 0.7f);
-					}
-					else
-						Heart.Draw(Tester.FixedCamera, HeartColor);
-					Heart.Draw(Tester.FixedCamera, Color.Honeydew * (float)(Checker.HeartTimer / 8.0));
+                    }
+                }
+                if (Tester.FreezeTimer > Tester.FreezeTime - 60)
+                {
 
-				}
-			}
-			if (Tester.FreezeTimer > Tester.FreezeTime - 60)
-			{
-				
-				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
-				Heart.SetSprite("Heart_Broken");
-				Heart.Draw(Tester.FixedCamera, HeartColor);
-			}
-			else if (Tester.FreezeTimer > Tester.FreezeTime - 110)
-			{
-				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
-				Heart.SetSprite("Heart_Broken2");
-				Heart.Draw(Tester.FixedCamera, HeartColor);
-			}
-			else if (Tester.FreezeTimer > 0)
-			{
-				Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
-				Heart.SetSprite("Heart_Broken3");
-				Heart.Draw(Tester.FixedCamera, HeartColor * (float)(Tester.FreezeTimer / (Tester.FreezeTime - 110.0)));
-			}
+                    Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+                    Heart.SetSprite("Heart_Broken");
+                    Heart.Draw(Tester.FixedCamera, HeartColor);
+                }
+                else if (Tester.FreezeTimer > Tester.FreezeTime - 110)
+                {
+                    Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+                    Heart.SetSprite("Heart_Broken2");
+                    Heart.Draw(Tester.FixedCamera, HeartColor);
+                }
+                else if (Tester.FreezeTimer > 0)
+                {
+                    Heart.SetPos(Heart.GetPos().X + 80, Heart.GetPos().Y);
+                    Heart.SetSprite("Heart_Broken3");
+                    Heart.Draw(Tester.FixedCamera, HeartColor * (float)(Tester.FreezeTimer / (Tester.FreezeTime - 110.0)));
+                }
 
 
 
 
-			//Show Menual
-			if (Tester.Room.Number == 0 && !Tester.IsEndPhase)
-			{
-				DrawingLayer Menual = new DrawingLayer("Menual", new Point(800, 500), 0.75f);
-				if (Standard.FrameTimer % 60 > 30)
-					Menual.SetSprite("Menual2");
-				if(Standard.FrameTimer%60>30)
-					Menual.Draw(Tester.FixedCamera, Color.White);
-				else
-					Menual.Draw(Tester.FixedCamera, Color.Goldenrod);
-			}
+                //Show Menual
+                if (Tester.Room.Number == 0 && !Tester.IsEndPhase)
+                {
+                    DrawingLayer Menual = new DrawingLayer("Menual", new Point(800, 500), 0.75f);
+                    if (Standard.FrameTimer % 60 > 30)
+                        Menual.SetSprite("Menual2");
+                    if (Standard.FrameTimer % 60 > 30)
+                        Menual.Draw(Tester.FixedCamera, Color.White);
+                    else
+                        Menual.Draw(Tester.FixedCamera, Color.Goldenrod);
+                }
 
 
 
 
 
-			//Show Buff Info
-			InfoVector = new Vector2(130, 150);
-			StringBackGround = new DrawingLayer("WhiteSpace", new Rectangle((int)(InfoVector.X - 15), (int)(InfoVector.Y - 10), 170, 35));
-			ShowBuffString(Status.Luck);
-			ShowBuffString(Status.Swiftness);
-			ShowBuffString(Status.Bloodthirst);
+                //Show Buff Info
+                InfoVector = new Vector2(130, 150);
+                StringBackGround = new DrawingLayer("WhiteSpace", new Rectangle((int)(InfoVector.X - 15), (int)(InfoVector.Y - 10), 170, 35));
+                ShowBuffString(Status.Luck);
+                ShowBuffString(Status.Swiftness);
+                ShowBuffString(Status.Bloodthirst);
 
-			//Show Gauge
-			DrawingLayer gauge = new DrawingLayer("WhiteSpace", new Rectangle(100,300,10, (int)(300 * Tester.Gauge)));
-			gauge.Draw(Tester.FixedCamera, Color.AliceBlue);
-			gauge.Draw(Tester.FixedCamera, Color.Red*(float)(1-Tester.Gauge));
+                //Show Gauge
+                gauge.Draw(Tester.FixedCamera, Color.AliceBlue);
+                gauge.Draw(Tester.FixedCamera, Color.Red * (float)(1 - Tester.Gauge));
 
 
-			//뷰포트 원상복귀.
-			Game1.graphics.GraphicsDevice.Viewport = Temp;
+            }
+
+            );
+           
 		}
 
 		public static void ShowBuffString(Status status)
@@ -3292,11 +3308,11 @@ namespace TestSheet
 			ValueTable.Add(9, 5);
 			ValueTable.Add(10, 10);
 			ValueTable.Add(11, 15);
-            ValueTable.Add(12, 30);
+            ValueTable.Add(12, 50);
             ValueTable.Add(13, 15);
             ValueTable.Add(14, 7);
-            ValueTable.Add(15, 35);
-            ValueTable.Add(16, 50);
+            ValueTable.Add(15, 55);
+            ValueTable.Add(16, 80);
 
             foreach (KeyValuePair<int,double> v in ValueTable)
 			{
@@ -3381,6 +3397,9 @@ namespace TestSheet
                             break;
                         case 15:
                             RemoveDrop(15);
+                            break;
+                        case 16:
+                            RemoveDrop(16);
                             break;
 
 

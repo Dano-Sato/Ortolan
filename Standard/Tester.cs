@@ -208,7 +208,30 @@ namespace TestSheet
 
         public static Camera2D FixedCamera = new Camera2D();
 
-        public static bool ShotMode = true;
+        private static bool shotMode;
+        public static bool ShotMode
+        {
+            get
+            {
+                return shotMode;
+            }
+            
+            set
+            {
+                shotMode = value;
+                if (value==true)
+                {
+                    player.player.ClearAnimation();
+                    player.player.AttachAnimation(30, "Player_Ani_GUN01", "Player_Ani_GUN02");
+                }
+                else
+                    Checker.Weapon_Melee = Checker.Weapon_Melee;
+
+             
+            }
+        }
+
+
 
         public static class BuffBubble
         {
@@ -558,7 +581,8 @@ namespace TestSheet
         public Tester()//여기에서 각종 이니셜라이즈가 가능합니다.
 		{
             TutorialCard.SetSprite("EmptySpace");
-        player = new Player();
+            player = new Player();
+            ShotMode = true;
 			enemies.Add(new Enemy(false));
 			ScrollBar_Sensitivity.Initialize(0.5f);
             ScrollBar_SongVolume.Initialize(0f);
@@ -732,6 +756,12 @@ namespace TestSheet
                     break;
                 case Phase.Game:
 
+
+                    if(ShotMode)
+                    {
+                        player.setRange(500);
+                    }
+
                     if(Checker.Weapon_Melee==16)
                     {
                         TimeCoefficient = 0.1;
@@ -857,10 +887,15 @@ namespace TestSheet
 						ShowMenu = !ShowMenu;
 					}
 
-					/*오버클럭 모드 처리*/
+                    if (Standard.JustPressed(Keys.D1))
+                        ShotMode = false;
+                    if(Standard.JustPressed(Keys.D2))
+                        ShotMode = true;
+
+                    /*오버클럭 모드 처리*/
 
 
-					if (FreezeTimer==-1&&!ShowMenu&&!IsEndPhase)
+                    if (FreezeTimer==-1&&!ShowMenu&&!IsEndPhase)
 					{
                         /*
 
@@ -1785,27 +1820,43 @@ namespace TestSheet
 			public void MoveUpdate()
 			{
 				player.Animate(true);
-				if (isAttacking)
-				{
-					if (AttackTimer < AttackSpeed - 3)
-					{
-						player.MoveTo(Cursor.GetPos().X - 40, Cursor.GetPos().Y - 40, MoveSpeed+4);
-						Standard.FadeAnimation(new DrawingLayer("Player_AfterImage", new Rectangle(player.GetPos(), new Point(70, 70))), 5, Color.AliceBlue);	
-					}
-					MovePoint = Method2D.DivPoint(player.GetCenter(), Cursor.GetPos(), 0.8);
+                if(isAttacking)
+                {
+                    if (!ShotMode)
+                    {
+                        if (AttackTimer < AttackSpeed - 3)
+                        {
+                            player.MoveTo(Cursor.GetPos().X - 40, Cursor.GetPos().Y - 40, MoveSpeed + 4);
+                            Standard.FadeAnimation(new DrawingLayer("Player_AfterImage", new Rectangle(player.GetPos(), new Point(70, 70))), 5, Color.AliceBlue);
+                        }
+                        MovePoint = Method2D.DivPoint(player.GetCenter(), Cursor.GetPos(), 0.8);
 
-					
-					for(int i=0;i<enemies.Count;i++)
-					{
-						if (enemies[i].getBound().Contains(Cursor.GetPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range)
-						{
-							return;
-						}
-					}
-					MovePoint = Cursor.GetPos();				
-					return;
-				}
-                if(ShotMode)
+
+                        for (int i = 0; i < enemies.Count; i++)
+                        {
+                            if (enemies[i].getBound().Contains(Cursor.GetPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range)
+                            {
+                                return;
+                            }
+                        }
+                        MovePoint = Cursor.GetPos();
+                        return;
+                    }
+                    else
+                    {
+                        if(AttackTimer > AttackSpeed/2)
+                            player.MoveTo(MovePoint.X, MovePoint.Y, -(AttackTimer-AttackSpeed/2));
+                        else
+                        {
+                            player.MoveTo(MovePoint.X, MovePoint.Y, MoveSpeed);
+                            MovePoint = Cursor.GetPos();
+                        }
+
+                        Standard.FadeAnimation(new DrawingLayer("Player_AfterImage", new Rectangle(player.GetPos(), new Point(70, 70))), 5, Color.AliceBlue);
+                        return;
+                    }
+                }
+                if (ShotMode)
                 {
                     if (!IsEndPhase && StartStageTimer == 0)
                     {
@@ -1816,12 +1867,14 @@ namespace TestSheet
                                 AttackIndex = i;
                                 isAttacking = true;
                                 AttackTimer = AttackSpeed;
+                                MovePoint = new Point(enemies[i].getCenter().X, enemies[i].getCenter().Y);
                                 if (enemies[i].IsGhost)
                                     return;
                             }
-
                         }
                     }
+                    if (isAttacking)
+                        return;
                 }
                 else
                 {
@@ -1839,6 +1892,8 @@ namespace TestSheet
                             }
 
                         }
+                        if (isAttacking)
+                            return;
                     }
                 }
                 MovePoint = Cursor.GetPos();	
@@ -1861,7 +1916,8 @@ namespace TestSheet
                         }
                         else
                         {
-                            Standard.PlayFadedSE("KnifeSound", 0.2f);
+                            Standard.PlayFadedSE("KnifeSound", 0.3f);
+                            Standard.PlayFadedSE("ClapMode", 1f);
                             Standard.PlayFadedSE("GunSound", 1f);
                         }
                     }
@@ -1926,6 +1982,35 @@ namespace TestSheet
             private event Action DrawAction;
             private event Action DrawAddonAction;
             private event Action SDeadAction;
+            private event Action DieAction;
+            public int DieTimer = 0;
+
+            public void DeadActivate(Color color)
+            {
+                DieTimer = 15;
+                enemy.SetSprite("Player_Broken2");
+                Standard.FadeAnimation(enemy, 15, Color.AntiqueWhite);
+                DieAction += () =>
+                {
+                    if(DieTimer==0)
+                    {
+                        enemies.Remove(this);
+                        Rectangle r = getBound();
+                        int rn = Standard.Random(3, 5);
+                        for (int i = 0; i < rn; i++)
+                        {
+                            int s = Standard.Random(10, 50);
+                            DrawingLayer newStar;
+                            Standard.FadeAnimation(newStar = new DrawingLayer("Player2", new Rectangle(r.Center.X - Standard.Random(-30, 30), r.Center.Y - Standard.Random(-30, 30), s, s)), Standard.Random(5 * 3, 15 * 3), color);
+                            DeadBodys.Add(newStar);
+                        }
+                    }
+                    if (DieTimer > 0)
+                        DieTimer--;
+                };
+
+            }
+            
 
             public static bool WholeGameOver=false;
             public Point GetPos()
@@ -2086,6 +2171,8 @@ namespace TestSheet
 
 			public void MoveUpdate()
 			{
+                if (DieAction != null)
+                    DieAction();
                 MoveAction();
                 //Death Check
 				if (!IsEndPhase&&StartStageTimer==0&&(Method2D.Distance(player.GetCenter(), getCenter())) <= 10 )
@@ -2709,8 +2796,11 @@ namespace TestSheet
         {
             Tester.player.setRange(Range);
             Checker.AttackSpeed_Coefficient_Weapon = attackSpeed_coefficient;
-            Tester.player.player.ClearAnimation();
-            Tester.player.player.AttachAnimation(30, Ani1, Ani2);
+            if(!Tester.ShotMode)
+            {
+                Tester.player.player.ClearAnimation();
+                Tester.player.player.AttachAnimation(30, Ani1, Ani2);
+            }
 
         }
 

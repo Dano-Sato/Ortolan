@@ -207,6 +207,9 @@ namespace TestSheet
         public static Color CursorEffectPair_2 = Color.AliceBlue;
 
         public static Camera2D FixedCamera = new Camera2D();
+
+        public static bool ShotMode = true;
+
         public static class BuffBubble
         {
             public static int BubbleTimer = 0;
@@ -442,7 +445,6 @@ namespace TestSheet
             {
                 return f.State == FTimer.FTimerState.Dead && TextList.Count == 0;
             }
-
         }
 
  
@@ -1803,22 +1805,43 @@ namespace TestSheet
 					MovePoint = Cursor.GetPos();				
 					return;
 				}
-				if(!IsEndPhase&&StartStageTimer==0)
-				{
-					for (int i = 0; i < enemies.Count; i++)
-					{
-						if (enemies[i].getBound().Contains(Cursor.GetPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range)
-						{
-							AttackIndex = i;
-							isAttacking = true;
-							AttackTimer = AttackSpeed;
-                            if (enemies[i].IsGhost)
-                                return;
-						}
+                if(ShotMode)
+                {
+                    if (!IsEndPhase && StartStageTimer == 0)
+                    {
+                        for (int i = 0; i < enemies.Count; i++)
+                        {
+                            if (enemies[i].getBound().Contains(Cursor.GetPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range&&Cursor.JustdidLeftClick())
+                            {
+                                AttackIndex = i;
+                                isAttacking = true;
+                                AttackTimer = AttackSpeed;
+                                if (enemies[i].IsGhost)
+                                    return;
+                            }
 
-					}
-				}			
-				MovePoint = Cursor.GetPos();	
+                        }
+                    }
+                }
+                else
+                {
+                    if (!IsEndPhase && StartStageTimer == 0)
+                    {
+                        for (int i = 0; i < enemies.Count; i++)
+                        {
+                            if (enemies[i].getBound().Contains(Cursor.GetPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range)
+                            {
+                                AttackIndex = i;
+                                isAttacking = true;
+                                AttackTimer = AttackSpeed;
+                                if (enemies[i].IsGhost)
+                                    return;
+                            }
+
+                        }
+                    }
+                }
+                MovePoint = Cursor.GetPos();	
 				if (MovePoint.X!=0||MovePoint.Y!=0)
 					player.MoveTo(MovePoint.X - 40, MovePoint.Y - 40,MoveSpeed+Checker.Swiftness * 1.0/3.0);
 			}
@@ -1831,10 +1854,18 @@ namespace TestSheet
 					{
 						enemies[AttackIndex].enemy.SetSprite("Player_Broken2");
 						Standard.FadeAnimation(enemies[AttackIndex].enemy, 15, Color.AntiqueWhite);
-						Standard.PlayFadedSE("KnifeSound",0.4f);
-						Standard.PlayFadedSE("GunSound",0.3f);
-					}
-					if (AttackTimer>0)//투사체 날아가는중
+                        if(!ShotMode)
+                        {
+                            Standard.PlayFadedSE("KnifeSound", 0.4f);
+                            Standard.PlayFadedSE("GunSound", 0.3f);
+                        }
+                        else
+                        {
+                            Standard.PlayFadedSE("KnifeSound", 0.2f);
+                            Standard.PlayFadedSE("GunSound", 1f);
+                        }
+                    }
+                    if (AttackTimer>0)//투사체 날아가는중
 					{
 						AttackTimer--;
 						return;

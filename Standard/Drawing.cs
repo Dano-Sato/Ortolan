@@ -244,7 +244,7 @@ namespace TestSheet
                         null,
                         null,
                         null,
-                        Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+                        Standard.MainCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
                 Game1.spriteBatch.Draw(spriteTexture, Bound, Color.White);
 				Game1.spriteBatch.End();
 				return;
@@ -255,7 +255,7 @@ namespace TestSheet
                     null,
                     null,
                     null,
-                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+                    Standard.MainCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
             Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), Color.White);
 			Game1.spriteBatch.End();
 		}
@@ -296,7 +296,7 @@ namespace TestSheet
                     null,
                     null,
                     null,
-                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+                    Standard.MainCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
                 Game1.spriteBatch.Draw(spriteTexture, Bound, color);
 				Game1.spriteBatch.End();
 				return;
@@ -307,7 +307,7 @@ namespace TestSheet
                     null,
                     null,
                     null,
-                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+                    Standard.MainCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
             Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), color);
 			Game1.spriteBatch.End();
 		}
@@ -348,7 +348,7 @@ namespace TestSheet
                     null,
                     null,
                     null,
-                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+                    Standard.MainCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
                 Game1.spriteBatch.Draw(spriteTexture, Bound, color * opacity);
 				Game1.spriteBatch.End();
 				return;
@@ -359,7 +359,7 @@ namespace TestSheet
                     null,
                     null,
                     null,
-                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+                    Standard.MainCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
             Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), color * opacity);
 			Game1.spriteBatch.End();
 		}

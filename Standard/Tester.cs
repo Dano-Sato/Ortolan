@@ -147,6 +147,7 @@ namespace TestSheet
                     GotoMain();
                 }
                 Zoom_Coefficient = 0f;
+                Standard.FrameTimer = 0;
                 gamePhase = value;
             }
     }
@@ -329,7 +330,7 @@ namespace TestSheet
                     zoom_Coefficient = 0.3f;
                   else
                     zoom_Coefficient = value;
-                Standard.StdCamera.Zoom = 1f + Zoom_Coefficient;
+                Standard.MainCamera.Zoom = 1f + Zoom_Coefficient;
             }
         }
 
@@ -339,6 +340,7 @@ namespace TestSheet
             IsEndPhase = true;
             Room.RoomColor = Color.AntiqueWhite;
             Room.StarColor = Color.Yellow;
+            Room.Init();
             Standard.DisposeSE();
             Standard.DisposeSong();
             //Standard.PlayLoopedSE("WindOfTheDawn");
@@ -473,6 +475,7 @@ namespace TestSheet
                 return;
             }
 
+            Standard.PlaySE("ClimbLadder2");
 			Room.Number = MonsterDeck[0];
 			MonsterDeck.RemoveAt(0);
 			StartStageTimer = 200;
@@ -575,6 +578,8 @@ namespace TestSheet
 			AddCard(777);
 			AddCard(66);
 			AddCard(666);
+
+            Card.Init();
 
 
 		}
@@ -761,22 +766,25 @@ namespace TestSheet
 						{
                             //GamePhase = Phase.Main;
                             GamePhase = Phase.Dead;
-							Standard.FrameTimer = 0;
+							//Standard.FrameTimer = 0;
 							return;
 						}
 						FreezeTimer = -1;
-                        if(Standard.Random()<0.5)
-    						Standard.FadeAnimation(new DrawingLayer("Dream", new Rectangle(200, 350, 600, 200)), 90, Color.DarkRed);
-                        else
-                            Standard.FadeAnimation(new DrawingLayer("Dream2", new Rectangle(200, 350, 600, 200)), 90, Color.DarkRed);
-                        //Standard.FadeAnimation(new DrawingLayer("Tip", new Rectangle(500, 350, 400, 200)), 150, Color.DarkRed);
-                        if (!RoomVoiceEnable)
+                        if(!IsEndPhase)
                         {
-                            double r = Standard.Random();
-                            if(r<0.5)
-                               Standard.PlaySE("Voice6");
+                            if (Standard.Random() < 0.5)
+                                Standard.FadeAnimation(new DrawingLayer("Dream", new Rectangle(200, 350, 600, 200)), 90, Color.DarkRed);
                             else
-                                Standard.PlaySE("Voice7");
+                                Standard.FadeAnimation(new DrawingLayer("Dream2", new Rectangle(200, 350, 600, 200)), 90, Color.DarkRed);
+                            if (!RoomVoiceEnable)
+                            {
+                                /*
+                                double r = Standard.Random();
+                                if (r < 0.5)
+                                    Standard.PlaySE("Voice6");
+                                else
+                                    Standard.PlaySE("Voice7");*/
+                            }
                         }
                         Room.Set();
 					}
@@ -788,18 +796,13 @@ namespace TestSheet
 						player.AttackUpdate();
                         /*
                         int x = (player.getAttackSpeed() / 2 - Math.Abs(player.getAttackTimer() - player.getAttackSpeed() / 2));
-                        Standard.StdCamera.Zoom = 1f+(float)(x*x)/500f;*/
+                        Standard.MainCamera.Zoom = 1f+(float)(x*x)/500f;*/
                         if (player.IsAttacking())
                             Zoom_Coefficient += Math.Max((0.007f - Zoom_Coefficient*Zoom_Coefficient/2f), 0);
                         else
                             Zoom_Coefficient -= (Zoom_Coefficient * Zoom_Coefficient + 0.005f);
                         if (FreezeTimer > 0)
                             Zoom_Coefficient = 0f;
- 
-
-
-                        
-                        
                     }
                     else
                     {
@@ -975,6 +978,15 @@ namespace TestSheet
                         enemies[i].MoveUpdate();
                         RandomIntCounter++;
                     });
+
+                    if(!GameOver&&Checker.LuckAct)
+                    {
+                        Checker.LuckAct = false;
+                        Standard.FadeAnimation(Tester.player.player, 30, Color.Green);
+                        Standard.PlaySE("GetHeart");
+                        Tester.BuffBubble.Init("Bubble_Luck01");
+
+                    }
 
                     /*좀비 생성 작업*/
 
@@ -1583,8 +1595,8 @@ namespace TestSheet
 					if (StartStageTimer > 0 && StartStageTimer < 100)
 					{
                         Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 1f * (float)(StartStageTimer / 100.0), Standard.LightMode.Absolute);
-                        Standard.DrawString("BigFont", Room.Name(), new Vector2(-Game1.graphics.GraphicsDevice.Viewport.X + 400, -Game1.graphics.GraphicsDevice.Viewport.Y + 300), Color.White * (float)(StartStageTimer / 100.0));
-                        Standard.DrawString("BigFont", Room.Name(), new Vector2(-Game1.graphics.GraphicsDevice.Viewport.X + 400, -Game1.graphics.GraphicsDevice.Viewport.Y + 300), Color.Red * 0.2f*(float)(StartStageTimer / 100.0));
+                       Standard.DrawString("BigFont", Room.Name(), new Vector2(-Game1.graphics.GraphicsDevice.Viewport.X + 400, -Game1.graphics.GraphicsDevice.Viewport.Y + 300), Color.White * (float)(StartStageTimer / 100.0));
+                       Standard.DrawString("BigFont", Room.Name(), new Vector2(-Game1.graphics.GraphicsDevice.Viewport.X + 400, -Game1.graphics.GraphicsDevice.Viewport.Y + 300), Color.Red * 0.2f*(float)(StartStageTimer / 100.0));
                     }
                 
                     break;//Game Phase Draw
@@ -2005,10 +2017,16 @@ namespace TestSheet
                 if (GhostDistance > 3)
                 {
                     if (SlowMode)
+                    {
                         GhostDistance = GhostDistance - 3 * TimeCoefficient;
+                        GhostAngle += Ghostw * TimeCoefficient;
+                    }
                     else
+                    {
                         GhostDistance = GhostDistance - 3;
-                    enemy.SetCenter(new Point(player.GetCenter().X + (int)(GhostDistance * (Math.Cos(GhostAngle + Standard.FrameTimer * Ghostw))), player.GetCenter().Y + (int)(GhostDistance * (Math.Sin(GhostAngle + Standard.FrameTimer * Ghostw)))));
+                        GhostAngle += Ghostw;
+                    }
+                    enemy.SetCenter(new Point(player.GetCenter().X + (int)(GhostDistance * (Math.Cos(GhostAngle))), player.GetCenter().Y + (int)(GhostDistance * (Math.Sin(GhostAngle)))));
                 }
                 else
                 {
@@ -2141,6 +2159,8 @@ namespace TestSheet
 
 
 		}
+
+        
 		public static class Room
 		{
 			public static int Number;
@@ -2176,37 +2196,46 @@ namespace TestSheet
             public static void PlaySong() => SongEvent();
             public static void Init()
 			{
-				RoomKeys.Add(0, "Hello, Ortolan");
+                RoomKeys.Clear();
+                RoomDifficulties.Clear();
+				RoomKeys.Add(0, Standard.RandomString("This is real love, Ortolan.", "You hear my voice, Ortolan."));
 				RoomDifficulties.Add(0, 1);
-				RoomKeys.Add(1, "You die.");
+                RoomKeys.Add(14, Standard.RandomString("So do not fear for I am with you."));
+                RoomDifficulties.Add(14, 1);
+                RoomKeys.Add(15, Standard.RandomString("Remain in me."));
+                RoomDifficulties.Add(15, 1);
+                RoomKeys.Add(16, "I will praise You with my whole heart.");
+                RoomDifficulties.Add(16, 2);
+
+                RoomKeys.Add(1, Standard.RandomString("Flee from all this."));
 				RoomDifficulties.Add(1, 2);
-				RoomKeys.Add(2, "It's icy cold.");
+				RoomKeys.Add(2, "Be still. And know that I'm god.");
 				RoomDifficulties.Add(2, 2);
-				RoomKeys.Add(3, "I will be your bad dream.");
+                RoomKeys.Add(13, Standard.RandomString("I will not forget you."));
+                RoomDifficulties.Add(13, 3);
+                RoomKeys.Add(3, "Let not your heart to be troubled.");
 				RoomDifficulties.Add(3, 3);
-				RoomKeys.Add(4, "Tonight, Ortolan joins the hunt...");
+                RoomKeys.Add(5, "I have made you. I will carry you.");
+                RoomDifficulties.Add(5, 3);
+                RoomKeys.Add(77, "I am Alpha and Omega, The beginning and the End, " +
+                    "\nThe first and the last.");
+                RoomDifficulties.Add(77, 5);
+                RoomKeys.Add(66, "Love you, sincerely.");
+                RoomDifficulties.Add(66, 5);
+
+
+                RoomKeys.Add(4, "Tonight, Ortolan joins the hunt...");
 				RoomDifficulties.Add(4, 4);
-				RoomKeys.Add(5, "Well, I don't like you.");
-				RoomDifficulties.Add(5, 3);
+
 				RoomKeys.Add(6, "Does the nightmare never ends?");
 				RoomDifficulties.Add(6, 4);
-				RoomKeys.Add(13, "Watch your Colorful Death.");
-				RoomDifficulties.Add(13, 3);
-				RoomKeys.Add(77, "Death, It's your Destiny.");
-				RoomDifficulties.Add(77, 5);
+			
 				RoomKeys.Add(777, "Room of Fire and Ice(EX)");
 				RoomDifficulties.Add(777, 7);
-				RoomKeys.Add(66, "See What's Inferno, your worst nightmare");
-				RoomDifficulties.Add(66, 5);
 				RoomKeys.Add(666, "Inferno(EX)");
 				RoomDifficulties.Add(666, 7);
-				RoomKeys.Add(14, "Fire!");
-				RoomDifficulties.Add(14, 1);
-				RoomKeys.Add(15, "It's bit cold. Isn't it?");
-				RoomDifficulties.Add(15, 1);
-				RoomKeys.Add(16, "Dance with fire and ice.");
-				RoomDifficulties.Add(16, 2);
-
+				
+			
 			}
 			public static int ClearRewardCount()
 			{
@@ -2263,9 +2292,9 @@ namespace TestSheet
 						//Standard.PlayLoopedSong("YouDieTheme8");
 						TheIceRoom = false;
                         Monolog.RandomAttach("...What was that?");
-                       
+                       /*
                        if(RoomVoiceEnable)
-                            Standard.PlaySE("Voice1");
+                            Standard.PlaySE("Voice1");*/
                         break;
                     case 14:
                         if (!LiteMode)
@@ -2273,222 +2302,226 @@ namespace TestSheet
                         else
                             SetFireRoom(1, 500);
                         Monolog.RandomAttach("I'm alive...");
+                        /*
                         if (RoomVoiceEnable)
-                            Standard.PlaySE("Voice4");
+                            Standard.PlaySE("Voice4");*/
                         break;
                     case 15:
                         SetIceRoom();
                         Monolog.RandomAttach("I don't want to see that again.");
-                        if (RoomVoiceEnable)
-                            Standard.PlaySE("Voice2");
-                        break;
-                    case 16:
-                        if (!LiteMode)
-                            SetFireAndIceRoom(2, 500);
-                        else
-                            SetFireAndIceRoom(1, 500);
-                        Monolog.RandomAttach("God, what do you want from me?");
-                        if (RoomVoiceEnable)
-                            Standard.PlaySE("Voice3");
-                        break;
-                    case 1:
-                        if (!LiteMode)
-                            SetFireRoom(10, 500);
-                        else
-                            SetFireRoom(3, 500);
-                        //SetFireRoom(20, 1500);
-                        break;
-					case 2:
-						SetIceRoom();
-						break;
-					case 3:
-                        if (!LiteMode)
-                            SetFireRoom(20, 1500);
-                        else
-                            SetFireRoom(5, 1500);
-                        if (RoomVoiceEnable)
-                            Standard.PlaySE("Voice5");
-
-                        //SetFireRoom(30, 1000);
-                        break;
-					case 4:
-						SetFireRoom(40, 30000 / 40);
-						break;
-					case 5:
-						SetIceRoom();
-						break;
-					case 6:
-						SetIceRoom();
-						break;
-
-					case 13:
-                        if (!LiteMode)
-                            SetFireAndIceRoom(8, 500);
-                        else
-                            SetFireAndIceRoom(2, 500);
-
-						break;
-
-					
-					case 77:
-                        if (!LiteMode)
-                            SetFireAndIceRoom(16, 500);
-                        else
-                            SetFireAndIceRoom(4, 500);
-                        break;
-                        RoomColor = Color.MediumPurple;
-						StarColor = Color.Aquamarine;
-						TheIceRoom = true;
-						Standard.PlayLoopedSong("FireAndIce2");
-						for (int i = 0; i < 28; i++)
-						{
-							bludgers.Add(new Bludger(new Point(i + 1, 1)));
-							bludgers[i].bludger.SetPos(i * 1000, 0);
-						}
-						break;
-					case 777:
-						SetFireAndIceRoom(38, 500);
-						break;
-					case 66:
-						TheIceRoom = false;
-						RoomColor = Color.MonoGameOrange;
-						StarColor = Color.Orange;
-                        AttachSong("Inferno_Final");
-                        //Standard.PlayLoopedSong("Inferno_Final");
-                        int InfernoCount = 25;
-                        if (LiteMode)
-                            InfernoCount = 17;
-						for (int i = 0; i < InfernoCount; i++)
-						{
-							bludgers.Add(new Bludger(new Point(i + 1, 1)));
-							bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / InfernoCount)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / InfernoCount)));
-						}
-
-						break;
-					case 666:
-						TheIceRoom = false;
-						RoomColor = Color.MonoGameOrange;
-						StarColor = Color.Orange;
-                        AttachSong("Inferno_Final");
-                        //Standard.PlayLoopedSong("Inferno_Final");
-                        for (int i = 0; i < 35; i++)
-						{
-							bludgers.Add(new Bludger(new Point(i + 1, 1)));
-							bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 35)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 35)));
-						}
-						break;
-
-
-				}
-                RoomVoiceEnable = false;
-
-			}
-
-			public static void Update()
-			{
-				switch (Number)
-				{
-				
-
-					case 2:
-                        if (!LiteMode)
-                        {
-                            if (Standard.FrameTimer % 40 == 0)//아이스(=고스트좀비) 생성
-                            {
-                                enemies.Add(new Enemy(true));
-                            }
-                        }
-                        else
-                        {
-                            if (Standard.FrameTimer % 60 == 0)//아이스(=고스트좀비) 생성
-                            {
-                                enemies.Add(new Enemy(true));
-                            }
-                        }
-                        break;
-
-					case 5:
-                        if (!LiteMode)
-                        {
-                            if (Standard.FrameTimer % 30 == 0)//아이스(=고스트좀비) 생성
-                            {
-                                enemies.Add(new Enemy(true));
-                            }
-                        }
-                        else
-                        {
-                            if (Standard.FrameTimer % 45 == 0)//아이스(=고스트좀비) 생성
-                            {
-                                enemies.Add(new Enemy(true));
-                            }
-                        }
-                        break;
-					case 6:
-						if (Standard.FrameTimer % 22 == 0)//아이스(=고스트좀비) 생성
-						{
-							enemies.Add(new Enemy(true));
-						}
-						break;
-					case 13:
-						if (Standard.FrameTimer % 55 == 0)//아이스(=고스트좀비) 생성
-						{
-							enemies.Add(new Enemy(true));
-						}
-						break;
-					case 15:
-                        if(!LiteMode)
-                        {
-                            if (Standard.FrameTimer % 60 == 0)//아이스(=고스트좀비) 생성
-                            {
-                                enemies.Add(new Enemy(true));
-                            }
-                        }
-                        else
-                        {
-                            if (Standard.FrameTimer % 90 == 0)//아이스(=고스트좀비) 생성
-                            {
-                                enemies.Add(new Enemy(true));
-                            }
-                        }
-                        break;
-					case 16:
-                        if (!LiteMode)
-                        {
-                            if (Standard.FrameTimer % 60 == 0)//아이스(=고스트좀비) 생성
-                            {
-                                enemies.Add(new Enemy(true));
-                            }
-                        }
-                        else
-                        {
-                            if (Standard.FrameTimer % 90 == 0)//아이스(=고스트좀비) 생성
-                            {
-                                enemies.Add(new Enemy(true));
-                            }
-                        }
-                        break;
-					case 77:
-                        if (!LiteMode)
-                        {
-                            if (Standard.FrameTimer % 45 == 0)//아이스(=고스트좀비) 생성
-                            {
-                                enemies.Add(new Enemy(true));
-                            }
-                        }
-                        else
-                        {
-                            if (Standard.FrameTimer % 60 == 0)//아이스(=고스트좀비) 생성
-                            {
-                                enemies.Add(new Enemy(true));
-                            }
-                        }
                         /*
-                        if (Standard.FrameTimer % 45 == 0)//아이스(=고스트좀비) 생성
-						{
-							enemies.Add(new Enemy(true));
+                       if (RoomVoiceEnable)
+                           Standard.PlaySE("Voice2");*/
+                       break;
+                   case 16:
+                       if (!LiteMode)
+                           SetFireAndIceRoom(2, 500);
+                       else
+                           SetFireAndIceRoom(1, 500);
+                       Monolog.RandomAttach("God, what do you want from me?");
+                        /*
+                       if (RoomVoiceEnable)
+                           Standard.PlaySE("Voice3");*/
+                       break;
+                   case 1:
+                       if (!LiteMode)
+                           SetFireRoom(10, 500);
+                       else
+                           SetFireRoom(3, 500);
+                       //SetFireRoom(20, 1500);
+                       break;
+                   case 2:
+                       SetIceRoom();
+                       break;
+                   case 3:
+                       if (!LiteMode)
+                           SetFireRoom(20, 1500);
+                       else
+                           SetFireRoom(5, 1500);
+                       /*
+                       if (RoomVoiceEnable)
+                           Standard.PlaySE("Voice5");*/
 
-						}*/
-						break;
+                       //SetFireRoom(30, 1000);
+                       break;
+                   case 4:
+                       SetFireRoom(40, 30000 / 40);
+                       break;
+                   case 5:
+                       SetIceRoom();
+                       break;
+                   case 6:
+                       SetIceRoom();
+                       break;
+
+                   case 13:
+                       if (!LiteMode)
+                           SetFireAndIceRoom(8, 500);
+                       else
+                           SetFireAndIceRoom(2, 500);
+
+                       break;
+
+
+                   case 77:
+                       if (!LiteMode)
+                           SetFireAndIceRoom(16, 500);
+                       else
+                           SetFireAndIceRoom(4, 500);
+                       break;
+                       RoomColor = Color.MediumPurple;
+                       StarColor = Color.Aquamarine;
+                       TheIceRoom = true;
+                       Standard.PlayLoopedSong("FireAndIce2");
+                       for (int i = 0; i < 28; i++)
+                       {
+                           bludgers.Add(new Bludger(new Point(i + 1, 1)));
+                           bludgers[i].bludger.SetPos(i * 1000, 0);
+                       }
+                       break;
+                   case 777:
+                       SetFireAndIceRoom(38, 500);
+                       break;
+                   case 66:
+                       TheIceRoom = false;
+                       RoomColor = Color.MonoGameOrange;
+                       StarColor = Color.Orange;
+                       AttachSong("Inferno_Final");
+                       //Standard.PlayLoopedSong("Inferno_Final");
+                       int InfernoCount = 25;
+                       if (LiteMode)
+                           InfernoCount = 17;
+                       for (int i = 0; i < InfernoCount; i++)
+                       {
+                           bludgers.Add(new Bludger(new Point(i + 1, 1)));
+                           bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / InfernoCount)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / InfernoCount)));
+                       }
+
+                       break;
+                   case 666:
+                       TheIceRoom = false;
+                       RoomColor = Color.MonoGameOrange;
+                       StarColor = Color.Orange;
+                       AttachSong("Inferno_Final");
+                       //Standard.PlayLoopedSong("Inferno_Final");
+                       for (int i = 0; i < 35; i++)
+                       {
+                           bludgers.Add(new Bludger(new Point(i + 1, 1)));
+                           bludgers[i].bludger.SetPos((int)(400 + 1000 * Math.Cos(2 * Math.PI * i / 35)), (int)(400 + 1000 * Math.Sin(2 * Math.PI * i / 35)));
+                       }
+                       break;
+
+
+               }
+               RoomVoiceEnable = false;
+
+           }
+
+           public static void Update()
+           {
+               switch (Number)
+               {
+
+
+                   case 2:
+                       if (!LiteMode)
+                       {
+                           if (Standard.FrameTimer % 40 == 0)//아이스(=고스트좀비) 생성
+                           {
+                               enemies.Add(new Enemy(true));
+                           }
+                       }
+                       else
+                       {
+                           if (Standard.FrameTimer % 60 == 0)//아이스(=고스트좀비) 생성
+                           {
+                               enemies.Add(new Enemy(true));
+                           }
+                       }
+                       break;
+
+                   case 5:
+                       if (!LiteMode)
+                       {
+                           if (Standard.FrameTimer % 30 == 0)//아이스(=고스트좀비) 생성
+                           {
+                               enemies.Add(new Enemy(true));
+                           }
+                       }
+                       else
+                       {
+                           if (Standard.FrameTimer % 45 == 0)//아이스(=고스트좀비) 생성
+                           {
+                               enemies.Add(new Enemy(true));
+                           }
+                       }
+                       break;
+                   case 6:
+                       if (Standard.FrameTimer % 22 == 0)//아이스(=고스트좀비) 생성
+                       {
+                           enemies.Add(new Enemy(true));
+                       }
+                       break;
+                   case 13:
+                       if (Standard.FrameTimer % 55 == 0)//아이스(=고스트좀비) 생성
+                       {
+                           enemies.Add(new Enemy(true));
+                       }
+                       break;
+                   case 15:
+                       if(!LiteMode)
+                       {
+                           if (Standard.FrameTimer % 60 == 0)//아이스(=고스트좀비) 생성
+                           {
+                               enemies.Add(new Enemy(true));
+                           }
+                       }
+                       else
+                       {
+                           if (Standard.FrameTimer % 90 == 0)//아이스(=고스트좀비) 생성
+                           {
+                               enemies.Add(new Enemy(true));
+                           }
+                       }
+                       break;
+                   case 16:
+                       if (!LiteMode)
+                       {
+                           if (Standard.FrameTimer % 60 == 0)//아이스(=고스트좀비) 생성
+                           {
+                               enemies.Add(new Enemy(true));
+                           }
+                       }
+                       else
+                       {
+                           if (Standard.FrameTimer % 90 == 0)//아이스(=고스트좀비) 생성
+                           {
+                               enemies.Add(new Enemy(true));
+                           }
+                       }
+                       break;
+                   case 77:
+                       if (!LiteMode)
+                       {
+                           if (Standard.FrameTimer % 45 == 0)//아이스(=고스트좀비) 생성
+                           {
+                               enemies.Add(new Enemy(true));
+                           }
+                       }
+                       else
+                       {
+                           if (Standard.FrameTimer % 60 == 0)//아이스(=고스트좀비) 생성
+                           {
+                               enemies.Add(new Enemy(true));
+                           }
+                       }
+                       /*
+                       if (Standard.FrameTimer % 45 == 0)//아이스(=고스트좀비) 생성
+                       {
+                           enemies.Add(new Enemy(true));
+
+                       }*/
+                        break;
 					case 777:
 						if (Standard.FrameTimer % 37 == 0)//아이스(=고스트좀비) 생성
 						{
@@ -2620,6 +2653,7 @@ namespace TestSheet
         public static int Luck = 0;
         public static int Swiftness = 0;
         public static int LuckTimer;
+        public static bool LuckAct=false;
 
         public static Vector2 InfoVector;
         public static DrawingLayer StringBackGround;
@@ -2796,7 +2830,7 @@ namespace TestSheet
             int LeftHearts = Checker.Hearts % 5;
             DrawingLayer gauge = new DrawingLayer("WhiteSpace", new Rectangle(100, 300, 10, (int)(300 * Tester.Gauge)));
 
-            Standard.ViewportDraw(new Viewport(MasterInfo.FullScreen), () =>
+            Standard.ViewportSwapDraw(new Viewport(MasterInfo.FullScreen), () =>
             {
                 for (int i = 0; i < Hearts_5; i++)
                 {
@@ -2948,33 +2982,32 @@ namespace TestSheet
 				case 1:
 					if (Standard.Random() < 0.05)
 					{
+                        /*
 						Standard.FadeAnimation(Tester.player.player, 30, Color.Green);
 						Standard.PlaySE("GetHeart");
                         Tester.BuffBubble.Init("Bubble_Luck01");
-                        LuckTimer = 30;
+                        LuckTimer = 30;*/
+                        Checker.LuckTimer = 30;
+                        LuckAct = true;
 						return true;
 					}
 					break;
 				case 2:
 					if (Standard.Random() < 0.10)
 					{
-						Standard.FadeAnimation(Tester.player.player, 30, Color.Green);
-						Standard.PlaySE("GetHeart");
-                        Tester.BuffBubble.Init("Bubble_Luck01");
-                        LuckTimer = 30;
+                        Checker.LuckTimer = 30;
+                        LuckAct = true;
 
-						return true;
+                        return true;
 					}
 
 					break;
 				case 3:
 					if (Standard.Random() < 0.15)
 					{
-						Standard.FadeAnimation(Tester.player.player, 30, Color.Green);
-						Standard.PlaySE("GetHeart");
-                        Tester.BuffBubble.Init("Bubble_Luck01");
-                        LuckTimer = 30;
-						return true;
+                        Checker.LuckTimer = 30;
+                        LuckAct = true;
+                        return true;
 					}
 					break;
 			}
@@ -2982,23 +3015,24 @@ namespace TestSheet
 		}
 
 	}
-	public class Card
-	{
-		public DrawingLayer Frame;
-		public int FlipTimer = -1;//-1:뒷면, 0:앞면, 1~30:까는중
-		public int RemoveTimer = -1;//-1:파괴X,0이상:파괴타이머
+    public class Card
+    {
+        public DrawingLayer Frame;
+        public int FlipTimer = -1;//-1:뒷면, 0:앞면, 1~30:까는중
+        public int RemoveTimer = -1;//-1:파괴X,0이상:파괴타이머
 
-		public string FrontFrameName;
-		public string BackFrameName = "RewardCard";
-		public static readonly int CardWidth = 140;
-		public static readonly int FlipTime = 30;
-		public string InfoString;
+        public string FrontFrameName;
+        public string BackFrameName = "RewardCard";
+        public static readonly int CardWidth = 140;
+        public static readonly int FlipTime = 30;
 
-		public enum CardClass { Reward };
+        public enum CardClass { Reward };
 
-		public delegate void CardOpenEvent(int EventNumber);
-		public event CardOpenEvent CardOpenEvents;
-		/*Card Index
+        public delegate void CardOpenEvent(int EventNumber);
+        public event CardOpenEvent CardOpenEvents;
+
+        public static Dictionary<int, string> InfoTable = new Dictionary<int, string>();
+        /* Card Index
 		 * 0:Heart 1
 		 * 1:Heart 2
 		 * 2:Heart 3
@@ -3013,7 +3047,27 @@ namespace TestSheet
 		 * 11:Luck 3
 		 * */
 
-		public Card(int Number, CardClass WhatClass)
+        public static void Init() 
+        {
+            InfoTable.Add(0, "Heart 1: \n\nGet 1 Heart.");
+            InfoTable.Add(1, "Heart 2: \n\nGet 1 Heart.");
+            InfoTable.Add(2, "Heart 3: \n\nGet 1 Heart.");
+            InfoTable.Add(3, "Swiftness 1:\n\nSpeed+10%, Attack Speed+7%");
+            InfoTable.Add(4, "Swiftness 2:\n\nSpeed+20%, Attack Speed+15%");
+            InfoTable.Add(5, "Swiftness 3:\n\nSpeed+30%, Attack Speed+25%");
+            InfoTable.Add(6, "Bloodthirst 1:\n\nGet 1 heart when you kill 100 enemies. ");
+            InfoTable.Add(7, "Bloodthirst 2:\n\nGet 1 heart when you kill 75 enemies. ");
+            InfoTable.Add(8, "Bloodthirst 3:\n\nGet 1 heart when you kill 50 enemies. ");
+            InfoTable.Add(9, "Luck 1:\n\nChance of avoiding death: 5%");
+            InfoTable.Add(10,"Luck 2:\n\nChance of avoiding death: 10%");
+            InfoTable.Add(11,"Luck 3:\n\nChance of avoiding death: 15%");
+            InfoTable.Add(12, "Soul Harvester:\n\nRange+2, AttackSpeed-10%\n\n <Blood Flow Acceleration> : Get doubled bloodthirst effect.");
+            InfoTable.Add(15, "Moonlight:\n\nRange-1\n\n<Sheer Celerity> : Get doubled attack-speed. ");
+
+
+        }
+
+        public Card(int Number, CardClass WhatClass)
 		{
 			//Rewards.Add(new DrawingLayer("RewardCard_" + Standard.Random(0, 12), CardPos, 0.75f));
 			BackFrameName = WhatClass.ToString() + "Card";
@@ -3025,56 +3079,57 @@ namespace TestSheet
 
             if (WhatClass==CardClass.Reward)
 			{
-				switch (Number)
-				{
-					case 0:
-						InfoString = "Heart 1: \n\nGet 1 Heart.";
-						break;
-					case 1:
-						InfoString = "Heart 2:\n\nGet 2 Hearts.";
-						break;
-					case 2:
-						InfoString = "Heart 3:\n\nGet 3 Hearts.";
-						break;
-					case 3:
-						InfoString = "Swiftness 1:\n\nSpeed+10%, Attack Speed+7%";
-						break;
-					case 4:
-						InfoString = "Swiftness 2:\n\nSpeed+20%, Attack Speed+15%";
-						break;
-					case 5:
-						InfoString = "Swiftness 3:\n\nSpeed+30%, Attack Speed+25%";
-						break;
-					case 6:
-						InfoString = "Bloodthirst 1:\n\nGet 1 heart when you kill 100. ";
-						break;
-					case 7:
-						InfoString = "Bloodthirst 2:\n\nGet 1 heart when you kill 75. ";
-						break;
-					case 8:
-						InfoString = "Bloodthirst 3:\n\nGet 1 heart when you kill 50. ";
-						break;
-					case 9:
-						InfoString = "Luck 1:\n\nChance of avoiding death: 5%";
-						break;
-					case 10:
-						InfoString = "Luck 2:\n\nChance of avoiding death: 10%";
-						break;
-					case 11:
-						InfoString = "Luck 3:\n\nChance of avoiding death: 15%";
-						break;
-                    case 12:
-                        InfoString = "Soul Harvester:\n\nRange+2, AttackSpeed-15%\n\n <Blood Flow Acceleration> : Get doubled bloodthirst effect.";
-                        break;
-                    case 15:
-                        InfoString = "Moonlight:\n\nRange-1\n\n<Sheer Celerity> : Get doubled attack-speed. ";
-                        break;
 
-                    default:
-						InfoString = "Preparing..";
-						break;
-				}
-				CardOpenEvents += CardRewardEvent;
+                /*
+                    switch (Number)
+                    {
+                        case 0:
+                            InfoString = "Heart 1: \n\nGet 1 Heart.";
+                            break;
+                        case 1:
+                            InfoString = "Heart 2:\n\nGet 2 Hearts.";
+                            break;
+                        case 2:
+                            InfoString = "Heart 3:\n\nGet 3 Hearts.";
+                            break;
+                        case 3:
+                            InfoString = "Swiftness 1:\n\nSpeed+10%, Attack Speed+7%";
+                            break;
+                        case 4:
+                            InfoString = "Swiftness 2:\n\nSpeed+20%, Attack Speed+15%";
+                            break;
+                        case 5:
+                            InfoString = "Swiftness 3:\n\nSpeed+30%, Attack Speed+25%";
+                            break;
+                        case 6:
+                            InfoString = "Bloodthirst 1:\n\nGet 1 heart when you kill 100. ";
+                            break;
+                        case 7:
+                            InfoString = "Bloodthirst 2:\n\nGet 1 heart when you kill 75. ";
+                            break;
+                        case 8:
+                            InfoString = "Bloodthirst 3:\n\nGet 1 heart when you kill 50. ";
+                            break;
+                        case 9:
+                            InfoString = "Luck 1:\n\nChance of avoiding death: 5%";
+                            break;
+                        case 10:
+                            InfoString = "Luck 2:\n\nChance of avoiding death: 10%";
+                            break;
+                        case 11:
+                            InfoString = "Luck 3:\n\nChance of avoiding death: 15%";
+                            break;
+                        case 12:
+                            InfoString = "Soul Harvester:\n\nRange+2, AttackSpeed-15%\n\n <Blood Flow Acceleration> : Get doubled bloodthirst effect.";
+                            break;
+                        case 15:
+                            InfoString = "Moonlight:\n\nRange-1\n\n<Sheer Celerity> : Get doubled attack-speed. ";
+                            break;
+                        default:
+                            InfoString = "Preparing..";
+                            break;
+                    }*/
+                CardOpenEvents += CardRewardEvent;
 			}
 		
 
@@ -3263,7 +3318,16 @@ namespace TestSheet
 			}
 			if(Cursor.IsOn(Frame)&&FlipTimer==0)
 			{
-				Standard.DrawString(InfoString, new Vector2(Frame.GetPos().X, Frame.GetPos().Y+200), Color.Black);
+                string s;
+                if(InfoTable.ContainsKey(GetIndex()))
+                {
+                    s = InfoTable[GetIndex()];
+                }
+                else
+                {
+                    s = "Preparing...";
+                }
+				Standard.DrawString(s, new Vector2(Frame.GetPos().X, Frame.GetPos().Y+200), Color.Black);
 			}
 		
 			

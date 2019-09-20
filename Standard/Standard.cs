@@ -529,7 +529,7 @@ namespace TestSheet
                     null,
                     null,
                     null,
-                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+                    Standard.MainCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
             Game1.spriteBatch.DrawString(Standardfont, s, vector2, color);
 			Game1.spriteBatch.End();
 		}
@@ -556,7 +556,7 @@ namespace TestSheet
                     null,
                     null,
                     null,
-                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+                    Standard.MainCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
             Game1.spriteBatch.DrawString(Standardfont, s, vector2 + new Vector2(d.GetPos().X, d.GetPos().Y), color);
 			Game1.spriteBatch.End();
 		}
@@ -584,7 +584,7 @@ namespace TestSheet
                     null,
                     null,
                     null,
-                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+                    Standard.MainCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
             Game1.spriteBatch.DrawString(Temporaryfont, s, vector2, color);
 			Game1.spriteBatch.End();
 		}
@@ -612,7 +612,7 @@ namespace TestSheet
                     null,
                     null,
                     null,
-                    Standard.StdCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+                    Standard.MainCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
             Game1.spriteBatch.DrawString(Temporaryfont, s, vector2 + new Vector2(d.GetPos().X, d.GetPos().Y), color);
 			Game1.spriteBatch.End();
 		}
@@ -652,14 +652,30 @@ namespace TestSheet
 
 
 
-        public static Camera2D StdCamera = new Camera2D();
+        public static Camera2D MainCamera = new Camera2D();
 
-        public static void ViewportDraw(Viewport v, Action s)
+        public static void ViewportSwapDraw(Viewport v, Action s)
         {
             Viewport Temp = Game1.graphics.GraphicsDevice.Viewport;
             Game1.graphics.GraphicsDevice.Viewport = v;
             s();
             Game1.graphics.GraphicsDevice.Viewport = Temp;
+        }
+
+
+        public static string RandomString(params string[] strings)
+        {
+            double r = Random();
+            double m = 1.0 / strings.Length;
+            for(int i=0;i<strings.Length;i++)
+            {
+                if (m * i <= r && m * (i+1) > r)
+                {
+                    return strings[i];
+                }
+            }
+            return "";
+
         }
 
 

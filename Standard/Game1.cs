@@ -119,11 +119,12 @@ namespace TestSheet
         {
             GraphicsDevice.Clear(WallColor);
 			Standard.DrawLight(MasterInfo.FullScreen, Tester.Room.RoomColor, Math.Max(0f,(float)(1-Tester.Score.Get() / 200.0)), Standard.LightMode.Absolute);
+            /*
             Viewport Temp = Game1.graphics.GraphicsDevice.Viewport;
             Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
             if (Tester.BeforeEndTimer<Tester.BeforeEndTimer_Max)
                 Standard.DrawLight(MasterInfo.FullScreen, Color.White, (float)(Tester.BeforeEndTimer_Max - Tester.BeforeEndTimer) / (float)(Tester.BeforeEndTimer_Max), Standard.LightMode.Absolute);
-            Game1.graphics.GraphicsDevice.Viewport = Temp;
+            Game1.graphics.GraphicsDevice.Viewport = Temp;*/
             // TODO: Add your drawing code here
             tester.Draw();
 			Standard.Draw();
@@ -181,7 +182,7 @@ namespace TestSheet
 				else if (Tester.FreezeTimer > Tester.FreezeTime - 110)
 					Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "HeartBite2");
                 if(Standard.FrameTimer%15==0)
-                Standard.FadeAnimation(new DrawingLayer("Player_Heart", Tester.player.player.GetBound()), 20, Color.Pink);
+                    Standard.FadeAnimation(new DrawingLayer("Player_Heart", Tester.player.player.GetBound()), 20, Color.Pink);
 
 
 				if (Standard.FrameTimer % 60 == 0)
@@ -206,31 +207,8 @@ namespace TestSheet
 
                 if (Tester.GameOver)
 				{
-
-
-                    /*
-					if (Tester.FreezeTimer > Tester.FreezeTime - 110 && Tester.KillerZombieIndex != -1)
-					{
-						if (Standard.FrameTimer % 20 <= 10)
-							Standard.DrawAddon(Tester.enemies[Tester.KillerZombieIndex].enemy, Color.White, 1f, "ZombieBite");
-						else
-							Standard.DrawAddon(Tester.enemies[Tester.KillerZombieIndex].enemy, Color.White, 1f, "ZombieBite2");
-
-					}
-                    */
 					if (Tester.FreezeTimer == Tester.FreezeTime - 110)
-					{
-                        /*
-						Tester.KillCard = new DrawingLayer("SDSample", new Point(0, 0), 0.6f);
-						double Rnd = Standard.Random();
-						if (Rnd < 0.5)
-							Tester.KillCard.SetSprite("SDSample");
-						else
-							Tester.KillCard.SetSprite("SDSample");
-                            */
                         DeadSceneEvent();
-
-					}
 					if (Tester.FreezeTimer > 0 && Tester.FreezeTimer < Tester.FreezeTime - 110)
 					{
 						GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
@@ -259,16 +237,20 @@ namespace TestSheet
 
 				}
 				Checker.ShowStatus();
-                if (Tester.BeforeEndTimer < Tester.BeforeEndTimer_Max)
-                    Standard.DrawLight(MasterInfo.FullScreen, Color.White, (float)(Tester.BeforeEndTimer_Max - Tester.BeforeEndTimer) / (float)(Tester.BeforeEndTimer_Max), Standard.LightMode.Absolute);
+                Standard.ViewportSwapDraw(new Viewport(MasterInfo.FullScreen),
+    () =>
+    {
+        if (Tester.BeforeEndTimer < Tester.BeforeEndTimer_Max)
+            Standard.DrawLight(MasterInfo.FullScreen, Color.White, (float)(Tester.BeforeEndTimer_Max - Tester.BeforeEndTimer) / (float)(Tester.BeforeEndTimer_Max), Standard.LightMode.Absolute);
+    }
+ );
+
             }
             #region DEMOSTRING
-            Viewport Temp2 = Game1.graphics.GraphicsDevice.Viewport;
-            Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
-            Standard.DrawString(Tester.FixedCamera,"DEMO PLAY", new Vector2(10, 10), Color.White);
-            Game1.graphics.GraphicsDevice.Viewport = Temp2;
-            base.Draw(gameTime);
+            Standard.ViewportSwapDraw(new Viewport(MasterInfo.FullScreen), () => Standard.DrawString(Tester.FixedCamera, "DEMO PLAY", new Vector2(10, 10), Color.White));
             #endregion
+            base.Draw(gameTime);
+         
         }
     }
 }

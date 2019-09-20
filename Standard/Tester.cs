@@ -1005,11 +1005,10 @@ namespace TestSheet
                 
                     Enemy.WholeGameOver=false;
                     Parallel.For(0, enemies.Count, (i) => {
-                        double r = Method2D.Distance(enemies[i].enemy.GetPos(), player.GetPos());
-                        HeartSignal += (1600.0 / (r * r));
-
+                    
+                        /*
                         if (i == player.getAttackIndex())
-                            return;
+                            return;*/
                         if (RandomIntCounter >= 14)
                             RandomIntCounter = 0;
                         enemies[i].MoveUpdate();
@@ -1725,8 +1724,10 @@ namespace TestSheet
 			private int MoveSpeed=6;
 			private int AttackSpeed = 15;
 			private int AttackTimer = 0;
-			private int AttackIndex = -1;
+			//private int AttackIndex = -1;
 			private bool isAttacking=false;
+
+            private Point DeadPoint;
 		
 			public void SetMoveSpeed(int s)
 			{
@@ -1760,15 +1761,15 @@ namespace TestSheet
 				Game1.graphics.GraphicsDevice.Viewport = new Viewport(-GetPos().X  + 400, -GetPos().Y +  400, Zoom.X, Zoom.X);
 				MovePoint = new Point(0, 0);
 				AttackTimer = 0;
-				AttackIndex = -1;
+				//AttackIndex = -1;
 				isAttacking = false;         
 				DeadBodys.Clear();
 			}
-
+            /*
 			public int getAttackIndex()
 			{
 				return AttackIndex;
-			}
+			}*/
 
 			public int getAttackTimer()
 			{
@@ -1864,7 +1865,12 @@ namespace TestSheet
                         {
                             if (enemies[i].getBound().Contains(Cursor.GetPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range&&Cursor.JustdidLeftClick())
                             {
-                                AttackIndex = i;
+                                //AttackIndex = i;
+                                if(enemies[i].IsGhost)
+                                    enemies[i].DeadActivate(Color.WhiteSmoke);
+                                else
+                                    enemies[i].DeadActivate(Color.DarkRed);
+                                DeadPoint = enemies[i].GetPos();
                                 isAttacking = true;
                                 AttackTimer = AttackSpeed;
                                 MovePoint = new Point(enemies[i].getCenter().X, enemies[i].getCenter().Y);
@@ -1884,7 +1890,12 @@ namespace TestSheet
                         {
                             if (enemies[i].getBound().Contains(Cursor.GetPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range)
                             {
-                                AttackIndex = i;
+                                //AttackIndex = i;
+                                if (enemies[i].IsGhost)
+                                    enemies[i].DeadActivate(Color.WhiteSmoke);
+                                else
+                                    enemies[i].DeadActivate(Color.DarkRed);
+                                DeadPoint = enemies[i].GetPos();
                                 isAttacking = true;
                                 AttackTimer = AttackSpeed;
                                 if (enemies[i].IsGhost)
@@ -1905,10 +1916,11 @@ namespace TestSheet
 			{
 				if(isAttacking)
 				{
-					if(AttackTimer==AttackSpeed&&AttackIndex!=-1&&enemies.Count>AttackIndex)
-					{
+					if(AttackTimer==AttackSpeed)/*&&AttackIndex!=-1&&enemies.Count>AttackIndex*/
+                    {
+                        /*
 						enemies[AttackIndex].enemy.SetSprite("Player_Broken2");
-						Standard.FadeAnimation(enemies[AttackIndex].enemy, 15, Color.AntiqueWhite);
+						Standard.FadeAnimation(enemies[AttackIndex].enemy, 15, Color.AntiqueWhite);*/
                         if(!ShotMode)
                         {
                             Standard.PlayFadedSE("KnifeSound", 0.4f);
@@ -1928,17 +1940,18 @@ namespace TestSheet
 					}
 					else//투사체 적중
 					{
+                        /*
 						if(enemies.Count>AttackIndex&&AttackIndex!=-1)
 						{
 							if (enemies[AttackIndex].IsGhost)
 								RemoveEnemy(AttackIndex, Color.AliceBlue);
 							else
 								RemoveEnemy(AttackIndex, Color.DarkRed);
-						}
+						}*/
 						ScoreStack++;
 
 						isAttacking = false;
-						AttackIndex = -1;
+						/*AttackIndex = -1;*/
 						return;
 					}
 				}
@@ -1946,10 +1959,10 @@ namespace TestSheet
 
 			public void DrawAttack()
 			{
-				if(isAttacking&&AttackTimer>=1&&enemies.Count>AttackIndex&&AttackIndex!=-1)
-				{
-					int x = ((AttackSpeed-AttackTimer) * enemies[AttackIndex].GetPos().X + AttackTimer * GetPos().X)/AttackSpeed;
-					int y = ((AttackSpeed - AttackTimer) * enemies[AttackIndex].GetPos().Y + AttackTimer * GetPos().Y)/AttackSpeed;
+				if(isAttacking&&AttackTimer>=1)/*&&enemies.Count>AttackIndex&&AttackIndex!=-1*/
+                {
+					int x = ((AttackSpeed-AttackTimer) * DeadPoint.X + AttackTimer * GetPos().X)/AttackSpeed;
+					int y = ((AttackSpeed - AttackTimer) * DeadPoint.Y + AttackTimer * GetPos().Y)/AttackSpeed;
 
 					
 					int KillActionTimer = AttackTimer * 2;
@@ -1957,11 +1970,11 @@ namespace TestSheet
 					if(!ShowMenu&& Standard.FrameTimer%5==0)
 					{
 						if (Standard.FrameTimer % 20 < 6)
-							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Cursor.GetPos().X/2+enemies[AttackIndex].enemy.GetPos().X/2, Cursor.GetPos().Y / 2 + enemies[AttackIndex].enemy.GetPos().Y / 2, 70, 70)), 15, Color.Pink);
+							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Cursor.GetPos().X/2 + DeadPoint.X/2, Cursor.GetPos().Y / 2 + DeadPoint.Y / 2, 70, 70)), 15, Color.Pink);
 						else if (Standard.FrameTimer % 20 < 12)
-							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Cursor.GetPos().X / 2 + enemies[AttackIndex].enemy.GetPos().X / 2, Cursor.GetPos().Y / 2 + enemies[AttackIndex].enemy.GetPos().Y / 2, 70, 70)), 15, Color.PaleVioletRed);
+							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Cursor.GetPos().X / 2 + DeadPoint.X / 2, Cursor.GetPos().Y / 2 + DeadPoint.Y / 2, 70, 70)), 15, Color.PaleVioletRed);
 						else
-							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Cursor.GetPos().X / 2 + enemies[AttackIndex].enemy.GetPos().X / 2, Cursor.GetPos().Y / 2 + enemies[AttackIndex].enemy.GetPos().Y / 2, 70, 70)), 15, Color.SkyBlue);
+							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Cursor.GetPos().X / 2 + DeadPoint.X / 2, Cursor.GetPos().Y / 2 + DeadPoint.Y / 2, 70, 70)), 15, Color.SkyBlue);
 					}
 
 
@@ -1994,7 +2007,7 @@ namespace TestSheet
                 {
                     if(DieTimer==0)
                     {
-                        enemies.Remove(this);
+                     
                         Rectangle r = getBound();
                         int rn = Standard.Random(3, 5);
                         for (int i = 0; i < rn; i++)
@@ -2004,6 +2017,8 @@ namespace TestSheet
                             Standard.FadeAnimation(newStar = new DrawingLayer("Player2", new Rectangle(r.Center.X - Standard.Random(-30, 30), r.Center.Y - Standard.Random(-30, 30), s, s)), Standard.Random(5 * 3, 15 * 3), color);
                             DeadBodys.Add(newStar);
                         }
+                        enemies.Remove(this);
+                        return;
                     }
                     if (DieTimer > 0)
                         DieTimer--;
@@ -2172,13 +2187,20 @@ namespace TestSheet
 			public void MoveUpdate()
 			{
                 if (DieAction != null)
+                {
                     DieAction();
+                    return;
+                }
                 MoveAction();
+                double r = Method2D.Distance(GetPos(), player.GetPos());
+                HeartSignal += (1600.0 / (r * r));
+
                 //Death Check
-				if (!IsEndPhase&&StartStageTimer==0&&(Method2D.Distance(player.GetCenter(), getCenter())) <= 10 )
+                if (!IsEndPhase&&StartStageTimer==0&&(Method2D.Distance(player.GetCenter(), getCenter())) <= 10 )
 				{
+                    /*
                     if (player.getAttackIndex() != -1 && this != enemies[player.getAttackIndex()])
-                        return;
+                        return;*/
 					if(!Checker.LuckCheck())
 					{
                         ThisIsTheKiller = true;

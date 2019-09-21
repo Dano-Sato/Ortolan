@@ -223,14 +223,58 @@ namespace TestSheet
                 {
                     player.player.ClearAnimation();
                     player.player.AttachAnimation(30, "Player_Ani_GUN01", "Player_Ani_GUN02");
+                    Checker.AttackSpeed_Coefficient_Weapon = 2f;
+                    player.setRange(500);
                 }
                 else
+                {
                     Checker.Weapon_Melee = Checker.Weapon_Melee;
-
-             
+                }
             }
         }
 
+        public static bool ShotModeBuffer=false;
+
+        private static int ReloadTimer=0;
+        private static int bullets;
+        public static int bullets_Max=2;
+        public static int Bullets
+        {
+            get
+            {
+                return bullets;
+            }
+            set
+            {
+                if (ReloadTimer > 0)
+                {
+                    if (ReloadTimer == 15)
+                    {
+                        Standard.PlaySE("Reload");
+                    }
+                    ReloadTimer--;
+                    return;
+                }
+             
+                if (ReloadTimer == 0)
+                {
+                    bullets = bullets_Max;
+                    ReloadTimer = -1;
+                    return;
+                }
+
+                if (bullets==0)
+                {
+                    ReloadTimer =70;
+                }
+                else
+                {
+                    if (ShotMode && player.getAttackTimer() == player.getAttackSpeed()-1)
+                        bullets--;
+                }
+
+            }
+        }
 
 
         public static class BuffBubble
@@ -359,6 +403,8 @@ namespace TestSheet
                 Standard.MainCamera.Zoom = 1f + Zoom_Coefficient;
             }
         }
+
+        public static int ScrollValueFixTimer = 0;
 
         public static void GotoMain()
         {
@@ -624,6 +670,11 @@ namespace TestSheet
 				ClickSprite = "Click";
 			else
 				ClickSprite = "Click2";
+
+            if (ShotMode)
+                ClickSprite = "GunClick";
+            
+
 			DrawingLayer Click = new DrawingLayer(ClickSprite, new Rectangle(Cursor.GetPos().X - 15, Cursor.GetPos().Y - 15, 30, 30));
             switch (Checker.Weapon_Melee)
             {
@@ -756,11 +807,10 @@ namespace TestSheet
                     break;
                 case Phase.Game:
 
+                    ShotMode = ShotMode;
 
-                    if(ShotMode)
-                    {
-                        player.setRange(500);
-                    }
+                    Bullets = Bullets;
+
 
                     if(Checker.Weapon_Melee==16)
                     {
@@ -888,9 +938,22 @@ namespace TestSheet
 					}
 
                     if (Standard.JustPressed(Keys.D1))
-                        ShotMode = false;
-                    if(Standard.JustPressed(Keys.D2))
-                        ShotMode = true;
+                        ShotModeBuffer = false;
+                    if (Standard.JustPressed(Keys.D2))
+                        ShotModeBuffer = true;
+
+ 
+                    if (ScrollValueFixTimer==0&&Cursor.ScrollValueChanged())
+                    {
+                        ShotModeBuffer = !ShotModeBuffer;
+                        ScrollValueFixTimer = 15;
+                    }
+                    if (ScrollValueFixTimer > 0)
+                        ScrollValueFixTimer--;
+                    if (!player.IsAttacking())
+                    {
+                        ShotMode = ShotModeBuffer;
+                    }
 
                     /*오버클럭 모드 처리*/
 
@@ -1004,16 +1067,20 @@ namespace TestSheet
 					RandomIntCounter = 0;
                 
                     Enemy.WholeGameOver=false;
-                    Parallel.For(0, enemies.Count, (i) => {
-                    
-                        /*
-                        if (i == player.getAttackIndex())
-                            return;*/
+                    for(int i=0;i<enemies.Count;i++)
+                    {
                         if (RandomIntCounter >= 14)
                             RandomIntCounter = 0;
                         enemies[i].MoveUpdate();
                         RandomIntCounter++;
-                    });
+                    }
+                    /*
+                    Parallel.For(0, enemies.Count, (i) => {
+                    
+                        /*
+                        if (i == player.getAttackIndex())
+                            return;
+                    });*/
 
                     if(!GameOver&&Checker.LuckAct)
                     {
@@ -1859,36 +1926,39 @@ namespace TestSheet
                 }
                 if (ShotMode)
                 {
-                    if (!IsEndPhase && StartStageTimer == 0)
+                  
+                    if (!IsEndPhase && StartStageTimer == 0&&bullets>=1)
                     {
                         for (int i = 0; i < enemies.Count; i++)
                         {
-                            if (enemies[i].getBound().Contains(Cursor.GetPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range&&Cursor.JustdidLeftClick())
+                            if (!enemies[i].IsDead()&&Method2D.Distance(enemies[i].getCenter(),Cursor.GetPos())<150 && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range&&Cursor.JustdidLeftClick()) /*enemies[i].getBound().Contains(Cursor.GetPos())*/
                             {
                                 //AttackIndex = i;
                                 if(enemies[i].IsGhost)
                                     enemies[i].DeadActivate(Color.WhiteSmoke);
                                 else
                                     enemies[i].DeadActivate(Color.DarkRed);
-                                DeadPoint = enemies[i].GetPos();
+                                DeadPoint = Cursor.GetPos();
                                 isAttacking = true;
                                 AttackTimer = AttackSpeed;
                                 MovePoint = new Point(enemies[i].getCenter().X, enemies[i].getCenter().Y);
-                                if (enemies[i].IsGhost)
-                                    return;
                             }
                         }
                     }
                     if (isAttacking)
                         return;
+
                 }
                 else
                 {
                     if (!IsEndPhase && StartStageTimer == 0)
                     {
+
+                        if (isAttacking)
+                            return;
                         for (int i = 0; i < enemies.Count; i++)
                         {
-                            if (enemies[i].getBound().Contains(Cursor.GetPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range)
+                            if (!enemies[i].IsDead()&&enemies[i].getBound().Contains(Cursor.GetPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range)
                             {
                                 //AttackIndex = i;
                                 if (enemies[i].IsGhost)
@@ -1903,8 +1973,6 @@ namespace TestSheet
                             }
 
                         }
-                        if (isAttacking)
-                            return;
                     }
                 }
                 MovePoint = Cursor.GetPos();	
@@ -1917,7 +1985,7 @@ namespace TestSheet
 				if(isAttacking)
 				{
 					if(AttackTimer==AttackSpeed)/*&&AttackIndex!=-1&&enemies.Count>AttackIndex*/
-                    {
+                            {
                         /*
 						enemies[AttackIndex].enemy.SetSprite("Player_Broken2");
 						Standard.FadeAnimation(enemies[AttackIndex].enemy, 15, Color.AntiqueWhite);*/
@@ -1931,11 +1999,13 @@ namespace TestSheet
                             Standard.PlayFadedSE("KnifeSound", 0.3f);
                             Standard.PlayFadedSE("ClapMode", 1f);
                             Standard.PlayFadedSE("GunSound", 1f);
+                            Standard.FadeAnimation(new DrawingLayer("GunFire",new Rectangle(player.GetCenter().X+25,player.GetCenter().Y-30,50,50)), 15, Color.NavajoWhite);
                         }
                     }
                     if (AttackTimer>0)//투사체 날아가는중
 					{
 						AttackTimer--;
+                        if(ShotMode)
 						return;
 					}
 					else//투사체 적중
@@ -1948,7 +2018,7 @@ namespace TestSheet
 							else
 								RemoveEnemy(AttackIndex, Color.DarkRed);
 						}*/
-						ScoreStack++;
+						
 
 						isAttacking = false;
 						/*AttackIndex = -1;*/
@@ -1997,9 +2067,18 @@ namespace TestSheet
             private event Action SDeadAction;
             private event Action DieAction;
             public int DieTimer = 0;
+            
+            public bool IsDead()
+            {
+                if (DieAction == null)
+                    return false;
+                else
+                    return true;
+            }
 
             public void DeadActivate(Color color)
             {
+                ScoreStack++;
                 DieTimer = 15;
                 enemy.SetSprite("Player_Broken2");
                 Standard.FadeAnimation(enemy, 15, Color.AntiqueWhite);
@@ -2813,6 +2892,24 @@ namespace TestSheet
                 weapon_Melee = value;
             }
         }
+        private static int weapon_Ranged;
+        public static int Weapon_Ranged
+        {
+            get
+            {
+                return weapon_Ranged;
+            }
+            set
+            {
+                weapon_Ranged = value;
+            }
+
+           
+
+
+        }
+
+
 
         private static void WeaponSetter(int Range, double attackSpeed_coefficient, string Ani1, string Ani2)
         {
@@ -2973,6 +3070,27 @@ namespace TestSheet
             int LeftHearts = Checker.Hearts % 5;
             DrawingLayer gauge = new DrawingLayer("WhiteSpace", new Rectangle(100, 300, 10, (int)(300 * Tester.Gauge)));
 
+            DrawingLayer Bullet = new DrawingLayer("BulletIcon", new Rectangle(Tester.player.player.GetCenter().X - 20, Tester.player.player.GetCenter().Y + 40, 30, 30));
+
+            if(Tester.FreezeTimer<0&&!Tester.ShowMenu&&Tester.ShotMode)
+            {
+                for (int i = 0; i < Tester.Bullets; i++)
+                {
+                    Bullet.Draw();
+                    Bullet.MoveByVector(new Point(1, 0), 20);
+                }
+                Bullet.SetSprite("BulletEmptyIcon");
+                for (int i = 0; i < Tester.bullets_Max-Tester.Bullets; i++)
+                {
+                    Bullet.Draw();
+                    Bullet.MoveByVector(new Point(1, 0), 20);
+                }
+
+
+            }
+
+            DrawingLayer MeleeWeaponIcon = new DrawingLayer("WeaponIcon_" + Checker.Weapon_Melee.ToString(), new Rectangle(50, 200, 80, 80));
+
             Standard.ViewportSwapDraw(new Viewport(MasterInfo.FullScreen), () =>
             {
                 for (int i = 0; i < Hearts_5; i++)
@@ -3087,7 +3205,7 @@ namespace TestSheet
                 gauge.Draw(Tester.FixedCamera, Color.AliceBlue);
                 gauge.Draw(Tester.FixedCamera, Color.Red * (float)(1 - Tester.Gauge));
 
-
+                MeleeWeaponIcon.Draw(Tester.FixedCamera, Color.White);
             }
 
             );

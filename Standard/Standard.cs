@@ -853,6 +853,10 @@ namespace TestSheet
 				return false;
 		}
 
+        public static bool ScrollValueChanged()
+        {
+            return OldMouseState.ScrollWheelValue != Mouse.GetState().ScrollWheelValue;
+        }
 
 
 

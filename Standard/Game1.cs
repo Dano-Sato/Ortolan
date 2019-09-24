@@ -194,10 +194,17 @@ namespace TestSheet
 				}
 				if (Tester.PressedATimer == 10)
 				{
-					Standard.PlayFadedSE("Oveclock", 0.75f);
-				}
+                    if(Checker.Weapon_Melee!=18)
+                        Standard.PlayFadedSE("Oveclock", 0.75f);            
+                }
+                if (Tester.PressedATimer > 0&&Tester.ChainTimer%80==10)
+                {
+                    if (Checker.Weapon_Melee == 18)
+                        Standard.PlayFadedSE("ChainChan", 1f);
+                }
 
-                if(!Tester.GameOver)
+
+                if (!Tester.GameOver)
                 {
                     if (Tester.player.player.GetSpriteName() == "Player_Ani_S01")
                         Standard.DrawAddon(Tester.player.player, Color.White, 1f, "MoonLight02");

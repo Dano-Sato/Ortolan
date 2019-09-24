@@ -142,15 +142,17 @@ namespace TestSheet
             }
             set
             {
-                if(value==Phase.Main)
+                if (value == Phase.Main)
                 {
                     GotoMain();
                 }
                 Zoom_Coefficient = 0f;
                 Standard.FrameTimer = 0;
+                Checker.Weapon_Ranged = -1;
+                Checker.Weapon_Melee = 17;
                 gamePhase = value;
             }
-    }
+        }
 
 
         public enum Phase { Main, Tutorial, Game, Ending, Dead };
@@ -158,7 +160,7 @@ namespace TestSheet
         public static Button StartButton = new Button(new StringLayer("Game Start", new Vector2(400, 600)), () => GamePhase = Phase.Tutorial);
         public static Button GameExitButton = new Button(new StringLayer("Exit", new Vector2(700, 600)), Exit);
 
-        public static Button RetryButton = new Button(new StringLayer("Retry", new Vector2(640, 600)), ()=> GamePhase= Phase.Main);
+        public static Button RetryButton = new Button(new StringLayer("Retry", new Vector2(640, 600)), () => GamePhase = Phase.Main);
 
         public static bool LiteMode = true;
         public static Button ChoiceButton01 = new Button(new DrawingLayer("Choice011", new Point(50, 50), 0.9f), () =>
@@ -215,16 +217,18 @@ namespace TestSheet
             {
                 return shotMode;
             }
-            
+
             set
             {
                 shotMode = value;
-                if (value==true)
+                if (value == true)
                 {
+                    /*
                     player.player.ClearAnimation();
                     player.player.AttachAnimation(30, "Player_Ani_GUN01", "Player_Ani_GUN02");
                     Checker.AttackSpeed_Coefficient_Weapon = 2f;
-                    player.setRange(500);
+                    player.setRange(500);*/
+                    Checker.Weapon_Ranged = Checker.Weapon_Ranged;
                 }
                 else
                 {
@@ -233,11 +237,42 @@ namespace TestSheet
             }
         }
 
-        public static bool ShotModeBuffer=false;
 
-        private static int ReloadTimer=0;
+        private static int chainTimer;
+        public static int ChainTimer {
+            get { return chainTimer;  }
+            set {
+                chainTimer = value;
+                if(value!=0)
+                {
+                    player.SetMoveSpeed(Math.Min(4 + value / 30.0,10));
+                    Checker.AttackSpeed_Coefficient_Weapon = Math.Min(2f-value/30.0,0.3);
+
+                }
+            }
+        }
+   
+        public static bool ShotModeBuffer = false;
+
+        public static int ReloadTime = 70;
+        private static int ReloadTimer = 0;
         private static int bullets;
-        public static int bullets_Max=2;
+        private static int bullets_Max;
+        public static int Bullets_Max
+        {
+            get
+            {
+                return bullets_Max;
+            }
+            set
+            {
+                if(value!=Bullets_Max)
+                {
+                    bullets_Max = value;
+                    Bullets = -1;
+                }
+            }
+        } 
         public static int Bullets
         {
             get
@@ -246,11 +281,18 @@ namespace TestSheet
             }
             set
             {
+                if(value==-1)
+                {
+                    bullets = Bullets_Max;
+                    ReloadTimer = -1;
+                    return;
+                }
                 if (ReloadTimer > 0)
                 {
-                    if (ReloadTimer == 15)
+                    if (ReloadTimer == 25)
                     {
-                        Standard.PlaySE("Reload");
+                        Checker.GunSoundEvent();
+                        //Standard.PlaySE("Reload");
                     }
                     ReloadTimer--;
                     return;
@@ -258,14 +300,14 @@ namespace TestSheet
              
                 if (ReloadTimer == 0)
                 {
-                    bullets = bullets_Max;
+                    bullets = Bullets_Max;
                     ReloadTimer = -1;
                     return;
                 }
 
                 if (bullets==0)
                 {
-                    ReloadTimer =70;
+                    ReloadTimer =ReloadTime;
                 }
                 else
                 {
@@ -633,7 +675,8 @@ namespace TestSheet
 			ScrollBar_Sensitivity.Initialize(0.5f);
             ScrollBar_SongVolume.Initialize(0f);
             ScrollBar_SEVolume.Initialize(0f);
-
+            Checker.Weapon_Ranged = -1;
+       
             //Room.Number = 1;
             //Room.Set();
             Room.Init();
@@ -698,6 +741,12 @@ namespace TestSheet
                     CursorEffectPair_1 = Color.OrangeRed;
                     CursorEffectPair_2 = Color.AliceBlue;
                     break;
+            }
+
+            if(Checker.Weapon_Melee==18&&!ShotMode&&ChainTimer>40)
+            {
+                CursorEffectPair_1 = Color.OrangeRed;
+                CursorEffectPair_2 = Color.DarkRed;
             }
 
 
@@ -808,7 +857,7 @@ namespace TestSheet
                 case Phase.Game:
 
                     ShotMode = ShotMode;
-
+                    ChainTimer = ChainTimer;
                     Bullets = Bullets;
 
 
@@ -818,6 +867,10 @@ namespace TestSheet
                     }
                     else
                         TimeCoefficient = 0.5;
+                    if(Checker.Weapon_Melee==18&&!ShotMode)
+                    {
+                        TimeCoefficient = 1;
+                    }
                     /* 게임오버 처리*/
 
                     if (GameOver && FreezeTimer == -1)
@@ -988,8 +1041,12 @@ namespace TestSheet
 
                         if ((Cursor.IsLeftClickingNow()||Cursor.IsRightClickingNow())&&!IsEndPhase)
 						{
-							Gauge = Math.Max(0, Gauge - 0.015);
-							if (Gauge == 0)
+                            if(Checker.Weapon_Melee == 18 && !ShotMode)
+                                Gauge = Math.Max(0, Gauge - 0.003);
+                            else 
+                                Gauge = Math.Max(0, Gauge - 0.015);
+
+                            if (Gauge == 0)
 								SlowMode = false;
 							else
 								SlowMode = true;
@@ -998,7 +1055,7 @@ namespace TestSheet
 						{
 
 							Gauge = Math.Min(1, Gauge + 0.003);
-                            if(Checker.Weapon_Melee==16)
+                            if((Checker.Weapon_Melee==16&&ShotMode)||(Checker.Weapon_Melee == 18&&!ShotMode))
                             {
                                 Gauge = Math.Min(1, Gauge + 0.0015);
                             }
@@ -1021,11 +1078,14 @@ namespace TestSheet
 							Standard.FrameTimer--;
 						player.SetMoveSpeed(3);
 						PressedATimer = Math.Min(25, PressedATimer + 1);
+                        if(Checker.Weapon_Melee==18&&!ShotMode)
+                        ChainTimer++;
 					}
 					else
 					{
 						player.SetMoveSpeed(6);
 						PressedATimer = Math.Max(0, PressedATimer - 3);
+                        ChainTimer = 0;
 					}
 
 
@@ -1621,7 +1681,14 @@ namespace TestSheet
                         }
                     }
 
-                    Standard.DrawLight(BloodLayer.GetBound(), Color.DarkBlue, (float)(PressedATimer / 100.0), Standard.LightMode.Absolute);
+                    Color OveColor;
+                    if (Checker.Weapon_Melee == 18&&!ShotMode)
+                        OveColor = Color.Red;
+                    else
+                        OveColor = Color.DarkBlue;
+
+
+                    Standard.DrawLight(BloodLayer.GetBound(), OveColor, (float)(PressedATimer / 100.0), Standard.LightMode.Absolute);
 
 					if (FreezeTimer > 0)
 						Standard.ClearFadeAnimation();
@@ -1788,7 +1855,7 @@ namespace TestSheet
 			public DrawingLayer player;
 			private Point MovePoint=new Point(0,0);
 			private int Range=130;
-			private int MoveSpeed=6;
+			private double MoveSpeed=6;
 			private int AttackSpeed = 15;
 			private int AttackTimer = 0;
 			//private int AttackIndex = -1;
@@ -1796,7 +1863,7 @@ namespace TestSheet
 
             private Point DeadPoint;
 		
-			public void SetMoveSpeed(int s)
+			public void SetMoveSpeed(double s)
 			{
 				MoveSpeed = s;
 			}
@@ -1927,11 +1994,11 @@ namespace TestSheet
                 if (ShotMode)
                 {
                   
-                    if (!IsEndPhase && StartStageTimer == 0&&bullets>=1)
+                    if (!IsEndPhase && StartStageTimer == 0&&Bullets>=1)
                     {
                         for (int i = 0; i < enemies.Count; i++)
                         {
-                            if (!enemies[i].IsDead()&&Method2D.Distance(enemies[i].getCenter(),Cursor.GetPos())<150 && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range&&Cursor.JustdidLeftClick()) /*enemies[i].getBound().Contains(Cursor.GetPos())*/
+                            if (!enemies[i].IsDead()&&Checker.GunEvent(enemies[i].getCenter()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range&&Cursor.JustdidLeftClick()) /*enemies[i].getBound().Contains(Cursor.GetPos())*/
                             {
                                 //AttackIndex = i;
                                 if(enemies[i].IsGhost)
@@ -1956,23 +2023,47 @@ namespace TestSheet
 
                         if (isAttacking)
                             return;
-                        for (int i = 0; i < enemies.Count; i++)
+                        if(Checker.Weapon_Melee==18&&!ShotMode&&ChainTimer>40)
                         {
-                            if (!enemies[i].IsDead()&&enemies[i].getBound().Contains(Cursor.GetPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range)
+                            for (int i = 0; i < enemies.Count; i++)
                             {
-                                //AttackIndex = i;
-                                if (enemies[i].IsGhost)
-                                    enemies[i].DeadActivate(Color.WhiteSmoke);
-                                else
-                                    enemies[i].DeadActivate(Color.DarkRed);
-                                DeadPoint = enemies[i].GetPos();
-                                isAttacking = true;
-                                AttackTimer = AttackSpeed;
-                                if (enemies[i].IsGhost)
-                                    return;
-                            }
+                                if (!enemies[i].IsDead() && Method2D.Distance(Cursor.GetPos(), enemies[i].getCenter())<100 && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range)
+                                {
+                                    //AttackIndex = i;
+                                    if (enemies[i].IsGhost)
+                                        enemies[i].DeadActivate(Color.WhiteSmoke);
+                                    else
+                                        enemies[i].DeadActivate(Color.DarkRed);
+                                    DeadPoint = enemies[i].GetPos();
+                                    isAttacking = true;
+                                    AttackTimer = AttackSpeed;
+                                                                    
+                                }
 
+                            }
                         }
+                        else
+                        {
+                            for (int i = 0; i < enemies.Count; i++)
+                            {
+                                if (!enemies[i].IsDead() && enemies[i].getBound().Contains(Cursor.GetPos()) && Method2D.Distance(GetCenter(), enemies[i].getCenter()) < Range)
+                                {
+                                    //AttackIndex = i;
+                                    if (enemies[i].IsGhost)
+                                        enemies[i].DeadActivate(Color.WhiteSmoke);
+                                    else
+                                        enemies[i].DeadActivate(Color.DarkRed);
+                                    DeadPoint = enemies[i].GetPos();
+                                    isAttacking = true;
+                                    AttackTimer = AttackSpeed;
+                                    return;
+                                    if (enemies[i].IsGhost)
+                                        return;
+                                }
+
+                            }
+                        }
+                      
                     }
                 }
                 MovePoint = Cursor.GetPos();	
@@ -2879,6 +2970,24 @@ namespace TestSheet
 
         public static double BloodStack = 0;
         public static readonly int Default_AttackSpeed = 15;
+
+        private static event Func<Point, bool> gunEvent;
+        private static event Action gunSoundEvent;
+
+        public static bool GunEvent(Point Enemy_Center) => gunEvent(Enemy_Center);
+
+        public static void GunSoundEvent() => gunSoundEvent();
+
+        public static void AttachGunEvent(Func<Point, bool> gun_event, Action gun_sound_Event)
+        {
+            gunEvent = null;
+            gunEvent += gun_event;
+            gunSoundEvent = null;
+            gunSoundEvent += gun_sound_Event;
+                
+        }
+       
+
         private static int weapon_Melee;
         public static int Weapon_Melee
         {
@@ -2888,7 +2997,8 @@ namespace TestSheet
             }
             set
             {
-                GetWeapon_Melee(value);
+                if(!Tester.ShotMode)
+                    Equip_Weapon_Melee(value);
                 weapon_Melee = value;
             }
         }
@@ -2901,13 +3011,60 @@ namespace TestSheet
             }
             set
             {
+                if(Tester.ShotMode)
+                    Equip_Weapon_Ranged(value);
                 weapon_Ranged = value;
+            }         
+        }
+
+        private static void Equip_Weapon_Ranged(int WeaponCode)
+        {
+
+            switch (WeaponCode)
+            {
+                
+                case 50:
+                    GunSetter(500, 1.0f, "Player_Ani_PIS01", "Player_Ani_PIS02");
+                    AttachGunEvent((Enemy_Center) =>
+                    {
+                        return Method2D.Distance(Enemy_Center, Cursor.GetPos()) < 100;
+                    }, ()=>Standard.PlaySE("RevolverReload"));
+                    Tester.Bullets_Max = 6;
+                    Tester.ReloadTime = 40;
+                    break;
+                case 52:
+                    GunSetter(500, 2f, "Player_Ani_GUN01", "Player_Ani_GUN02");
+                    AttachGunEvent((Enemy_Center) =>
+                    {
+                        return Method2D.Distance(Enemy_Center, Cursor.GetPos()) < 200;
+                    }, ()=>Standard.PlaySE("Reload"));
+                    Tester.Bullets_Max = 2;
+                    Tester.ReloadTime = 70;
+
+                    break;
+                case -1:
+                    Tester.ShotMode = false;
+                    Tester.Bullets_Max = -1;
+                    break;
+
+
             }
 
-           
+        }
 
+        private static void GunSetter(int Range, double attackSpeed_coefficient, string Ani1, string Ani2)
+        {
+            Tester.player.setRange(Range);
+            Checker.AttackSpeed_Coefficient_Weapon = attackSpeed_coefficient;
+            if (Tester.ShotMode && !Tester.player.player.ContainsSprite(Ani1))
+            {
+                Tester.player.player.ClearAnimation();
+                Tester.player.player.SetSprite(Ani1);
+                Tester.player.player.AttachAnimation(30, Ani1, Ani2);
+            }
 
         }
+
 
 
 
@@ -2915,15 +3072,15 @@ namespace TestSheet
         {
             Tester.player.setRange(Range);
             Checker.AttackSpeed_Coefficient_Weapon = attackSpeed_coefficient;
-            if(!Tester.ShotMode)
+            if(!Tester.ShotMode&&!Tester.player.player.ContainsSprite(Ani1))
             {
                 Tester.player.player.ClearAnimation();
+                Tester.player.player.SetSprite(Ani1);
                 Tester.player.player.AttachAnimation(30, Ani1, Ani2);
             }
-
         }
 
-        public static void GetWeapon_Melee(int WeaponCode)
+        public static void Equip_Weapon_Melee(int WeaponCode)
         {
             switch (WeaponCode)
             {
@@ -2954,6 +3111,9 @@ namespace TestSheet
                     break;
                 case 16:
                     WeaponSetter(140, 1, "Player_Ani_T01", "Player_Ani_T02");
+                    break;
+                case 18:
+                    WeaponSetter(145, 1.10 / 1.0, "Player_Ani_CH01", "Player_Ani_CH02");
                     break;
 
 
@@ -3080,7 +3240,7 @@ namespace TestSheet
                     Bullet.MoveByVector(new Point(1, 0), 20);
                 }
                 Bullet.SetSprite("BulletEmptyIcon");
-                for (int i = 0; i < Tester.bullets_Max-Tester.Bullets; i++)
+                for (int i = 0; i < Tester.Bullets_Max-Tester.Bullets; i++)
                 {
                     Bullet.Draw();
                     Bullet.MoveByVector(new Point(1, 0), 20);
@@ -3089,7 +3249,7 @@ namespace TestSheet
 
             }
 
-            DrawingLayer MeleeWeaponIcon = new DrawingLayer("WeaponIcon_" + Checker.Weapon_Melee.ToString(), new Rectangle(50, 200, 80, 80));
+           
 
             Standard.ViewportSwapDraw(new Viewport(MasterInfo.FullScreen), () =>
             {
@@ -3205,7 +3365,47 @@ namespace TestSheet
                 gauge.Draw(Tester.FixedCamera, Color.AliceBlue);
                 gauge.Draw(Tester.FixedCamera, Color.Red * (float)(1 - Tester.Gauge));
 
-                MeleeWeaponIcon.Draw(Tester.FixedCamera, Color.White);
+                int MainWeaponNumber;
+                int SubWeaponNumber;
+                int MainBoxNum;
+                int SubBoxNum;
+
+                if(Tester.ShotMode)
+                {
+                    MainWeaponNumber = Weapon_Ranged;
+                    SubWeaponNumber = Weapon_Melee;
+                    MainBoxNum = 2;
+                    SubBoxNum = 1;
+                }
+                else
+                {
+                    MainWeaponNumber = Weapon_Melee;
+                    SubWeaponNumber = Weapon_Ranged;
+                    MainBoxNum = 1;
+                    SubBoxNum = 2;
+                }
+
+
+
+
+                Rectangle WeaponIconBound = new Rectangle(50, 200, 80, 80);
+                DrawingLayer WeaponIcon = new DrawingLayer("WeaponIcon_" + MainWeaponNumber.ToString(), WeaponIconBound);
+                Rectangle SmallWeaponIcon = new Rectangle(WeaponIcon.GetCenter(), new Point(60, 60));
+                WeaponIcon.SetBound(SmallWeaponIcon);
+                WeaponIcon.SetCenter(new Point(WeaponIconBound.Center.X,WeaponIconBound.Center.Y+5));
+                WeaponIcon.Draw(Tester.FixedCamera, Color.White);
+                WeaponIcon = new DrawingLayer("IconBox"+MainBoxNum, WeaponIconBound);
+                WeaponIcon.Draw(Tester.FixedCamera, Color.White);
+                if(Weapon_Ranged!=-1)
+                {
+                    Rectangle SubIconBound = new Rectangle(WeaponIcon.GetPos().X + WeaponIcon.GetBound().Width + 10, WeaponIcon.GetPos().Y, 60, 60);
+                    WeaponIcon = new DrawingLayer("WeaponIcon_" + SubWeaponNumber.ToString(),new Rectangle(0,0,50,50));
+                    WeaponIcon.SetCenter(SubIconBound.Center);
+                    WeaponIcon.Draw(Tester.FixedCamera, Color.White);
+                    WeaponIcon.SetBound(SubIconBound);
+                    WeaponIcon.SetSprite("IconBox"+SubBoxNum);
+                    WeaponIcon.Draw(Tester.FixedCamera, Color.White);
+                }
             }
 
             );
@@ -3415,6 +3615,15 @@ namespace TestSheet
         {
             return GetIndex() >= 12;
         }
+        public bool IsWeaponMelee()
+        {
+            return IsWeapon() && GetIndex() < 50;
+        }
+        public bool IsWeaponRanged()
+        {
+            return IsWeapon() && GetIndex() >= 50;
+        }
+        
 		public void Update()
 		{
 			if (FlipTimer > 0)
@@ -3444,9 +3653,26 @@ namespace TestSheet
             {
 
                 Standard.PlaySE("Reload");
-                int temp = Checker.Weapon_Melee;
-                Checker.Weapon_Melee = GetIndex();
-                FrontFrameName = "Reward" + "Card_" + temp;
+                if(IsWeaponMelee())
+                {
+                    Tester.ShotModeBuffer = false;
+                    int temp = Checker.Weapon_Melee;
+                    Checker.Weapon_Melee = GetIndex();
+                    FrontFrameName = "Reward" + "Card_" + temp;
+                }
+                else if(IsWeaponRanged()&&Checker.Weapon_Ranged==-1)
+                {
+                    Tester.ShotModeBuffer = true;
+                    Checker.Weapon_Ranged = GetIndex();
+                    RemoveTimer = 30;
+                }
+                else
+                {
+                    Tester.ShotModeBuffer = true;
+                    int temp = Checker.Weapon_Ranged;
+                    Checker.Weapon_Ranged = GetIndex();
+                    FrontFrameName = "Reward" + "Card_" + temp;
+                }
                 return;
             }
 
@@ -3528,29 +3754,15 @@ namespace TestSheet
 						Checker.Luck = 3;
                     Tester.Monolog.RandomAttach("I found a clover.", "Is this helpful?");
                     break;
-                case 12:                 
-                    Checker.Weapon_Melee = 12;                
-                    break;
-                case 13:                 
-                    Checker.Weapon_Melee = 13;                
-                    break;
-                case 14:               
-                    Checker.Weapon_Melee = 14;                  
-                    break;
-                case 15:
-                    Checker.Weapon_Melee = 15;
-                    break;
-                case 16:
-                    Checker.Weapon_Melee = 16;
-                    break;
-                case 17:
-                    Checker.Weapon_Melee = 17;
-                    break;
-
+              
 
             }
+            if (IsWeaponMelee())
+                Checker.Weapon_Melee = EventNum;
+            if (IsWeaponRanged())
+                Checker.Weapon_Ranged = EventNum;
         }
-		public void Draw()
+        public void Draw()
 		{
 			if (RemoveTimer < 30 && RemoveTimer > 5)
 			{
@@ -3568,8 +3780,7 @@ namespace TestSheet
 				Frame.Draw();
 				Standard.DrawAddon(Frame, Color.White, 1f, "CardFrame");
                 if (IsWeapon()&&Cursor.IsOn(Frame))
-                    Standard.DrawLight(Frame, Color.AliceBlue, 0.5f,Standard.LightMode.Absolute);
-                
+                    Standard.DrawLight(Frame, Color.AliceBlue, 0.5f,Standard.LightMode.Absolute);                
 			}
 			else
 			{
@@ -3638,6 +3849,9 @@ namespace TestSheet
             ValueTable.Add(14, 7);
             ValueTable.Add(15, 55);
             ValueTable.Add(16, 80);
+            ValueTable.Add(50, 0.01);
+            ValueTable.Add(52, 15);
+            ValueTable.Add(18, 0.1);
 
             foreach (KeyValuePair<int,double> v in ValueTable)
 			{
@@ -3711,25 +3925,9 @@ namespace TestSheet
 							RemoveDrop(10);
 							RemoveDrop(11);
 							break;
-                        case 12:
-                            RemoveDrop(12);
-                            break;
-                        case 13:
-                            RemoveDrop(13);
-                            break;
-                        case 14:
-                            RemoveDrop(14);
-                            break;
-                        case 15:
-                            RemoveDrop(15);
-                            break;
-                        case 16:
-                            RemoveDrop(16);
-                            break;
-
-
-
                     }
+                    if (v.Key >= 12)
+                        RemoveDrop(v.Key);
 
                     return v.Key;
 				}

@@ -161,6 +161,16 @@ namespace TestSheet
 			return spriteTexture.ToString();
 		}
 
+        public bool ContainsSprite(string s)
+        {
+            foreach(string Ac in Actions)
+            {
+                if (Ac.Contains(s))
+                    return true;
+            }
+            return false;
+        }
+
 		public Rectangle GetBound()
 		{
 			return Bound;

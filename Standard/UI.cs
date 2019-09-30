@@ -356,47 +356,44 @@ namespace TestSheet
 
 
 
-	/* 각종 대사 및 나레이션을 출력하는 스크립터.
+    /* 각종 대사 및 나레이션을 출력하는 스크립터.
 	 * 외부 텍스트 파일을 읽어올수도 있고, C# 내에서 직접 이니셜라이즈 가능
 	 * 기본적으로 문장을 분해하는 능력이 있어서 연극 대본처럼 입력하면 바로 스크립트를 읽어준다.
 	 * 	 요런 느낌으로 입력하면 된다.
-	 * 	string[] Lines = new string[] { "안젤리카 : (웃는 얼굴) 당신이 그녀의 아버지가 되어주시겠습니까?",
-		"안젤리카 : (눈을 감으며) 그녀에겐 꿈이 있었답니다",
-		"나흐트 : (화난 얼굴) 닥쳐라. 빌어먹을 적군년",
-		"안젤리카 : (흥분) 하악.. 기뻐라"};
 	 * */
 
 
 
-	public class Scripter
-	{
-		private List<string> Lines;
-		private List<string> Backlog;
-		private string Script;
+    /*
+public class Scripter
+{
+    private List<string> Lines=new List<string>();
+    private List<string> Backlog=new List<string>();
+    private string Script;
 
-		public void Initialize(params string[] strings)
-		{
-			for(int i=0;i<strings.Length;i++)
-			{
-				Lines.Add(strings[i]);
-			}
-		}
-		public void LoadText(string TextName)
-		{
+    public void Initialize(params string[] strings)
+    {
+        for(int i=0;i<strings.Length;i++)
+        {
+            Lines.Add(strings[i]);
+        }
+    }
+    public void LoadText(string TextName)
+    {
 
-		}
+    }
 
-		public void ReadNext()
-		{
-			Script = Lines[0];
-			Backlog.Add(Lines[0]);
-			Lines.RemoveAt(0);
-		}
-	}
+    public void ReadNext()
+    {
+        Script = Lines[0];
+        Backlog.Add(Lines[0]);
+        Lines.RemoveAt(0);
+    }
+}
+*/
 
 
-
-	public class Button
+    public class Button
 	{
 		public IGraphicLayer ButtonGraphic;
 		public delegate void ButtonEvent();

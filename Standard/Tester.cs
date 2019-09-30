@@ -1202,7 +1202,12 @@ namespace TestSheet
 
 					Point PlayerDisPlacementVector = Method2D.Deduct(player.GetPos(), OldPlayerPos);
 					Point ViewportDisplacement = Method2D.Deduct(PlayerDisPlacementVector, OldPlayerDisplacementVector);
-					Point CursorDisplacement = Method2D.Deduct(player.GetPos(), Cursor.GetPos());
+                    if(Checker.Weapon_Melee == 14 && player.getAttackTimer() == player.getAttackSpeed() - 1)
+                    {
+                        ViewportDisplacement = new Point(0, 0);
+                    }
+
+                    Point CursorDisplacement = Method2D.Deduct(player.GetPos(), Cursor.GetPos());
 					int Dis = Method2D.Abs(CursorDisplacement);
 
 					if (Dis > 250)
@@ -1213,6 +1218,7 @@ namespace TestSheet
 					OldPlayerPos = player.GetPos();
 					OldPlayerDisplacementVector = PlayerDisPlacementVector;
 
+
 					if (SlowMode)
 					{						
 						Game1.graphics.GraphicsDevice.Viewport = new Viewport(-player.GetPos().X + CursorDisplacement.X / 4 + ViewportDisplacement.X / 2 + 400, -player.GetPos().Y + CursorDisplacement.Y / 4 + ViewportDisplacement.Y / 2 + 400, 
@@ -1220,7 +1226,8 @@ namespace TestSheet
 					}
 					else
 					{
-						Game1.graphics.GraphicsDevice.Viewport = new Viewport(-player.GetPos().X + CursorDisplacement.X / 4 + ViewportDisplacement.X / 2 + 400, -player.GetPos().Y + CursorDisplacement.Y / 4 + ViewportDisplacement.Y / 2 + 400, 
+                        
+                        Game1.graphics.GraphicsDevice.Viewport = new Viewport(-player.GetPos().X + CursorDisplacement.X / 4 + ViewportDisplacement.X / 2 + 400, -player.GetPos().Y + CursorDisplacement.Y / 4 + ViewportDisplacement.Y / 2 + 400, 
 							Zoom.X, Zoom.Y);
 					}
 
@@ -1658,12 +1665,25 @@ namespace TestSheet
 						for (int i = 0; i < enemies.Count; i++)
 						{
 							int r = Method2D.Distance(enemies[i].getCenter(), player.GetCenter());
-							Fear = Math.Min(Fear + 400.0 / Math.Pow(Math.Max(r, 9), 2), 200);
+							//Fear = Math.Min(Fear + 400.0 / Math.Pow(Math.Max(r, 9), 2), 200);
 						}
+            
+                        /*
 						if (player.IsAttacking())
-							Fear = Math.Max(0, Fear - Math.Max(1, enemies.Count / 10));
+							Fear = Math.Max(0, Fear - Math.Max(1, enemies.Count / 10));*/
 						int Sight = Math.Max(800 - (int)(Fear * 4) - Math.Min(PressedATimer * 30, 250) + Standard.Random(-5, 5), player.getRange() + 50);
-						if (FreezeTimer > 0)
+                        if (ChainTimer > 40)
+                        {
+                            Sight = Math.Min(300+Standard.Random(-30,30),3500-(ChainTimer-40)* (ChainTimer - 40)/2);
+                        }
+                        else if(ChainTimer>0)
+                        {
+                            Sight = 1100 - ChainTimer * ChainTimer / 2;
+                        }
+                        
+                        if (Checker.Weapon_Melee == 14 && !ShotMode && !IsEndPhase)
+                            Sight = 100;
+                        if (FreezeTimer > 0)
 						{
 							Sight = 800 - (int)(Fear * 4);
 							if (FreezeTimer < 170)
@@ -1966,6 +1986,10 @@ namespace TestSheet
                 {
                     if (!ShotMode)
                     {
+                        if(Checker.Weapon_Melee==14&&AttackTimer==AttackSpeed-1)
+                        {
+                            player.MoveByVector(Method2D.Deduct(DeadPoint, player.GetCenter()), Method2D.Distance(DeadPoint, player.GetCenter())+20);
+                        }
                         if (AttackTimer < AttackSpeed - 3)
                         {
                             player.MoveTo(Cursor.GetPos().X - 40, Cursor.GetPos().Y - 40, MoveSpeed + 4);
@@ -1978,6 +2002,7 @@ namespace TestSheet
                                 return;
                             }
                         }
+
                         MovePoint = Cursor.GetPos();
                         return;
                     }
@@ -2127,12 +2152,10 @@ namespace TestSheet
                                         enemies[i].DeadActivate(Color.WhiteSmoke);
                                     else
                                         enemies[i].DeadActivate(Color.DarkRed);
-                                    DeadPoint = enemies[i].GetPos();
+                                    DeadPoint = enemies[i].getCenter();
                                     isAttacking = true;
                                     AttackTimer = AttackSpeed;
                                     return;
-                                    if (enemies[i].IsGhost)
-                                        return;
                                 }
 
                             }
@@ -2150,7 +2173,7 @@ namespace TestSheet
 				if(isAttacking)
 				{
 					if(AttackTimer==AttackSpeed)/*&&AttackIndex!=-1&&enemies.Count>AttackIndex*/
-                            {
+                        {
                         /*
 						enemies[AttackIndex].enemy.SetSprite("Player_Broken2");
 						Standard.FadeAnimation(enemies[AttackIndex].enemy, 15, Color.AntiqueWhite);*/
@@ -2215,11 +2238,11 @@ namespace TestSheet
 					if(!ShowMenu&& Standard.FrameTimer%5==0)
 					{
 						if (Standard.FrameTimer % 20 < 6)
-							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Cursor.GetPos().X/2 + DeadPoint.X/2, Cursor.GetPos().Y / 2 + DeadPoint.Y / 2, 70, 70)), 15, Color.Pink);
+							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Cursor.GetPos().X/2 + DeadPoint.X/2-25, Cursor.GetPos().Y / 2 + DeadPoint.Y / 2-25, 70, 70)), 15, Color.Pink);
 						else if (Standard.FrameTimer % 20 < 12)
-							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Cursor.GetPos().X / 2 + DeadPoint.X / 2, Cursor.GetPos().Y / 2 + DeadPoint.Y / 2, 70, 70)), 15, Color.PaleVioletRed);
+							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Cursor.GetPos().X / 2 + DeadPoint.X / 2 - 25, Cursor.GetPos().Y / 2 + DeadPoint.Y / 2 - 25, 70, 70)), 15, Color.PaleVioletRed);
 						else
-							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Cursor.GetPos().X / 2 + DeadPoint.X / 2, Cursor.GetPos().Y / 2 + DeadPoint.Y / 2, 70, 70)), 15, Color.SkyBlue);
+							Standard.FadeAnimation(new DrawingLayer("BladeAttack2", new Rectangle(Cursor.GetPos().X / 2 + DeadPoint.X / 2 - 25, Cursor.GetPos().Y / 2 + DeadPoint.Y / 2 - 25, 70, 70)), 15, Color.SkyBlue);
 					}
 
 
@@ -2789,17 +2812,7 @@ namespace TestSheet
                            SetFireAndIceRoom(16, 500);
                        else
                            SetFireAndIceRoom(4, 500);
-                       break;
-                       RoomColor = Color.MediumPurple;
-                       StarColor = Color.Aquamarine;
-                       TheIceRoom = true;
-                       Standard.PlayLoopedSong("FireAndIce2");
-                       for (int i = 0; i < 28; i++)
-                       {
-                           bludgers.Add(new Bludger(new Point(i + 1, 1)));
-                           bludgers[i].bludger.SetPos(i * 1000, 0);
-                       }
-                       break;
+                       break;                     
                    case 777:
                        SetFireAndIceRoom(38, 500);
                        break;
@@ -4044,16 +4057,16 @@ namespace TestSheet
 			ValueTable.Add(11, 15);
             ValueTable.Add(12, 50);
             ValueTable.Add(13, 15);
-            ValueTable.Add(14, 7);
+            ValueTable.Add(14, 7);//7
             ValueTable.Add(15, 55);
             ValueTable.Add(16, 100);
-            ValueTable.Add(50, 0.01);
-            ValueTable.Add(51, 10000);
-            ValueTable.Add(52, 15);
-            ValueTable.Add(53, 50);
-            ValueTable.Add(54, 0.1);
+            ValueTable.Add(50, 0.01);//권총
+            ValueTable.Add(51, 40);//로켓런처
+            ValueTable.Add(52, 25);//샷건
+            ValueTable.Add(53, 60);//피스메이커
+            ValueTable.Add(54, 60);//얼음총
 
-            ValueTable.Add(18, 35);
+            ValueTable.Add(18, 35);//전기톱 35
 
             foreach (KeyValuePair<int,double> v in ValueTable)
 			{
@@ -4162,7 +4175,7 @@ namespace TestSheet
 		float DefaultSize = 0.75f;
 		Point DefaultPoint = new Point(700, 50);
 		string CurrentDialog;
-		string ViewDialog;
+		//string ViewDialog;
 
 
 		private void SetSCG(string s)

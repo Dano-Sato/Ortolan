@@ -410,9 +410,10 @@ namespace TestSheet
 
 			//미리 계수를 조정하는 것도 가능하다.
 			FadeAnimationList.Add(Color.White, new AnimationList(1 / 100.0));
-		}
+            FadeAnimationList.Add(Color.WhiteSmoke, new AnimationList(1/4.0));
+        }
 
-		public static void FadeAnimation(DrawingLayer d, int t)
+        public static void FadeAnimation(DrawingLayer d, int t)
 		{
 			if(FadeAnimationList.ContainsKey(Color.White))
 			{

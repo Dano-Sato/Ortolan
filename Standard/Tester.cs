@@ -111,10 +111,7 @@ namespace TestSheet
         public static double HeartSignal = 0;
         public static int HoldTimer = 0;
 
-
-        public static List<DrawingLayer> Cards = new List<DrawingLayer>();
-        public static int OldCardIndex;
-        public static bool ShowCard = true;
+      
         public static bool TheIceRoom = true;
         public static Point CardPos = new Point(200, 400);
         public static int FreezeTime = 210;
@@ -122,7 +119,7 @@ namespace TestSheet
         public static double TimeCoefficient = 0.5;
         public static DrawingLayer KillCard = new DrawingLayer("SDead_1", new Point(0, 0), 0.8f);
 
-        public static List<Card> Rewards = new List<Card>();
+        public static List<Card> RewardCards = new List<Card>();
 
         public static List<int> MonsterDeck = new List<int>();
 
@@ -210,6 +207,7 @@ namespace TestSheet
         public static Color CursorEffectPair_2 = Color.AliceBlue;
 
         public static Camera2D FixedCamera = new Camera2D();
+        public static int KatanaTimer = 0;
 
         private static bool shotMode;
         public static bool ShotMode
@@ -562,15 +560,10 @@ namespace TestSheet
         }
 
  
-        //public static int PressedATimer = 0;
-        public void AddCard(int i)
-		{
-			Cards.Add(new DrawingLayer("RoomCard_" + i, CardPos, 0.75f));
-		}
 
 		public void AddReward()
 		{
-			Rewards.Add(new Card(Table.Pick(),Card.CardClass.Reward));
+			RewardCards.Add(new Card(Table.Pick(),Card.CardClass.Reward));
 		}
 
 		public static void Exit()
@@ -597,23 +590,10 @@ namespace TestSheet
 			StartStageTimer = 200;
 		}
 
-		public int MouseIsOnCardsIndex()
-		{
-			int MouseIndex = -1;
-			for(int i=0;i<Cards.Count;i++)
-			{
-				if(Cursor.IsOn(Cards[i]))
-				{
-					MouseIndex=i;
-				}
-			}
-			return MouseIndex;
-		}
-
 		public static void GameInit()
 		{
             MadMoonGauge = 0;
-			Rewards.Clear();
+			RewardCards.Clear();
 			MonsterDeck.Clear();
 			MonsterDeck.Add(0);
 			MonsterDeck.Add(14);
@@ -652,7 +632,7 @@ namespace TestSheet
 
         public static void Nightmare_GameInit()
         {
-            Rewards.Clear();
+            RewardCards.Clear();
             MonsterDeck.Clear();
             MonsterDeck.Add(4);
             MonsterDeck.Add(6);
@@ -683,20 +663,6 @@ namespace TestSheet
             //Room.Number = 1;
             //Room.Set();
             Room.Init();
-			AddCard(0);
-			AddCard(1);
-			AddCard(3);
-			AddCard(4);
-			AddCard(2);
-			AddCard(5);
-			AddCard(6);
-			AddCard(13);
-
-			AddCard(77);
-			AddCard(777);
-			AddCard(66);
-			AddCard(666);
-
             Card.Init();
 
 
@@ -762,10 +728,28 @@ namespace TestSheet
             if (!IsEndPhase||GamePhase==Phase.Ending)
                 
 			{
-				Standard.FadeAnimation(Click, 10, CursorEffectPair_1);
-				Standard.FadeAnimation(Click, 10, CursorEffectPair_2);
-			}
-			else
+                if(Checker.Weapon_Melee == 14 && !ShotMode && !IsEndPhase && !GameOver)
+                {
+                    if(Method2D.Distance(Cursor.GetPos(),player.GetCenter())<50)
+                    {
+                        Standard.FadeAnimation(Click, Method2D.Distance(Cursor.GetPos(), player.GetCenter())/5, CursorEffectPair_1);
+                        Standard.FadeAnimation(Click, Method2D.Distance(Cursor.GetPos(), player.GetCenter())/5, CursorEffectPair_2);
+                    }
+                    else
+                    {
+                        Standard.FadeAnimation(Click, 10, CursorEffectPair_1);
+                        Standard.FadeAnimation(Click, 10, CursorEffectPair_2);
+                    }
+                }
+                else
+                {
+                    Standard.FadeAnimation(Click, 10, CursorEffectPair_1);
+                    Standard.FadeAnimation(Click, 10, CursorEffectPair_2);
+                }
+
+
+            }
+            else
 			{
 				Standard.FadeAnimation(Click, 10, Color.Black);
 				Standard.FadeAnimation(Click, 10, Color.DarkGray);
@@ -1250,7 +1234,7 @@ namespace TestSheet
 
 						FadeTimer = 100;
 						ScoreStack = 0;
-						Rewards.Clear();
+						RewardCards.Clear();
 						for (int i = 0; i < Room.ClearRewardCount(); i++)
 						{
 							AddReward();
@@ -1283,16 +1267,20 @@ namespace TestSheet
 						Fear = 0;
 						Score.Set(0);
 
-						for (int i = 0; i < Rewards.Count; i++)
+                        CardInfoUI.CardIndex = -1;
+						for (int i = 0; i < RewardCards.Count; i++)
 						{
-							Rewards[i].Update();
-							Rewards[i].Frame.CenterMoveTo(CardPos.X + (Card.CardWidth + 10) * i, CardPos.Y, 50);
+							RewardCards[i].Update();
+							RewardCards[i].Frame.CenterMoveTo(CardPos.X + (Card.CardWidth + 10) * i, CardPos.Y, 50);
 							if (FadeTimer > 50)
-								Rewards[i].Frame.SetRatio((1.5f * (FadeTimer - 50) + (0.75) * (100 - FadeTimer)) / 50f);
-
-							if (Rewards[i].RemoveTimer == 0)
+								RewardCards[i].Frame.SetRatio((1.5f * (FadeTimer - 50) + (0.75) * (100 - FadeTimer)) / 50f);
+                            if (Cursor.IsOn(RewardCards[i].Frame)&&RewardCards[i].FlipTimer==0)
+                            {
+                                CardInfoUI.CardIndex = RewardCards[i].GetIndex();
+                            }
+                            if (RewardCards[i].RemoveTimer == 0)
 							{
-								Rewards.RemoveAt(i);
+								RewardCards.RemoveAt(i);
 								i--;
 							}
 						}
@@ -1562,9 +1550,13 @@ namespace TestSheet
                     if (IsEndPhase)
                     {
                         NextStageButton.Draw();
-                        for (int i = 0; i < Rewards.Count; i++)
+                        for (int i = 0; i < RewardCards.Count; i++)
                         {
-                            Rewards[i].Draw();
+                            RewardCards[i].Draw();
+                        }
+                        if(CardInfoUI.CardIndex!=-1)
+                        {
+                            CardInfoUI.Draw();
                         }
                         Monolog.Draw();
                       
@@ -1681,8 +1673,17 @@ namespace TestSheet
                             Sight = 1100 - ChainTimer * ChainTimer / 2;
                         }
                         
-                        if (Checker.Weapon_Melee == 14 && !ShotMode && !IsEndPhase)
-                            Sight = 100;
+                        if (Checker.Weapon_Melee == 14 && !ShotMode && !IsEndPhase&&!GameOver&&!SlowMode)
+                        {
+                            KatanaTimer++;
+                            Sight = Math.Max(-2000,1600- KatanaTimer* KatanaTimer);
+                        }
+                        else if(!IsEndPhase)
+                        {
+                            KatanaTimer = Math.Min(100,(int)(KatanaTimer/1.1));
+                            Sight = 1600 - KatanaTimer * KatanaTimer;
+                        }
+
                         if (FreezeTimer > 0)
 						{
 							Sight = 800 - (int)(Fear * 4);
@@ -1986,9 +1987,12 @@ namespace TestSheet
                 {
                     if (!ShotMode)
                     {
-                        if(Checker.Weapon_Melee==14&&AttackTimer==AttackSpeed-1)
+
+                        if(Checker.Weapon_Melee==14&&AttackTimer>AttackSpeed-4)
                         {
-                            player.MoveByVector(Method2D.Deduct(DeadPoint, player.GetCenter()), Method2D.Distance(DeadPoint, player.GetCenter())+20);
+                            Standard.FadeAnimation(player, Standard.Random(1,8), Color.WhiteSmoke);
+                            player.MoveByVector(Method2D.Deduct(DeadPoint, player.GetCenter()), (Method2D.Distance(DeadPoint, player.GetCenter()))/3.0);
+                            return;
                         }
                         if (AttackTimer < AttackSpeed - 3)
                         {
@@ -3299,7 +3303,7 @@ namespace TestSheet
                     WeaponSetter(150, 1, "Player_Ani_TH01", "Player_Ani_TH02");
                     break;
                 case 14:
-                    WeaponSetter(140, 1, "Player_Ani_K01", "Player_Ani_K02");
+                    WeaponSetter(140, 0.8, "Player_Ani_K01", "Player_Ani_K02");
                     break;
                 case 15:
                     WeaponSetter(120, 0.5, "Player_Ani_S01", "Player_Ani_S02");
@@ -3714,27 +3718,37 @@ namespace TestSheet
 
         public static void Init() 
         {
-            InfoTable.Add(0, "Heart 1: \n\nGet 1 Heart.");
-            InfoTable.Add(1, "Heart 2: \n\nGet 1 Heart.");
-            InfoTable.Add(2, "Heart 3: \n\nGet 1 Heart.");
-            InfoTable.Add(3, "Swiftness 1:\n\nSpeed+10%, Attack Speed+7%");
-            InfoTable.Add(4, "Swiftness 2:\n\nSpeed+20%, Attack Speed+15%");
-            InfoTable.Add(5, "Swiftness 3:\n\nSpeed+30%, Attack Speed+25%");
-            InfoTable.Add(6, "Bloodthirst 1:\n\nGet 1 heart when you kill 100 enemies. ");
-            InfoTable.Add(7, "Bloodthirst 2:\n\nGet 1 heart when you kill 75 enemies. ");
-            InfoTable.Add(8, "Bloodthirst 3:\n\nGet 1 heart when you kill 50 enemies. ");
-            InfoTable.Add(9, "Luck 1:\n\nChance of avoiding death: 5%");
-            InfoTable.Add(10,"Luck 2:\n\nChance of avoiding death: 10%");
-            InfoTable.Add(11,"Luck 3:\n\nChance of avoiding death: 15%");
-            InfoTable.Add(12, "Soul Harvester:\n\nRange+2, AttackSpeed-10%\n\n <Blood Flow Acceleration> : Get doubled bloodthirst effect.");
-            InfoTable.Add(15, "Moonlight:\n\nRange-1\n\n<Sheer Celerity> : Get doubled attack-speed. ");
+            InfoTable.Add(0, "Heart 1$Get 1 Heart.$There was a red bowel\n stuffed with warmness.");
+            InfoTable.Add(1, "Heart 2$Get 2 Heart.$There were red bowels\n stuffed with warmness.");
+            InfoTable.Add(2, "Heart 3$Get 3 Heart.$There were red bowels\n stuffed with warmness.");
+            InfoTable.Add(3, "Swiftness 1$Speed+10%, Attack Speed+7%$This book eases the burden of life.");
+            InfoTable.Add(4, "Swiftness 2$Speed+20%, Attack Speed+15%$This book eases the burden of life.");
+            InfoTable.Add(5, "Swiftness 3$Speed+30%, Attack Speed+25%$This book eases the burden of life.");
+            InfoTable.Add(6, "Bloodthirst 1$Get 1 heart when you kill 100 enemies.$The cursed book turns people\n into the blood-starved beast.");
+            InfoTable.Add(7, "Bloodthirst 2$Get 1 heart when you kill 75 enemies.$The cursed book turns people\n into the blood-starved beast.");
+            InfoTable.Add(8, "Bloodthirst 3$Get 1 heart when you kill 50 enemies.$The cursed book turns people\n into the blood-starved beast.");
+            InfoTable.Add(9, "Luck 1$Chance of avoiding death: 5%$A little clover was put in a book.");
+            InfoTable.Add(10, "Luck 2$Chance of avoiding death: 10%$Little clovers were put in a book.");
+            InfoTable.Add(11, "Luck 3$Chance of avoiding death: 15%$Little clovers were put in a book.");
+            InfoTable.Add(12, "Soul Harvester$Range+2, AttackSpeed-10%\n\n <Blood Flow Acceleration> :\n Get doubled bloodthirst effect.$");        
+            InfoTable.Add(13, "Thorn Whip$Range+2.$It's looked like not so much weapon,\n but rather instrument of torture.");
+            InfoTable.Add(14, "Katana$Range+1.$The sword slightly better than \na kitchen knife.");
+            InfoTable.Add(15, "Moonlight$Range-1.\n\n<Sheer Celerity> :\n Get doubled attack-speed. $");
+            InfoTable.Add(16, "The World$Range+1.\n\n<Time Stop> :\n Enemies stop while using overclock. $Argent, mystic material was flowing\n inside the sword. ");
+            InfoTable.Add(17, "Knife$Default Weapon.$A usual kitchen knife.");
+            InfoTable.Add(18, "Yume Diary$Range+1, AttackSpeed-10%\n\n <Yume Drive> :\n While using overclock, \nAttack-speed and Move-speed bulid up. $Dear Yume, you were always with me.\n I love you, Sincerely.");
+            InfoTable.Add(50, "Fancy Roulette$6 bullets. Fast reloading. Small hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$This was not edible for them.");
+            InfoTable.Add(52, "Good Negociator$2 bullets. Medium reloading. Medium hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$this was not edible.");
+            InfoTable.Add(53, "PeaceMaker$1 bullet. Very slow reloading. Very large hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$this was not edible.");
+            InfoTable.Add(54, "Merry Christmas$2 bullet. Slow reloading. large hit-range. \n <Winter is Coming!> :\n The gun freezes" +
+                " all creatures in its hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$this was not\n edible for the creatures.");
 
 
         }
 
         public Card(int Number, CardClass WhatClass)
 		{
-			//Rewards.Add(new DrawingLayer("RewardCard_" + Standard.Random(0, 12), CardPos, 0.75f));
+			//RewardCards.Add(new DrawingLayer("RewardCard_" + Standard.Random(0, 12), CardPos, 0.75f));
 			BackFrameName = WhatClass.ToString() + "Card";
 			Frame = new DrawingLayer(BackFrameName, Tester.CardPos, 0.75f);
 			Frame.SetCenter(new Point(Tester.CardPos.X+800, Tester.CardPos.Y));
@@ -3822,6 +3836,10 @@ namespace TestSheet
         public bool IsWeapon()
         {
             return GetIndex() >= 12;
+        }
+        public static bool IsWeapon(int i)
+        {
+            return i >= 12;
         }
         public bool IsWeaponMelee()
         {
@@ -3999,6 +4017,7 @@ namespace TestSheet
 				Frame.Draw();
 
 			}
+            /*
 			if(Cursor.IsOn(Frame)&&FlipTimer==0)
 			{
                 string s;
@@ -4010,12 +4029,58 @@ namespace TestSheet
                 {
                     s = "Preparing...";
                 }
-				Standard.DrawString(s, new Vector2(Frame.GetPos().X, Frame.GetPos().Y+200), Color.Black);
-			}
+                Standard.ViewportSwapDraw(new Viewport(MasterInfo.FullScreen),
+                    () =>
+                    {
+                        DrawingLayer InfoFrame = new DrawingLayer("WhiteSpace", new Rectangle(550,150, 500, 500));
+                        InfoFrame.Draw(Tester.FixedCamera, Color.Black*0.5f);
+                        Standard.DrawString(s, new Vector2(InfoFrame.GetPos().X+50, InfoFrame.GetPos().Y + 40), Color.White);
+                    });
+
+ 			}*/
 		
 			
 		}
 	}
+
+    public static class CardInfoUI
+    {
+        public static DrawingLayer InfoFrame = new DrawingLayer("WhiteSpace", new Rectangle(550,150, 500, 500));
+        public static string InfoString;
+        public static int CardIndex;
+        public static void Draw()
+        {
+            if (Card.InfoTable.ContainsKey(CardIndex))
+            {
+                //InfoTable.Add(0, "Heart 1: \n\nGet 1 Heart.\n\n\n\n「There was a red bowel\n stuffed with warmness.」");
+                //InfoTable.Add(0, "Heart 1%Get 1 Heart.%There was a red bowel\n stuffed with warmness.);
+
+                string[] s = Card.InfoTable[CardIndex].Split('$');
+                if(s.Length<=2)
+                    InfoString = Card.InfoTable[CardIndex];
+                else
+                    InfoString = s[0]+ ": \n\n" + s[1]+ "\n\n\n\n「" + s[2]+ "」";
+            }
+            else
+            {
+                InfoString = "Preparing...";
+            }
+            Standard.ViewportSwapDraw(new Viewport(MasterInfo.FullScreen),
+                   () =>
+                   {
+                       InfoFrame.Draw(Tester.FixedCamera, Color.Black * 0.5f);
+                       Standard.DrawString(InfoString, new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 40), Color.White);
+                       if(Card.IsWeapon(CardIndex))
+                       {
+                           Standard.DrawString("To equip the weapon, Left-click the card. ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.White);
+                           Standard.DrawString("To equip the weapon, Left-click the card. ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.Red*(Math.Min(Standard.FrameTimer%60,60-Standard.FrameTimer%60)/30.0f));
+                       }
+                   });
+        }
+
+
+    }
+
 
 	public static class Table
 	{
@@ -4057,7 +4122,7 @@ namespace TestSheet
 			ValueTable.Add(11, 15);
             ValueTable.Add(12, 50);
             ValueTable.Add(13, 15);
-            ValueTable.Add(14, 7);//7
+            ValueTable.Add(14, 0.01);//7
             ValueTable.Add(15, 55);
             ValueTable.Add(16, 100);
             ValueTable.Add(50, 0.01);//권총

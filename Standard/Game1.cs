@@ -118,7 +118,7 @@ namespace TestSheet
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(WallColor);
-			Standard.DrawLight(MasterInfo.FullScreen, Tester.Room.RoomColor, Math.Max(0f,(float)(1-Tester.Score.Get() / 200.0)), Standard.LightMode.Absolute);
+			Standard.DrawLight(MasterInfo.FullScreen, Tester.Room.RoomColor, Math.Max(0f,(float)(1-Tester.Score.var / 200.0)), Standard.LightMode.Absolute);
             /*
             Viewport Temp = Game1.graphics.GraphicsDevice.Viewport;
             Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
@@ -255,6 +255,7 @@ namespace TestSheet
             }
             #region DEMOSTRING
             Standard.ViewportSwapDraw(new Viewport(MasterInfo.FullScreen), () => Standard.DrawString(Tester.FixedCamera, "DEMO PLAY", new Vector2(10, 10), Color.White));
+            Standard.ViewportSwapDraw(new Viewport(MasterInfo.FullScreen), () => Standard.DrawString(Tester.FixedCamera, HeartShop.HeartCoin.ToString(), new Vector2(200, 10), Color.White));
             #endregion
             base.Draw(gameTime);
          

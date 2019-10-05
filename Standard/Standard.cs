@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.IO;
+using System.Timers;
 using System.Threading;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -679,7 +680,20 @@ namespace TestSheet
 
         }
 
+        private static System.Timers.Timer StandardTimer = new System.Timers.Timer(100);
 
+        public static void Start()
+        {
+            StandardTimer.Start();
+        }
+        public static void AttachTickEvent(ElapsedEventHandler e)
+        {
+            StandardTimer.Elapsed += e;
+        }
+        public static void DetachTickEvent(ElapsedEventHandler e)
+        {
+            StandardTimer.Elapsed -= e;
+        }
     }
 
 

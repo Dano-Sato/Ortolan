@@ -38,7 +38,7 @@ namespace TestSheet
 
         public static void ResetGame()
         {
-            Score.var=0;
+            Score.var = 0;
             Fear = 0;
             Gauge = 1;
             Standard.FrameTimer = 0;
@@ -135,7 +135,8 @@ namespace TestSheet
         public static bool TimeSleeper = false;//2초에 한번씩 타이머를 멈춰 체감시간과 실제 타이머 작동시간을 맞춘다.
 
         private static Phase gamePhase;
-        public static Phase GamePhase {
+        public static Phase GamePhase
+        {
             get
             {
                 return gamePhase;
@@ -169,14 +170,15 @@ namespace TestSheet
             LiteMode = true;
             MadMoonSelected = false;
         });
-        public static Button ChoiceButton02 = new Button(new DrawingLayer("Choice022", new Point(ChoiceButton01.ButtonGraphic.GetBound().X, ChoiceButton01.ButtonGraphic.GetBound().Y + ChoiceButton01.ButtonGraphic.GetBound().Height + 50), 0.9f), () => {
+        public static Button ChoiceButton02 = new Button(new DrawingLayer("Choice022", new Point(ChoiceButton01.ButtonGraphic.GetBound().X, ChoiceButton01.ButtonGraphic.GetBound().Y + ChoiceButton01.ButtonGraphic.GetBound().Height + 50), 0.9f), () =>
+        {
             LiteMode = false;
             MadMoonSelected = false;
         });
 
         public static Button TutorialButton01 = new Button(new DrawingLayer("Range", new Rectangle(60, 600, 80, 80)), () => TutorialCard.SetSprite("Tutorial01"));
         public static Button TutorialButton02 = new Button(new DrawingLayer("Range", new Rectangle(160, 600, 80, 80)), () => TutorialCard.SetSprite("Tutorial022"));
-        public static Button TutorialButton03 = new Button(new DrawingLayer("InitButton", new Rectangle(460, 510, 80, 80)), () =>
+        public static Button TutorialButton03 = new Button(new DrawingLayer("InitButton", new Rectangle(260, 600, 80, 80)), () =>
         {
             if (!MadMoonSelected)
             {
@@ -196,7 +198,8 @@ namespace TestSheet
         public static readonly int SCGClickTimer_Interval = 30;
         public static DrawingLayer TolSCG = new DrawingLayer("ChoiceSCG01", new Point(300, 0), 1f);
         public static DrawingLayer MadMoonLittle = new DrawingLayer("Choice_MadMoon_LittleBit", new Point(1160, -20), 1.3f);
-        public static Button MadMoonButton = new Button(new DrawingLayer("Choice_MadMoon", new Point(600, 200), 1.2f), () => {
+        public static Button MadMoonButton = new Button(new DrawingLayer("Choice_MadMoon", new Point(600, 200), 1.2f), () =>
+        {
             MadMoonSelected = true;
             LiteMode = false;
             TutorialCard.SetSprite("Tutorial01");
@@ -241,9 +244,11 @@ namespace TestSheet
 
 
         private static int chainTimer;
-        public static int ChainTimer {
+        public static int ChainTimer
+        {
             get { return chainTimer; }
-            set {
+            set
+            {
                 chainTimer = value;
                 if (value != 0)
                 {
@@ -401,7 +406,8 @@ namespace TestSheet
                     timer--;
             }
 
-            public FTimerState State {
+            public FTimerState State
+            {
                 get
                 {
                     if (timer == 0)
@@ -412,7 +418,8 @@ namespace TestSheet
                         return FTimerState.Fade_Out;
                     else
                         return FTimerState.Show;
-                } }
+                }
+            }
 
             public float Fader
             {
@@ -441,7 +448,12 @@ namespace TestSheet
         public static List<string> EndCGList = new List<string>();
 
         private static float zoom_Coefficient;
-        public static float Zoom_Coefficient { get { return zoom_Coefficient; } set { if (value < 0) zoom_Coefficient = 0;
+        public static float Zoom_Coefficient
+        {
+            get { return zoom_Coefficient; }
+            set
+            {
+                if (value < 0) zoom_Coefficient = 0;
                 else if (value > 0.3f)
                     zoom_Coefficient = 0.3f;
                 else
@@ -451,7 +463,88 @@ namespace TestSheet
         }
 
         public static int ScrollValueFixTimer = 0;
-       
+
+        public static int LetterNum = 0;
+        public static class DungeonMaster
+        {
+            public static DrawingLayer Sprite = new DrawingLayer("Master01", new Point(500, 600), 1f);
+            public static DrawingLayer DialogFrame = new DrawingLayer("WhiteSpace", new Rectangle(500,400,500,50));
+            public static List<string> Dialogs= new List<string>();
+            private static bool isDead = false;
+
+            public static void Init()
+            {
+                isDead = false;
+                Dialogs.Clear();
+                Dialogs.Add(" ");
+                Dialogs.Add("Hello, Ortolan.I'm the master of this dungeon.");
+                Dialogs.Add("You wouldn't know why this happened for you.");
+                Dialogs.Add("The creatures you killed was my children.");
+                Dialogs.Add("You know, I needed to feed my children.");
+                Dialogs.Add("But there was no one else who wanted to visit our dungeon,");
+                Dialogs.Add("because my dungeon was notorious.");
+                Dialogs.Add("But my little devils eat fresh heart only. They were starving...");
+                Dialogs.Add("So I made some imitation hearts for them, but they didn't eat it.");
+                Dialogs.Add("That's why I made you.");
+                Dialogs.Add("you are Homunculus... working with artificial heart.");
+                Dialogs.Add("You were living...");
+                Dialogs.Add("so you gave the sign of some 'freshness' to my children.");
+                Dialogs.Add("So they ate your heart, endlessly..");
+                Dialogs.Add("But I didn't expect you to murder all of my children...");
+                Dialogs.Add("You must be a prey... I designed you as a prey...");
+                Dialogs.Add("$There's one thing you'd never known.");
+                Dialogs.Add("$I, as a Homunculus, had all memories of my whole life...");
+                Dialogs.Add("$That's why I became stronger, because of my memory..");
+                Dialogs.Add("$I died, soft reset, and died, hard reset, and died.");
+                Dialogs.Add("$I remember all the sufferings that I'd ever had.");
+                Dialogs.Add("Well...Ortolan, I didn't mean to. I didn't think you suffered like that.");
+                Dialogs.Add("I apologize...If you want to kill me, do so.");
+                Dialogs.Add("There's nothing left... And I have no power to defeat you.");
+                Dialogs.Add("Go upstairs. You can go outside.");
+            }
+            public static void Update()
+            {
+                if(MonsterDeck.Count==1&&IsEndPhase&&Cursor.JustdidLeftClick(Sprite))
+                {
+                    if(Dialogs.Count > 0)
+                    {
+                        Dialogs.RemoveAt(0);
+                        if (Dialogs.Count > 0 && Dialogs[0][0] == '$')
+                            Monolog.RandomAttach(Dialogs[0].Substring(1));
+                    }
+                    else if(!LiteMode)
+                    {
+                        isDead = true;
+                        Standard.PlayFadedSE("KnifeSound", 1f);
+                        Standard.PlayFadedSE("GunSound", 0.9f);
+                    }
+                }
+            }
+
+            public static void Draw()
+            {
+                if (MonsterDeck.Count == 1)
+                {
+                    if(!isDead)
+                    {
+                        DungeonMaster.Sprite.Draw();
+                        if (Standard.FrameTimer % 15 == 0)
+                            DungeonMaster.Sprite.SetSprite("Master" + Standard.Random(1, 11).ToString("D2"));
+                        if (Dialogs.Count > 0 && Dialogs[0][0] != '$')
+                        {
+                            Standard.DrawString(Dialogs[0], new Vector2(500, 540), Color.Black);
+                        }
+                    }
+                    else
+                    {
+                        DungeonMaster.Sprite.SetSprite("Master_Dead");
+                        DungeonMaster.Sprite.Draw();
+                    }
+                }
+            }
+
+        }
+
 
         public static void GotoMain()
         {
@@ -476,7 +569,7 @@ namespace TestSheet
         public static class Monolog
         {
             private static StringLayer Script = new StringLayer("", new Vector2(0, 0));
-            private static FTimer f = new FTimer();
+            private static FTimer f = new FTimer(160);
 
             public static void Update()
             {
@@ -511,6 +604,7 @@ namespace TestSheet
 
             }
         }
+
 
         public static class Credit
         {
@@ -565,9 +659,14 @@ namespace TestSheet
 
 
 
-        public void AddReward()
+        public static void AddReward()
         {
             RewardCards.Add(new Card(Table.Pick(), Card.CardClass.Reward));
+        }
+
+        public static void AddLetter()
+        {        
+            RewardCards.Add(new Card(100, Card.CardClass.Reward));
         }
 
         public static void Exit()
@@ -587,7 +686,6 @@ namespace TestSheet
 
                 return;
             }
-
             Standard.PlaySE("ClimbLadder2");
             Room.Number = MonsterDeck[0];
             MonsterDeck.RemoveAt(0);
@@ -624,13 +722,19 @@ namespace TestSheet
             else
                 Bludger.BludgerSpeed = 14;
 
-
+            DungeonMaster.Init();
             IsEndPhase = true;
-
+            Monolog.RandomAttach(" ");
+            
 
             Checker.Init();
             Table.Init();
             Standard.PlayLoopedSong("WindOfTheDawn");
+
+            AddLetter();
+
+            LetterNum = 0;
+            
             GamePhase = Phase.Game;
         }
 
@@ -668,6 +772,7 @@ namespace TestSheet
             //Room.Set();
             Room.Init();
             Card.Init();
+            Costume.Init();
 
 
         }
@@ -680,13 +785,30 @@ namespace TestSheet
             UpdateScore();
 
             #region 커서 애니메이션 처리
-            /*커서 애니메이션 처리*/
+            /*커서 애니메이션 처리*/           
             string ClickSprite;
             if (Standard.FrameTimer % 30 < 15)
                 ClickSprite = "Click";
             else
                 ClickSprite = "Click2";
-
+            if(ChainTimer>0)
+            {
+                ClickSprite = "Chain_Cursor";
+            }
+            if(ChainTimer>40)
+                ClickSprite = "Chain_Cursor2";
+            if(Checker.Weapon_Melee==15)
+            {
+                ClickSprite = "Moon_Cursor";
+            }
+            if (Checker.Weapon_Melee == 12)
+            {
+                ClickSprite = "Scythe_Cursor";
+            }
+            if(Checker.Weapon_Melee==16)
+                ClickSprite = "Clock_Cursor";
+            if(Checker.Weapon_Melee==14)
+                ClickSprite = "Yomi_Cursor";
             if (ShotMode)
                 ClickSprite = "GunClick";
 
@@ -723,7 +845,7 @@ namespace TestSheet
             if (Checker.Weapon_Melee == 18 && !ShotMode && ChainTimer > 40)
             {
                 CursorEffectPair_1 = Color.OrangeRed;
-                CursorEffectPair_2 = Color.DarkRed;
+                CursorEffectPair_2 = Color.AliceBlue;
             }
 
 
@@ -794,7 +916,6 @@ namespace TestSheet
                     {
                         Standard.PlayLoopedSong("DamnTutorialSong");
                     }
-                    Monolog.RandomAttach("I saw a light...from the top.");
                     if (TutorialCard.GetSpriteName() == "EmptySpace")
                     {
                         ChoiceButton01.Enable();
@@ -903,10 +1024,11 @@ namespace TestSheet
                         FreezeTimer = -1;
                         if (!IsEndPhase)
                         {
+                            /*
                             if (Standard.Random() < 0.5)
                                 Standard.FadeAnimation(new DrawingLayer("Dream", new Rectangle(200, 350, 600, 200)), 90, Color.DarkRed);
                             else
-                                Standard.FadeAnimation(new DrawingLayer("Dream2", new Rectangle(200, 350, 600, 200)), 90, Color.DarkRed);
+                                Standard.FadeAnimation(new DrawingLayer("Dream2", new Rectangle(200, 350, 600, 200)), 90, Color.DarkRed);*/
                             if (!RoomVoiceEnable)
                             {
                                 /*
@@ -946,7 +1068,7 @@ namespace TestSheet
                     }
 
 
-
+                    DungeonMaster.Update();
 
                     /*키보드 입력 처리*/
                     if (Standard.JustPressed(Keys.H))
@@ -1261,6 +1383,9 @@ namespace TestSheet
                         {
                             AddReward();
                         }
+                        if(LetterNum<9)
+                            AddLetter();
+                        LetterNum++;
                     }
                     if (IsEndPhase && StartStageTimer == 0)
                     {
@@ -1569,12 +1694,8 @@ namespace TestSheet
                         {
                             RewardCards[i].Draw();
                         }
-                        if (CardInfoUI.CardIndex != -1)
-                        {
-                            CardInfoUI.Draw();
-                        }
                         Monolog.Draw();
-
+                        DungeonMaster.Draw();
                     }
                     player.Draw();
                     player.DrawAttack();
@@ -1730,6 +1851,10 @@ namespace TestSheet
                         Standard.DrawLight(new Rectangle(0, player.GetCenter().Y + Sight, Zoom.X, Zoom.X), Color.Black, 1f, Standard.LightMode.Absolute);
                         DrawingLayer PlayerSight = new DrawingLayer("Sight3", new Rectangle(player.GetCenter().X - Sight, player.GetCenter().Y - Sight, Sight * 2, Sight * 2));
                         PlayerSight.Draw();
+                        if (Checker.Weapon_Melee == 16 && SlowMode && !ShotMode)
+                        {
+                            Standard.DrawAddon(PlayerSight, Color.White, 0.4f, "TheWorldClock");
+                        }
                         if (Standard.FrameTimer % 30 < 15)
                         {
                             //Standard.DrawAddon(PlayerSight, Color.White, Zoom_Coefficient * 2, "Con1");
@@ -1755,6 +1880,11 @@ namespace TestSheet
                         Standard.ClearFadeAnimation();
 
                     Standard.DrawAddon(BloodLayer, Room.RoomColor, 1f, "Wall3");
+
+                    if (CardInfoUI.CardIndex != -1)
+                    {
+                        CardInfoUI.Draw();
+                    }
                     #endregion
 
                     #region 세팅화면 처리
@@ -1776,17 +1906,17 @@ namespace TestSheet
                         RestartButton.Draw();
                         if (RestartButton.MouseIsOnThis())
                             RestartButton.Draw(Color.DarkRed);
-                        DrawingLayer SCGSample = new DrawingLayer("SCGSample", new Point(600, 0), 0.5f);
+                        DrawingLayer SCGSample = new DrawingLayer(Costume.GetCostume("SCGSample"), new Point(600, 0), 0.45f);
                         if (Checker.Hearts < 5)
                         {
-                            SCGSample.SetSprite("SCG_Dying");
+                            SCGSample.SetSprite(Costume.GetCostume("SCG_Dying"));
                         }
                         else if (Checker.Hearts < 25)
-                            SCGSample.SetSprite("SCGSample");
+                            SCGSample.SetSprite(Costume.GetCostume("SCGSample"));
                         else
-                            SCGSample.SetSprite("SCG_Happy");
+                            SCGSample.SetSprite(Costume.GetCostume("SCG_Happy"));
                         if (MadMoonGauge > 10)
-                            SCGSample.SetSprite("SCG_Crazy");
+                            SCGSample.SetSprite(Costume.GetCostume("SCG_Crazy"));
                         SCGSample.Draw();
                         Standard.FrameTimer--;
                     }
@@ -2006,7 +2136,7 @@ namespace TestSheet
             public Player()
             {
                 player = new DrawingLayer("Player_V6", new Rectangle(400, 400, 90, 90));
-                player.AttachAnimation(30, "Player_Ani11", "Player_Ani12");
+                player.AttachAnimation(30, Costume.GetCostume("Player_Ani11"), Costume.GetCostume("Player_Ani12"));
             }
 
             public void Draw()
@@ -2682,7 +2812,7 @@ namespace TestSheet
             {
                 RoomKeys.Clear();
                 RoomDifficulties.Clear();
-                RoomKeys.Add(0, Standard.RandomString("This is real love, Ortolan.", "You hear my voice, Ortolan."));
+                RoomKeys.Add(0, Standard.RandomString("This is real love, Ortolan."));
                 RoomDifficulties.Add(0, 1);
                 RoomKeys.Add(14, Standard.RandomString("So do not fear for I am with you."));
                 RoomDifficulties.Add(14, 1);
@@ -2704,7 +2834,7 @@ namespace TestSheet
                 RoomKeys.Add(77, "I am Alpha and Omega, The beginning and the End, " +
                     "\nThe first and the last.");
                 RoomDifficulties.Add(77, 5);
-                RoomKeys.Add(66, "Love you, sincerely.");
+                RoomKeys.Add(66, "THAT WAS A LIE, YOU IDIOT!");
                 RoomDifficulties.Add(66, 5);
 
 
@@ -2775,7 +2905,7 @@ namespace TestSheet
                         AttachSong("YoudieTheme8");
                         //Standard.PlayLoopedSong("YouDieTheme8");
                         TheIceRoom = false;
-                        Monolog.RandomAttach("...What was that?");
+                        //Monolog.RandomAttach("...What was that?");
                         /*
                         if(RoomVoiceEnable)
                              Standard.PlaySE("Voice1");*/
@@ -2785,14 +2915,14 @@ namespace TestSheet
                             SetFireRoom(2, 500);
                         else
                             SetFireRoom(1, 500);
-                        Monolog.RandomAttach("I'm alive...");
+                       // Monolog.RandomAttach("I'm alive...");
                         /*
                         if (RoomVoiceEnable)
                             Standard.PlaySE("Voice4");*/
                         break;
                     case 15:
                         SetIceRoom();
-                        Monolog.RandomAttach("I don't want to see that again.");
+                        //Monolog.RandomAttach("I don't want to see that again.");
                         /*
                        if (RoomVoiceEnable)
                            Standard.PlaySE("Voice2");*/
@@ -2802,7 +2932,7 @@ namespace TestSheet
                             SetFireAndIceRoom(2, 500);
                         else
                             SetFireAndIceRoom(1, 500);
-                        Monolog.RandomAttach("God, what do you want from me?");
+                        //Monolog.RandomAttach("God, what do you want from me?");
                         /*
                        if (RoomVoiceEnable)
                            Standard.PlaySE("Voice3");*/
@@ -3194,7 +3324,7 @@ namespace TestSheet
             {
 
                 case 50://권총
-                    GunSetter(500, 1.0f, "Player_Ani_PIS01", "Player_Ani_PIS02");
+                    GunSetter(500, 1.0f, Costume.GetCostume("Player_Ani_PIS01"), Costume.GetCostume("Player_Ani_PIS02"));
                     AttachGunEvent((Enemy_Center) =>
                     {
                         return Method2D.Distance(Enemy_Center, Cursor.GetPos()) < 100;
@@ -3210,7 +3340,7 @@ namespace TestSheet
                     Tester.ReloadTime = 40;
                     break;
                 case 51://드림런처
-                    GunSetter(500, 5.0f, "Player_Ani_RO01", "Player_Ani_RO02");
+                    GunSetter(500, 5.0f, Costume.GetCostume("Player_Ani_RO01"), Costume.GetCostume("Player_Ani_RO02"));
                     AttachGunEvent((Enemy_Center) =>
                     {
                         return Method2D.Distance(Enemy_Center, Tester.player.GetPos()) < 100;
@@ -3224,7 +3354,7 @@ namespace TestSheet
                     Tester.ReloadTime = 200;
                     break;
                 case 52: //샷건
-                    GunSetter(500, 2f, "Player_Ani_GUN01", "Player_Ani_GUN02");
+                    GunSetter(500, 2f, Costume.GetCostume("Player_Ani_GUN01"), Costume.GetCostume("Player_Ani_GUN02"));
                     AttachGunEvent((Enemy_Center) =>
                     {
                         return Method2D.Distance(Enemy_Center, Cursor.GetPos()) < 200;
@@ -3240,7 +3370,7 @@ namespace TestSheet
 
                     break;
                 case 53: //라이플
-                    GunSetter(500, 2.5f, "Player_Ani_RI01", "Player_Ani_RI02");
+                    GunSetter(500, 2.5f, Costume.GetCostume("Player_Ani_RI01"), Costume.GetCostume("Player_Ani_RI02"));
                     AttachGunEvent((Enemy_Center) =>
                     {
 
@@ -3259,7 +3389,7 @@ namespace TestSheet
 
                     break;
                 case 54: //겨울총
-                    GunSetter(500, 1f, "Player_Ani_ME01", "Player_Ani_ME02");
+                    GunSetter(500, 1f, Costume.GetCostume("Player_Ani_ME01"), Costume.GetCostume("Player_Ani_ME02"));
                     AttachGunEvent((Enemy_Center) =>
                     {
 
@@ -3320,7 +3450,7 @@ namespace TestSheet
             switch (WeaponCode)
             {
                 case 17:
-                    WeaponSetter(130, 1, "Player_Ani11", "Player_Ani12");
+                    WeaponSetter(130, 1, Costume.GetCostume("Player_Ani11"), Costume.GetCostume("Player_Ani12"));
                     /*
                     Tester.player.setRange(130);
                     Checker.AttackSpeed_Coefficient_Weapon = 1;
@@ -3328,7 +3458,7 @@ namespace TestSheet
                     Tester.player.player.AttachAnimation(30, "Player_Ani11", "Player_Ani12");*/
                     break;
                 case 12:
-                    WeaponSetter(150, 1.10 / 1.0, "Player_Ani_SH01", "Player_Ani_SH02");
+                    WeaponSetter(150, 1.10 / 1.0, Costume.GetCostume("Player_Ani_SH01"), Costume.GetCostume("Player_Ani_SH02"));
                     /*
                     Tester.player.setRange(150);
                     Checker.AttackSpeed_Coefficient_Weapon = 1.15/1.0;
@@ -3336,19 +3466,19 @@ namespace TestSheet
                     Tester.player.player.AttachAnimation(30, "Player_SH01", "Player_SH02");*/
                     break;
                 case 13:
-                    WeaponSetter(150, 1, "Player_Ani_TH01", "Player_Ani_TH02");
+                    WeaponSetter(150, 1, Costume.GetCostume("Player_Ani_TH01"), Costume.GetCostume("Player_Ani_TH02"));
                     break;
                 case 14:
-                    WeaponSetter(1000, 0.9, "Player_Ani_K01", "Player_Ani_K02");
+                    WeaponSetter(1000, 0.9, Costume.GetCostume("Player_Ani_K01"), Costume.GetCostume("Player_Ani_K02"));
                     break;
                 case 15:
-                    WeaponSetter(120, 0.5, "Player_Ani_S01", "Player_Ani_S02");
+                    WeaponSetter(120, 0.5, Costume.GetCostume("Player_Ani_S01"), Costume.GetCostume("Player_Ani_S02"));
                     break;
                 case 16:
-                    WeaponSetter(140, 1, "Player_Ani_T01", "Player_Ani_T02");
+                    WeaponSetter(140, 1, Costume.GetCostume("Player_Ani_T01"), Costume.GetCostume("Player_Ani_T02"));
                     break;
                 case 18:
-                    WeaponSetter(145, 1.10 / 1.0, "Player_Ani_CH01", "Player_Ani_CH02");
+                    WeaponSetter(145, 1.10 / 1.0, Costume.GetCostume("Player_Ani_CH01"), Costume.GetCostume("Player_Ani_CH02"));
                     break;
 
 
@@ -3768,7 +3898,7 @@ namespace TestSheet
             InfoTable.Add(11, "Luck 3$Chance of avoiding death: 15%$Little clovers were put in a book.");
             InfoTable.Add(12, "Soul Harvester$Range+2, AttackSpeed-10%\n\n <Blood Flow Acceleration> :\n Get doubled bloodthirst effect.$");
             InfoTable.Add(13, "Thorn Whip$Range+2.$It's looked like not so much weapon,\n but rather instrument of torture.");
-            InfoTable.Add(14, "Katana$Range+1.$The sword slightly better than \na kitchen knife.");
+            InfoTable.Add(14, "Yomi$Range+999. \n\n <Shadow Hunting> :\n Ortolan Disappears in the darkness.\nTake the monster's position \nafter killing that enemy. $The sword slightly better than \na kitchen knife.");
             InfoTable.Add(15, "Moonlight$Range-1.\n\n<Sheer Celerity> :\n Get doubled attack-speed. $");
             InfoTable.Add(16, "The World$Range+1.\n\n<Time Stop> :\n Enemies stop while using overclock. $Argent, mystic material was flowing\n inside the sword. ");
             InfoTable.Add(17, "Knife$Default Weapon.$A usual kitchen knife.");
@@ -3777,8 +3907,18 @@ namespace TestSheet
             InfoTable.Add(52, "Good Negociator$2 bullets. Medium reloading. Medium hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$this was not edible.");
             InfoTable.Add(53, "PeaceMaker$1 bullet. Very slow reloading. Very large hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$this was not edible.");
             InfoTable.Add(54, "Merry Christmas$2 bullet. Slow reloading. large hit-range. \n <Winter is Coming!> :\n The gun freezes" +
-                " all creatures in its hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$this was not\n edible for the creatures.");
-
+                " all creatures in its hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$This was concealed under\n the ridiculous red hat.");
+            InfoTable.Add(100, "Dear Ortolan$$Ortolan, we have a party tonight.\n\nA lot of delicacies and amusements " +
+                "\n\nare waiting for you.\n\nPlease come upstairs if you are \n\n ready to enjoy it.\n\n\n Sincerely, Your Best Friend");
+            InfoTable.Add(101, "Dear Ortolan$$Ortolan, why were you being\n so rude to our friends?\n\n We did not have any malice. \n\n Please come upstairs without \nyour dangerous knife.\n\n\nSincerely, Your Worried Friend");
+            InfoTable.Add(102, "Dear Ortolan$$Ortolan, You might have some issues.\n\nCalm down and take a rest, Please.\n\n I would not recommend you to come here\n\n with that hideous weapons.\n\n\n Sincerely, Your Gentle Friend");
+            InfoTable.Add(103, "Dear Ortolan$$Ortolan, I think you don't know how\n\n to deal with your friend.\n\n Friends want to eat you. \n\nWe know that you're trying to escape, \n\nbut that makes us much happier.   \n\n\nSincerely, Your Predators ");
+            InfoTable.Add(104, "Dear Delicious Meat$$DIE ");
+            InfoTable.Add(105, "Dear Precious Meat$$Delicious Meat was delicious meat.\n\nDelicious heart was delicious heart.\n\nDelicious body was delicious body.\n\nDelicacy was delicacy.\n\nA lot of Delicacies are waiting for us. ");
+            InfoTable.Add(106, "Dear Ortolan$$I don't understand how could this happen.\n\n You're just a little child.\n\nEven a lot of dungeon adventurers \n\ncouldn't survive us.\n\nWhat's happening to you? Let us know. \n\n\n From, Your Concerned Friend");
+            InfoTable.Add(107, "Dear Ortolan$$You don't have to be with us anymore.\n\nWe will let you do all you want.\n\n So, just one thing--don't come upstairs.\n\n\n Sincerely, Your Best Ever Friend");
+            InfoTable.Add(108, "Dear Ortolan$$I will tell you about the truth.\n\nThere is no way to go outside.\n\nThis dungeon is underground cavern. \n\n That's why couldn't you see other people.\n\n Killing us is not a solution. \n\n Let's live with each other.");
+            InfoTable.Add(109, "Dear....$$You've done a lot to us.\n\n At first you were designed as a meat, \n\nbut now you've survived this far.\n\nWell, we've gathered all together.\n\nLet's dance with each other, a last dance.");
 
         }
 
@@ -3871,11 +4011,11 @@ namespace TestSheet
         }
         public bool IsWeapon()
         {
-            return GetIndex() >= 12;
+            return IsWeapon(GetIndex());
         }
         public static bool IsWeapon(int i)
         {
-            return i >= 12;
+            return (i >= 12) && (i <100);
         }
         public bool IsWeaponMelee()
         {
@@ -3911,7 +4051,7 @@ namespace TestSheet
                 Open();
                 Standard.PlaySE("CardHandOver");
             }
-            if (Cursor.JustdidLeftClick(Frame) && FlipTimer == 0 && IsWeapon())
+            if (Cursor.JustdidLeftClick(Frame) && FlipTimer == 0 && IsWeapon()) //Weapon 카드를 열었을 때.
             {
 
                 Standard.PlaySE("Reload");
@@ -3944,6 +4084,54 @@ namespace TestSheet
             if (Cursor.JustdidLeftClick(Frame) && FlipTimer == 0 && RemoveTimer == -1)
             {
                 RemoveTimer = 30;
+                if (GetIndex() == 100)
+                {
+                    switch (Tester.LetterNum)
+                    {
+                        case 0:
+                            Tester.Monolog.RandomAttach("Fuck you..");
+                            break;
+                        case 1:
+                            Tester.Monolog.RandomAttach("Shut up, Pig...");                            
+                            break;
+                        case 2:
+                            Tester.Monolog.RandomAttach("Oh, I found a trash.");
+                            break;
+                        case 3:
+                            Tester.Monolog.RandomAttach("Ha, now you're joking.");
+                            break;
+                        case 4:
+                            Tester.Monolog.RandomAttach("Very simple, Huh?");
+                            break;
+                        case 5:
+                            Tester.Monolog.RandomAttach("Yeah, you've done a lot to me.");
+                            break;
+                        case 6:
+                            Tester.Monolog.RandomAttach("..You would never know.");
+                            break;
+                        case 7:
+                            Tester.Monolog.RandomAttach("This makes me even pleased.");
+                            break;
+                        case 8:
+                            Tester.Monolog.RandomAttach("Well, then I'll do  killing for my pleasure.");
+                            break;
+                        case 9:
+                            Tester.Monolog.RandomAttach("This is not last for me. This is ENDLESS");
+                            break;
+
+
+
+                    }
+                    if (Tester.ShotMode)
+                    {
+                        Checker.GunFireEvent();
+                    }
+                    else
+                    {
+                        Standard.PlaySE("Trash");
+                    }
+  
+                }
             }
 
         }
@@ -4086,20 +4274,42 @@ namespace TestSheet
         public static int CardIndex;
         public static void Draw()
         {
-            if (Card.InfoTable.ContainsKey(CardIndex))
+            if(CardIndex<100)
             {
-                //InfoTable.Add(0, "Heart 1: \n\nGet 1 Heart.\n\n\n\n「There was a red bowel\n stuffed with warmness.」");
-                //InfoTable.Add(0, "Heart 1%Get 1 Heart.%There was a red bowel\n stuffed with warmness.);
+                if (Card.InfoTable.ContainsKey(CardIndex))
+                {
+                    //InfoTable.Add(0, "Heart 1: \n\nGet 1 Heart.\n\n\n\n「There was a red bowel\n stuffed with warmness.」");
+                    //InfoTable.Add(0, "Heart 1%Get 1 Heart.%There was a red bowel\n stuffed with warmness.);
 
-                string[] s = Card.InfoTable[CardIndex].Split('$');
-                if (s.Length <= 2)
-                    InfoString = Card.InfoTable[CardIndex];
+                    string[] s = Card.InfoTable[CardIndex].Split('$');
+                    if (s.Length <= 2)
+                        InfoString = Card.InfoTable[CardIndex];
+                    else
+                        InfoString = s[0] + ": \n\n" + s[1] + "\n\n\n\n「" + s[2] + "」";
+                }
                 else
-                    InfoString = s[0] + ": \n\n" + s[1] + "\n\n\n\n「" + s[2] + "」";
+                {
+                    InfoString = "Preparing...";
+                }
             }
             else
             {
-                InfoString = "Preparing...";
+                if (Card.InfoTable.ContainsKey(CardIndex+Tester.LetterNum))
+                {
+                    //InfoTable.Add(0, "Heart 1: \n\nGet 1 Heart.\n\n\n\n「There was a red bowel\n stuffed with warmness.」");
+                    //InfoTable.Add(0, "Heart 1%Get 1 Heart.%There was a red bowel\n stuffed with warmness.);
+
+                    string[] s = Card.InfoTable[CardIndex + Tester.LetterNum].Split('$');
+                    if (s.Length <= 2)
+                        InfoString = Card.InfoTable[CardIndex + Tester.LetterNum];
+                    else
+                        InfoString = s[0] + ": \n\n" + s[1] + "\n\n\n\n「" + s[2] + "」";
+                }
+                else
+                {
+                    InfoString = "Preparing...";
+                }
+
             }
             Standard.ViewportSwapDraw(new Viewport(MasterInfo.FullScreen),
                    () =>
@@ -4528,6 +4738,11 @@ namespace TestSheet
                 int HeartNum = Int32.Parse(s[1]);
                 Checker.Hearts = HeartNum;
             }
+
+            if (s.Length >= 2 && s[0] == "c")
+            {
+                Costume.CostumeNumber.var = Int32.Parse(s[1]);
+            }
         }
 
         public static void Update()
@@ -4627,8 +4842,7 @@ namespace TestSheet
         }
 
         private static string AccountPath = "HeartAccount.txt";
-        private static string Seed = "OrtolanIsGreat";
-
+        private static string Seed = "OrtolanIsGreat!_"+System.Security.Principal.WindowsIdentity.GetCurrent().Name;
 
         private static byte[] SHA256_toByte(string inputString)
         {
@@ -4641,7 +4855,6 @@ namespace TestSheet
             StringBuilder sb = new StringBuilder();
             foreach (byte b in SHA256_toByte(inputString))
                 sb.Append(b.ToString("X2"));
-
             return sb.ToString();
         }
 
@@ -4707,6 +4920,7 @@ namespace TestSheet
 
         public static void AddAccount(string Account)
         {
+
             string s = Account + "/"+DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss");
             if (!File.Exists(AccountPath))
             {
@@ -4743,8 +4957,44 @@ namespace TestSheet
         }
 
     }
-    
 
+
+    public static class Costume
+    {
+        public static Dictionary<string, string> BunnyCostumeTable=new Dictionary<string, string>();
+        public static Dictionary<string, string> MaidCostumeTable = new Dictionary<string, string>();
+        public static SafeInt CostumeNumber=new SafeInt(0);
+
+        public static void Init()
+        {
+            BunnyCostumeTable.Add("SCGSample", "SCG_Bunny_Default");
+            BunnyCostumeTable.Add("SCG_Crazy", "SCG_Bunny_Crazy");
+            BunnyCostumeTable.Add("SCG_Happy", "SCG_Bunny_Happy");
+            BunnyCostumeTable.Add("SCG_Dying", "SCG_Bunny_Dying");
+
+        }
+
+        public static string GetCostume(string CostumeName)
+        {
+            if (CostumeNumber.var == 1)
+            {
+                if(BunnyCostumeTable.ContainsKey(CostumeName))
+                     return BunnyCostumeTable[CostumeName];
+                if (Game1.content.assetExists(CostumeName + "B"))
+                    return CostumeName + "B";
+            }
+
+
+            if (CostumeNumber.var == 2&&MaidCostumeTable.ContainsKey(CostumeName))
+                return MaidCostumeTable[CostumeName];
+            return CostumeName;
+        }
+
+
+
+
+
+    }
 
 
 

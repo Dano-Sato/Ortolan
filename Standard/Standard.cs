@@ -19,20 +19,12 @@ using System.Runtime.InteropServices;
 namespace TestSheet
 {
 
-	/* 게임 엔진의 기본적인 파트를 구현합니다.
+    /* 게임 엔진의 기본적인 파트를 구현합니다.
 	 * 기본 함수, Standard IO(커서 및 키보드 작동), 기본 사운드 전반을 담당합니다.
 	 */
 
-	public class MouseSetter
+    public static class Standard
 	{
-		
-		
-
-	}
-
-	public static class Standard
-	{
-
 		/*기본 인자*/
 		public static int FrameTimer;//프레임 수를 센다.
 
@@ -355,12 +347,12 @@ namespace TestSheet
 			if(lightMode==LightMode.Absolute)
 			{
 				DrawingLayer AbsoluteLightLayer = new DrawingLayer("WhiteSpace", Bound);
-				AbsoluteLightLayer.Draw(color, opacity);
+				AbsoluteLightLayer.Draw(color*opacity);
 			}
 			else if(lightMode==LightMode.Vignette)
 			{
 				DrawingLayer AbsoluteLightLayer = new DrawingLayer("Light", Bound);
-				AbsoluteLightLayer.Draw(color, opacity);
+				AbsoluteLightLayer.Draw(color * opacity);
 			}
 		}
 		public static void DrawLight(DrawingLayer d, Color color, float opacity, LightMode lightMode)
@@ -368,26 +360,26 @@ namespace TestSheet
 			if (lightMode == LightMode.Absolute)
 			{
 				DrawingLayer AbsoluteLightLayer = new DrawingLayer("WhiteSpace", d.GetBound());
-				AbsoluteLightLayer.Draw(color, opacity);
+				AbsoluteLightLayer.Draw(color * opacity);
 			}
 			else if (lightMode == LightMode.Vignette)
 			{
 				DrawingLayer AbsoluteLightLayer = new DrawingLayer("Light", d.GetBound());
-				AbsoluteLightLayer.Draw(color, opacity);
+				AbsoluteLightLayer.Draw(color * opacity);
 			}
 		}
 
 		public static void DrawAddon(DrawingLayer d, Color color, float opacity, string LayerName)
 		{
 			DrawingLayer AddonLayer = new DrawingLayer(LayerName, d.GetBound());
-			AddonLayer.Draw(color, opacity);
+			AddonLayer.Draw(color * opacity);
 		}
 
 
         public static void DrawAddon(Camera2D cam, DrawingLayer d, Color color, float opacity, string LayerName)
         {
             DrawingLayer AddonLayer = new DrawingLayer(LayerName, d.GetBound());
-            AddonLayer.Draw(cam, color, opacity);
+            AddonLayer.Draw(cam, color * opacity);
         }
 
 
@@ -408,9 +400,10 @@ namespace TestSheet
 			//FadeAnimation_ColorException.Add(ExampleColor);
 			//제외할 컬러들을 선택한다.
 			FadeAnimation_ColorException.Add(Color.LightSeaGreen);
+            FadeAnimation_ColorException.Add(ParticleEngine.BloodColor);
 
-			//미리 계수를 조정하는 것도 가능하다.
-			FadeAnimationList.Add(Color.White, new AnimationList(1 / 100.0));
+            //미리 계수를 조정하는 것도 가능하다.
+            FadeAnimationList.Add(Color.White, new AnimationList(1 / 100.0));
             FadeAnimationList.Add(Color.WhiteSmoke, new AnimationList(1/4.0));
         }
 
@@ -1036,6 +1029,27 @@ namespace TestSheet
 			return Rec;
 		}
 
+        public static Color AddColor(params Color[] colors) // 망함
+        {
+            Color temp = new Color(0,0,0);
+            foreach(Color c in colors)
+            {
+                temp.R += c.R;
+                temp.G += c.G;
+                temp.B += c.B;
+            }
+            byte Max = Math.Max(temp.R,temp.G);
+            Max = Math.Max(Max, temp.B);
+            temp.R *= 100; 
+            temp.R/= Max;
+            temp.B *= 100;
+            temp.B /= Max;
+            temp.G *= 100;
+            temp.G /= Max;
+
+
+            return temp;
+        }
 
 	
 	}

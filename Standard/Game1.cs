@@ -10,8 +10,6 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using System.Drawing;
 
-
-
 namespace TestSheet
 {
     /// <summary>
@@ -183,9 +181,10 @@ namespace TestSheet
 					Standard.DrawAddon(Tester.player.player, Color.White, (float)Tester.HeartSignal * (float)(Standard.FrameTimer % 30 / 8.0), "HeartBite2");
                 if(Standard.FrameTimer%15==0)
                     Standard.FadeAnimation(new DrawingLayer("Player_Heart", Tester.player.player.GetBound()), 20, Color.Pink);
-
-
-				if (Standard.FrameTimer % 60 == 0)
+                if(Tester.Sight<0)
+                    Standard.DrawAddon(Tester.player.player, Color.Red, 1f, "Player_Heart");
+           
+                if (Standard.FrameTimer % 60 == 0)
 				{
 					if (!Tester.SlowMode)
 						Standard.PlayFadedSE("HeartBeat", Math.Min((float)Tester.HeartSignal, 1f));
@@ -221,7 +220,7 @@ namespace TestSheet
 						GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
 						Tester.KillCard.SetRatio(Math.Min((Tester.FreezeTime - 110 - Tester.FreezeTimer) * 6, 75) / 120.0);
 						Tester.KillCard.SetCenter(new Point(500, 400));
-						Tester.KillCard.Draw(Tester.FixedCamera,Color.White, (float)(Tester.FreezeTimer / 75.0));
+						Tester.KillCard.Draw(Tester.FixedCamera,Color.White * (float)(Tester.FreezeTimer / 75.0));
                         if(Tester.KillCard.GetSpriteName()=="SDead_11")
                             Standard.DrawAddon(Tester.FixedCamera, Tester.KillCard, Tester.Room.RoomColor, (float)(Tester.FreezeTimer / 75.0), "Sdead_Add");
 					}

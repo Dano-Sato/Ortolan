@@ -224,7 +224,8 @@ namespace TestSheet
 		public bool isVertical = false;
 		public int Interval;
 		public float Coefficient=0;
-		public ScrollBar(DrawingLayer frame,string BarSpriteName, int BarSize, bool is_vertical)
+        public event Action ScrollEvent;
+		public ScrollBar(DrawingLayer frame,string BarSpriteName, int BarSize, bool is_vertical, Action ScrollAction)
 		{
 			Frame = frame;
 			isVertical = is_vertical;
@@ -232,6 +233,8 @@ namespace TestSheet
 				Interval = Frame.GetBound().Height - BarSize;
 			else
 				Interval = Frame.GetBound().Width - BarSize;
+
+            ScrollEvent += ScrollAction;
 
 			if (is_vertical)
 			{
@@ -244,6 +247,8 @@ namespace TestSheet
 		}
 		public void Update()
 		{
+            if (ScrollEvent != null)
+                ScrollEvent();
 
 			//마우스 입력 처리
 			if (Cursor.IsDragging(Bar)||(Cursor.JustdidLeftClick() && Cursor.IsOn(Frame)))

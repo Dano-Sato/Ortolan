@@ -33,6 +33,7 @@ namespace TestSheet
                 Score.var++;
                 if (LiteMode && Score.var % 4 == 2)
                     Score.var++;
+            
             }
         }
 
@@ -79,6 +80,7 @@ namespace TestSheet
         public static double Lightr = 0;//화면이 좀 깜빡거리도록 하기 위해 넣은 변수
         public static DrawingLayer BloodLayer = new DrawingLayer("Blood", new Rectangle(0, 0, Zoom.X, Zoom.Y));
         public static List<DrawingLayer> DeadBodys = new List<DrawingLayer>();
+        public static int Sight;
 
         public static int ZombieSpeed = 7;
         public static int ScoreStack = 0;
@@ -93,9 +95,9 @@ namespace TestSheet
 
         public static bool ShowMenu = false;
         public static DrawingLayer MenuLayer = new DrawingLayer("WhiteSpace", new Rectangle(100, 50, 1000, 700));
-        public static ScrollBar ScrollBar_Sensitivity = new ScrollBar(new DrawingLayer("BarFrame2", new Rectangle(200, 400, 500, 50)), "Bar2", 50, false);
-        public static ScrollBar ScrollBar_SongVolume = new ScrollBar(new DrawingLayer("BarFrame2", new Rectangle(200, 220, 500, 50)), "Bar2", 50, false);
-        public static ScrollBar ScrollBar_SEVolume = new ScrollBar(new DrawingLayer("BarFrame2", new Rectangle(200, 290, 500, 50)), "Bar2", 50, false);
+        public static ScrollBar ScrollBar_Sensitivity = new ScrollBar(new DrawingLayer("BarFrame2", new Rectangle(200, 400, 500, 50)), "Bar2", 50, false,() => MasterInfo.SetFullScreen(ScrollBar_Sensitivity.Coefficient * 4 + 1f));
+        public static ScrollBar ScrollBar_SongVolume = new ScrollBar(new DrawingLayer("BarFrame2", new Rectangle(200, 220, 500, 50)), "Bar2", 50, false, () => Standard.SetSongVolume(ScrollBar_SongVolume.Coefficient));
+        public static ScrollBar ScrollBar_SEVolume = new ScrollBar(new DrawingLayer("BarFrame2", new Rectangle(200, 290, 500, 50)), "Bar2", 50, false, () => Standard.SetSEVolume(ScrollBar_SEVolume.Coefficient));
         public static DrawingLayer YouDieLayer = new DrawingLayer("Dream", new Point(200, 500), 1.0f);
         public static DrawingLayer ExitButton = new DrawingLayer("Exit", new Point(850, 650), 1.0f);
         public static DrawingLayer RestartButton = new DrawingLayer("Restart", new Point(650, 650), 1.0f);
@@ -128,6 +130,8 @@ namespace TestSheet
 
         public static DrawingLayer TutorialCard = new DrawingLayer("Tutorial01", new Point(0, 0), 0.67f);
 
+        //public static DrawingLayer 
+
         /*오버클럭 처리용 변수*/
         public static int PressedATimer;
         public static double Gauge = 1;
@@ -135,6 +139,7 @@ namespace TestSheet
         public static bool TimeSleeper = false;//2초에 한번씩 타이머를 멈춰 체감시간과 실제 타이머 작동시간을 맞춘다.
 
         private static Phase gamePhase;
+
         public static Phase GamePhase
         {
             get
@@ -214,6 +219,8 @@ namespace TestSheet
 
         public static Camera2D FixedCamera = new Camera2D();
         public static int KatanaTimer = 0;
+        public static int KatanaKillCount = 0;
+        
 
         private static bool shotMode;
         public static bool ShotMode
@@ -360,6 +367,7 @@ namespace TestSheet
                         BubbleLayer.SetSprite("EmptySpace");
                     }
                 }
+
             }
             public static void Draw()
             {
@@ -478,22 +486,22 @@ namespace TestSheet
                 Dialogs.Clear();
                 Dialogs.Add(" ");
                 Dialogs.Add("Hello, Ortolan.I'm the master of this dungeon.");
-                Dialogs.Add("You wouldn't know why this happened for you.");
+                Dialogs.Add("You wouldn't know why this happened to you.");
                 Dialogs.Add("The creatures you killed was my children.");
                 Dialogs.Add("You know, I needed to feed my children.");
                 Dialogs.Add("But there was no one else who wanted to visit our dungeon,");
                 Dialogs.Add("because my dungeon was notorious.");
-                Dialogs.Add("But my little devils eat fresh heart only. They were starving...");
+                Dialogs.Add("But my little devils eat fresh hearts only. They were starving...");
                 Dialogs.Add("So I made some imitation hearts for them, but they didn't eat it.");
                 Dialogs.Add("That's why I made you.");
-                Dialogs.Add("you are Homunculus... working with artificial heart.");
+                Dialogs.Add("you are Magic Golem... working with artificial heart.");
                 Dialogs.Add("You were living...");
                 Dialogs.Add("so you gave the sign of some 'freshness' to my children.");
                 Dialogs.Add("So they ate your heart, endlessly..");
                 Dialogs.Add("But I didn't expect you to murder all of my children...");
                 Dialogs.Add("You must be a prey... I designed you as a prey...");
                 Dialogs.Add("$There's one thing you'd never known.");
-                Dialogs.Add("$I, as a Homunculus, had all memories of my whole life...");
+                Dialogs.Add("$I, as a Golem, had all memories of my whole life...");
                 Dialogs.Add("$That's why I became stronger, because of my memory..");
                 Dialogs.Add("$I died, soft reset, and died, hard reset, and died.");
                 Dialogs.Add("$I remember all the sufferings that I'd ever had.");
@@ -600,7 +608,15 @@ namespace TestSheet
                 }
 
                 f.Update();
-                Script.Draw(Color.Black * f.Fader);
+                if(DungeonMaster.Dialogs.Count > 0 && DungeonMaster.Dialogs[0][0] == '$')
+                {
+                    Script.Draw(Color.White * f.Fader);
+                }
+                else
+                {
+                    Script.Draw(Color.Black * f.Fader);
+                }
+
 
             }
         }
@@ -766,6 +782,7 @@ namespace TestSheet
             ScrollBar_Sensitivity.Initialize(0.5f);
             ScrollBar_SongVolume.Initialize(0f);
             ScrollBar_SEVolume.Initialize(0f);
+
             Checker.Weapon_Ranged = -1;
 
             //Room.Number = 1;
@@ -783,9 +800,10 @@ namespace TestSheet
             /*기타*/
 
             UpdateScore();
+            ParticleEngine.Update();
 
             #region 커서 애니메이션 처리
-            /*커서 애니메이션 처리*/           
+            /*커서 애니메이션 처리*/
             string ClickSprite;
             if (Standard.FrameTimer % 30 < 15)
                 ClickSprite = "Click";
@@ -796,8 +814,14 @@ namespace TestSheet
                 ClickSprite = "Chain_Cursor";
             }
             if(ChainTimer>40)
+            {
                 ClickSprite = "Chain_Cursor2";
-            if(Checker.Weapon_Melee==15)
+                ParticleEngine.GenerateSmallGravityParticle(Cursor.GetPos(), -20, 0, ParticleEngine.BloodColor, Color.White * 0.5f);               
+                ParticleEngine.GenerateSmallGravityParticle(Cursor.GetPos(), -20, 0, ParticleEngine.BloodColor, Color.White * 0.2f);
+              
+
+            }
+            if (Checker.Weapon_Melee==15)
             {
                 ClickSprite = "Moon_Cursor";
             }
@@ -833,8 +857,11 @@ namespace TestSheet
                     CursorEffectPair_2 = Color.GhostWhite;
                     break;
                 case 12:
+                    /*
                     CursorEffectPair_1 = Color.PaleVioletRed;
-                    CursorEffectPair_2 = Color.Black;
+                    CursorEffectPair_2 = Color.Black;*/
+                    CursorEffectPair_1 = Color.OrangeRed;
+                    CursorEffectPair_2 = Color.AliceBlue;
                     break;
                 default:
                     CursorEffectPair_1 = Color.OrangeRed;
@@ -849,6 +876,7 @@ namespace TestSheet
             }
 
 
+        
 
 
             if (!IsEndPhase || GamePhase == Phase.Ending)
@@ -882,10 +910,12 @@ namespace TestSheet
             }
             #endregion
 
-            MasterInfo.SetFullScreen(ScrollBar_Sensitivity.Coefficient * 4 + 1f);
 
             if (GamePhase != Phase.Game)
                 Zoom_Coefficient = 0f;
+
+
+
 
             switch (GamePhase)
             {
@@ -1041,7 +1071,6 @@ namespace TestSheet
                         }
                         Room.Set();
                     }
-
 
                     if (!ShowMenu)
                     {
@@ -1224,13 +1253,10 @@ namespace TestSheet
                     if (ShowMenu)
                     {
 
+
                         ScrollBar_Sensitivity.Update();
                         ScrollBar_SongVolume.Update();
                         ScrollBar_SEVolume.Update();
-
-                        if (!IsEndPhase)
-                            Standard.SetSongVolume(ScrollBar_SongVolume.Coefficient);
-                        Standard.SetSEVolume(ScrollBar_SEVolume.Coefficient);
                         if (ExitButton.MouseJustLeftClickedThis())
                             Game1.GameExit = true;
                         if (RestartButton.MouseJustLeftClickedThis())
@@ -1381,6 +1407,7 @@ namespace TestSheet
                         }
                         else
                         {
+                            AddReward();
                             AddReward();
                         }
                         if(LetterNum<9)
@@ -1642,7 +1669,7 @@ namespace TestSheet
                     break;
                 case Phase.Game:
                     /*배경 드로우. 핏자국, 별들*/
-                    BloodLayer.Draw(Room.StarColor, Math.Min(10, Score.var) * 0.1f);
+                    BloodLayer.Draw(Room.StarColor* Math.Min(10, Score.var) * 0.1f);
                     for (int i = 0; i < DeadBodys.Count; i++)
                     {
                         if (!IsEndPhase)
@@ -1650,11 +1677,11 @@ namespace TestSheet
                             DeadBodys[i].MoveByVector(Wind, ZombieSpeed);
                             if (DeadBodys[i].GetPos().Y > MasterInfo.FullScreen.Height)
                                 DeadBodys[i].SetPos(DeadBodys[i].GetPos().X, 0);
-                            DeadBodys[i].Draw(Room.StarColor, Math.Min(10, Score.var) * 0.1f);
+                            DeadBodys[i].Draw(Room.StarColor*Math.Min(10, Score.var) * 0.1f);
                         }
                         else
                         {
-                            DeadBodys[i].Draw(Color.LightGoldenrodYellow, Math.Min(10, Score.var) * 0.1f);
+                            DeadBodys[i].Draw(Color.LightGoldenrodYellow*Math.Min(10, Score.var) * 0.1f);
                             DeadBodys[i].MoveTo(player.GetPos().X, player.GetPos().Y, 10);
                             if (Method2D.Distance(DeadBodys[i].GetPos(), player.GetPos()) < 10)
                             {
@@ -1673,20 +1700,33 @@ namespace TestSheet
                     {
                         if (YouDieLayer.GetSpriteName() != "EmptySpace")
                             YouDieLayer = new DrawingLayer("EmptySpace", new Point(200, 500), 1.5f);
-                        YouDieLayer.Draw(Color.LightGoldenrodYellow, (float)(2 * FadeTimer / 100.0));
+                        YouDieLayer.Draw(Color.LightGoldenrodYellow*(float)(2 * FadeTimer / 100.0));
                         YouDieLayer.SetPos(-Game1.graphics.GraphicsDevice.Viewport.X + 100, -Game1.graphics.GraphicsDevice.Viewport.Y + 300);
                     }
                     Standard.FadeAnimationDraw(Color.LightSeaGreen);//별이 사라지는 페이드애니메이션(컬러는 LighteaGreen으로 지정)은 아래 라이트레이어 전에 발생해야 보기 좋으므로 별도로 처리함.
-
+                     if (IsEndPhase)
+                    {
+                        if (DungeonMaster.Dialogs.Count > 0 && DungeonMaster.Dialogs[0][0] == '$')
+                        {
+                            Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 1f, Standard.LightMode.Absolute);
+                        }
+                    }
                     /*풀스크린 라이트 레이어 처리*/
 
                     if (!IsEndPhase)
                     {
-                        Standard.DrawLight(new Rectangle(0, 0, MasterInfo.PreferredScreen.Width * 4, MasterInfo.PreferredScreen.Height * 4), Color.White, 1f, Standard.LightMode.Vignette);
+                        if(Room.RoomColor==Color.Orange)
+                            Standard.DrawLight(MasterInfo.FullScreen, Color.DarkRed, 0.3f , Standard.LightMode.Absolute);
+                        Standard.FadeAnimationDraw(ParticleEngine.BloodColor);//별이 사라지는 페이드애니메이션(컬러는 LighteaGreen으로 지정)은 아래 라이트레이어 전에 발생해야 보기 좋으므로 별도로 처리함.
+                        if (Room.RoomColor == Color.Orange)
+                            Standard.DrawLight(new Rectangle(0, 0, MasterInfo.PreferredScreen.Width * 4, MasterInfo.PreferredScreen.Height * 4), Color.White, 0.5f, Standard.LightMode.Vignette);
+                        else
+                            Standard.DrawLight(new Rectangle(0, 0, MasterInfo.PreferredScreen.Width * 4, MasterInfo.PreferredScreen.Height * 4), Color.White, 1f, Standard.LightMode.Vignette);
                         //스코어 올라갈수록 보라색을 띈다.
-                        Standard.DrawLight(MasterInfo.FullScreen, Color.Purple, 0.3f * Math.Min(1.2f, (float)(Score.var / 100.0)), Standard.LightMode.Absolute);
-
+                        // Standard.DrawLight(MasterInfo.FullScreen, Color.Purple, 0.3f * Math.Min(1.2f, (float)(Score.var / 100.0)), Standard.LightMode.Absolute);
+                        Monolog.RandomAttach("");
                     }
+              
                     if (IsEndPhase)
                     {
                         NextStageButton.Draw();
@@ -1694,9 +1734,10 @@ namespace TestSheet
                         {
                             RewardCards[i].Draw();
                         }
-                        Monolog.Draw();
                         DungeonMaster.Draw();
+                        Monolog.Draw();
                     }
+                  
                     player.Draw();
                     player.DrawAttack();
 
@@ -1780,12 +1821,12 @@ namespace TestSheet
 								Standard.FadeAnimation(enemies[i].enemy, 30, Color.White);
 							}
 						}
-
+                        
 
 
 					}
                     */
-
+                    
 
                     #region 시야처리
                     if (!ShowMenu)
@@ -1799,7 +1840,7 @@ namespace TestSheet
 
                         if (player.IsAttacking())
                             Fear = Math.Max(0, Fear - Math.Max(1, enemies.Count / 10));
-                        int Sight = Math.Max(800 - (int)(Fear * 4) - Math.Min(PressedATimer * 30, 250) + Standard.Random(-5, 5), 300);
+                        Sight = Math.Max(800 - (int)(Fear * 4) - Math.Min(PressedATimer * 30, 250) + Standard.Random(-5, 5), 300);
                         if (ChainTimer > 40)
                         {
                             Sight = Math.Min(300 + Standard.Random(-30, 30), 3500 - (ChainTimer - 40) * (ChainTimer - 40) / 2);
@@ -1864,6 +1905,14 @@ namespace TestSheet
                         {
                             //Standard.DrawAddon(PlayerSight, Color.White, Zoom_Coefficient * 2, "Con2");
                             Standard.DrawAddon(PlayerSight, Color.Black, Zoom_Coefficient * 2, "Con2");
+                        }
+
+                        if(Sight<0)
+                        {
+                            Standard.FadeAnimationDraw(ParticleEngine.BloodColor);//별이 사라지는 페이드애니메이션(컬러는 LighteaGreen으로 지정)은 아래 라이트레이어 전에 발생해야 보기 좋으므로 별도로 처리함.
+                         
+                            Standard.DrawLight(new Rectangle(0, 0, MasterInfo.PreferredScreen.Width * 4, MasterInfo.PreferredScreen.Height * 4), Color.White, 1f, Standard.LightMode.Vignette);
+                            Standard.DrawLight(new Rectangle(0, 0, MasterInfo.PreferredScreen.Width * 4, MasterInfo.PreferredScreen.Height * 4), Color.DarkBlue, 0.3f, Standard.LightMode.Absolute);
                         }
                     }
 
@@ -2304,7 +2353,7 @@ namespace TestSheet
                                     DeadPoint = enemies[i].GetPos();
                                     isAttacking = true;
                                     AttackTimer = AttackSpeed;
-
+                             
                                 }
 
                             }
@@ -2450,6 +2499,7 @@ namespace TestSheet
                 DieTimer = 15;
                 enemy.SetSprite("Player_Broken2");
                 Standard.FadeAnimation(enemy, 15, Color.AntiqueWhite);
+                ParticleEngine.GenerateBlood(new Point(enemy.GetPos().X, enemy.GetPos().Y));
                 DieAction += () =>
                 {
                     if (DieTimer == 0)
@@ -2464,6 +2514,7 @@ namespace TestSheet
                             Standard.FadeAnimation(newStar = new DrawingLayer("Player2", new Rectangle(r.Center.X - Standard.Random(-30, 30), r.Center.Y - Standard.Random(-30, 30), s, s)), Standard.Random(5 * 3, 15 * 3), color);
                             DeadBodys.Add(newStar);
                         }
+                        
                         enemies.Remove(this);
                         return;
                     }
@@ -2754,7 +2805,7 @@ namespace TestSheet
             }
             public void Draw()
             {
-                bludger.Draw(BludgerColor, 0.5f);
+                bludger.Draw(BludgerColor*0.5f);
                 if (FrozenTimer > 0 && Standard.FrameTimer % 5 == 0)
                 {
                     Standard.FadeAnimation(new DrawingLayer("frozen", new Rectangle(bludger.GetPos(), new Point(100, 100))), 8, Color.FloralWhite);
@@ -2861,7 +2912,7 @@ namespace TestSheet
             }
             public static void SetFireRoom(int FireCount, int Interval)
             {
-                RoomColor = Color.MonoGameOrange;
+                RoomColor = Color.Orange;
                 StarColor = Color.Orange;
                 TheIceRoom = false;
                 AttachSong("GhostTown");
@@ -2988,7 +3039,7 @@ namespace TestSheet
                         break;
                     case 66:
                         TheIceRoom = false;
-                        RoomColor = Color.MonoGameOrange;
+                        RoomColor = Color.Orange;
                         StarColor = Color.Orange;
                         AttachSong("Inferno_Final");
                         //Standard.PlayLoopedSong("Inferno_Final");
@@ -3004,7 +3055,7 @@ namespace TestSheet
                         break;
                     case 666:
                         TheIceRoom = false;
-                        RoomColor = Color.MonoGameOrange;
+                        RoomColor = Color.Orange;
                         StarColor = Color.Orange;
                         AttachSong("Inferno_Final");
                         //Standard.PlayLoopedSong("Inferno_Final");
@@ -4990,7 +5041,118 @@ namespace TestSheet
             return CostumeName;
         }
 
+    }
 
+    public static class ParticleEngine
+    {
+        public static Dictionary<DrawingLayer, Action<DrawingLayer>> ParticleActions = new Dictionary<DrawingLayer, Action<DrawingLayer>>();
+        public static Dictionary<DrawingLayer, int> Timers = new Dictionary<DrawingLayer, int>();
+        public static Dictionary<DrawingLayer, Point> Vectors = new Dictionary<DrawingLayer, Point>();
+        public static Color BloodColor = Color.DarkRed * 5f;
+        public static void GenerateParticle(Point Origin, int Timer, int Size, Action<DrawingLayer> ParticleAction, params Color[] colors)
+        {
+            DrawingLayer particle = new DrawingLayer("Range", new Rectangle(Origin.X + Standard.Random(-20, 0), Origin.Y + Standard.Random(-20, 0), Size, Size));
+            ParticleActions.Add(particle, ParticleAction);
+            Timers.Add(particle, Timer);
+            foreach (Color c in colors)
+            {
+                Standard.FadeAnimation(particle, Timer, c);
+            }
+        }
+        public static void GenerateVectorParticle(Point Origin, Point v, int Timer, int Size, Action<DrawingLayer> ParticleAction, params Color[] colors)
+        {
+            DrawingLayer particle = new DrawingLayer("Range", new Rectangle(Origin.X + Standard.Random(-20, 0), Origin.Y + Standard.Random(-20, 0), Size, Size));
+            ParticleActions.Add(particle, ParticleAction);
+            Timers.Add(particle, Timer);
+            Vectors.Add(particle, v);
+            foreach (Color c in colors)
+            {
+                Standard.FadeAnimation(particle, Timer, c);
+            }
+        }
+
+        public static void GenerateSmallGravityParticle(Point Origin, int Random_i, int Random_j, params Color[] colors) =>
+            GenerateParticle(new Point(Origin.X + Standard.Random(Random_i, Random_j), Origin.Y + Standard.Random(Random_i, Random_j)), 30, 3, Gravity_Smaller_Action, colors);
+        public static void Update()
+        {
+            List<DrawingLayer> list = ParticleActions.Keys.ToList();
+            for (int i = 0; i < list.Count; i++)
+            {
+                if(ParticleActions.ContainsKey(list[i]))
+                    ParticleActions[list[i]](list[i]);
+                if(Timers.ContainsKey(list[i]))
+                {
+                    Timers[list[i]]--;
+
+                    if (Timers[list[i]] == 0)
+                    {
+                        RemoveParticle(list[i]);
+                        i--;                        
+                    }
+
+                }
+            }
+        }
+
+        public static void Gravity_Smaller_Action(DrawingLayer d)
+        {
+            if (Standard.FrameTimer % 2 == 0)
+                d.SetBound(new Rectangle(d.GetPos().X + 1, d.GetPos().Y + 10, d.GetBound().Size.X, d.GetBound().Size.Y));
+        }
+
+
+        public static void GenerateBlood(Point Pos)
+        {
+            GenerateParticle(Pos, 40, 60, Blood_Seed_Action, BloodColor);
+        }
+
+        public static void GenerateBloodBranch(DrawingLayer BloodSeed)
+        {
+            int r = BloodSeed.GetBound().Width / 2;
+            double w = Standard.Random() * 10;
+            Point v = new Point((int)(Math.Cos(w) * r), (int)(Math.Sin(w) * r));
+            GenerateVectorParticle(new Point(BloodSeed.GetCenter().X + v.X, BloodSeed.GetCenter().Y + v.Y), v, Timers[BloodSeed], (int)(r * 2 * 0.7f), Blood_Branch_Action, BloodColor);
+        }
+
+        public static void GrowBloodBranch(DrawingLayer BloodBranch)
+        {
+            if (Standard.Random() < 0.6)
+                return;
+            int r = BloodBranch.GetBound().Width / 2;
+            Point v = Vectors[BloodBranch];
+            GenerateVectorParticle(new Point(BloodBranch.GetCenter().X + v.X, BloodBranch.GetCenter().Y + v.Y), v, Timers[BloodBranch], (int)(r * 2 * 0.6f), Blood_Branch_Action, BloodColor);
+        }
+
+        public static void Blood_Seed_Action(DrawingLayer d)
+        {
+            if (Standard.FrameTimer % 2 == 0)
+            {
+                for (int i = 0; i < 50; i++)
+                    GenerateBloodBranch(d);
+                //추가 랜덤한 양의 Blood_Branch
+                //Branch는 벡터를 받고 성장한다. 성장중 랜덤하게 붕괴
+                RemoveParticle(d);
+
+            }
+        }
+        public static void Blood_Branch_Action(DrawingLayer d)
+        {
+            if (Standard.FrameTimer % 4 == 0&&d.GetBound().Width>=2)
+            {
+                GrowBloodBranch(d);
+                RemoveParticle(d);
+            }
+        }
+
+        public static void RemoveParticle(DrawingLayer d)
+        {
+            if(ParticleActions.ContainsKey(d))
+                ParticleActions.Remove(d);
+            if (Timers.ContainsKey(d)) 
+                Timers.Remove(d);
+            if(Vectors.ContainsKey(d))
+                Vectors.Remove(d);
+        }
 
 
 

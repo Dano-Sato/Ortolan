@@ -84,11 +84,7 @@ namespace TestSheet
 		{
 			Standard.DrawString(String, Pos, color);
 		}
-		public void Draw(Color color, float opacity)
-		{
-			Standard.DrawString(String, Pos, color * opacity);
-		}
-
+	
 	}
 
 	/* 드로잉이 행해지는 각 레이어의 클래스를 만들었습니다.
@@ -322,6 +318,12 @@ namespace TestSheet
 			Game1.spriteBatch.End();
 		}
 
+        public void Draw(params Color[] colors)
+        {
+            foreach(Color c in colors)
+                Draw(c);
+        }
+
         public void Draw(Camera2D cam, Color color)
         {
             if (SpriteSize.IsZero())//애니메이션이 없을 경우
@@ -348,57 +350,13 @@ namespace TestSheet
             Game1.spriteBatch.End();
         }
 
-        public void Draw(Color color, float opacity)
-		{
-			if (SpriteSize.IsZero())//애니메이션이 없을 경우
-			{
-                Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
-                    BlendState.AlphaBlend,
-                    null,
-                    null,
-                    null,
-                    null,
-                    Standard.MainCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
-                Game1.spriteBatch.Draw(spriteTexture, Bound, color * opacity);
-				Game1.spriteBatch.End();
-				return;
-			}
-            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
-                    BlendState.AlphaBlend,
-                    null,
-                    null,
-                    null,
-                    null,
-                    Standard.MainCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
-            Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), color * opacity);
-			Game1.spriteBatch.End();
-		}
-
-        public void Draw(Camera2D cam, Color color, float opacity)
+        public void Draw(Camera2D cam, params Color[] colors)
         {
-            if (SpriteSize.IsZero())//애니메이션이 없을 경우
-            {
-                Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
-                    BlendState.AlphaBlend,
-                    null,
-                    null,
-                    null,
-                    null,
-                    cam.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
-                Game1.spriteBatch.Draw(spriteTexture, Bound, color * opacity);
-                Game1.spriteBatch.End();
-                return;
-            }
-            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
-                    BlendState.AlphaBlend,
-                    null,
-                    null,
-                    null,
-                    null,
-                    cam.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
-            Game1.spriteBatch.Draw(spriteTexture, Bound, ProcessedSourceRect(), color * opacity);
-            Game1.spriteBatch.End();
+            foreach(Color c in colors)
+                Draw(cam, c);
         }
+
+
 
 
 

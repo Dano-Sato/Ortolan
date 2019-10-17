@@ -4349,8 +4349,8 @@ namespace TestSheet
                        }
                        else if(CardIndex<100)
                        {
-                           Standard.DrawString("This was activated when it's opened. ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.White);
-                           Standard.DrawString("This was activated when it's opened. ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.Red * (Math.Min(Standard.FrameTimer % 60, 60 - Standard.FrameTimer % 60) / 30.0f));
+                           Standard.DrawString("This was activated when it was opened. ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.White);
+                           Standard.DrawString("This was activated when it was opened. ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.Red * (Math.Min(Standard.FrameTimer % 60, 60 - Standard.FrameTimer % 60) / 30.0f));
                        }
                    });
         }

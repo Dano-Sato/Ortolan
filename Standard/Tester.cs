@@ -1439,7 +1439,7 @@ namespace TestSheet
                             RewardCards[i].Frame.CenterMoveTo(CardPos.X + (Card.CardWidth + 10) * i, CardPos.Y, 50);
                             if (FadeTimer > 50)
                                 RewardCards[i].Frame.SetRatio((1.5f * (FadeTimer - 50) + (0.75) * (100 - FadeTimer)) / 50f);
-                            if (Cursor.IsOn(RewardCards[i].Frame) && RewardCards[i].FlipTimer == 0)
+                            if (Cursor.IsOn(RewardCards[i].Frame) && RewardCards[i].FlipTimer == 0&&RewardCards[i].RemoveTimer==-1)
                             {
                                 CardInfoUI.CardIndex = RewardCards[i].GetIndex();
                             }
@@ -1710,6 +1710,8 @@ namespace TestSheet
                         {
                             Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 1f, Standard.LightMode.Absolute);
                         }
+                        if(CardInfoUI.CardIndex==100)
+                            Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 1f, Standard.LightMode.Absolute);
                     }
                     /*풀스크린 라이트 레이어 처리*/
 
@@ -2591,27 +2593,9 @@ namespace TestSheet
                     {
                         DrawAddonAction += () =>
                         {
-                            /*
-                            if (Score.Get() % 30 == 23)
-                            {
-                                Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie_2");
-                            }
-                            else if (Score.Get() % 30 == 24)
-                            {
-                                Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie_3");
-                            }
-                            else if (Score.Get() % 30 == 25)
-                            {
-                                Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie_4");
-                            }
-                            else
-                            {
+                            if (Score.var % 4 == 0)
                                 Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie");
-                            }*/
-
-                            if (Score.var == 0)
-                                Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie");
-                            else if (Score.var == 1)
+                            else if (Score.var % 4 == 1)
                                 Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie_3");
                             else
                                 Standard.DrawAddon(enemy, Color.White, 1f, "NormalZombie_4");
@@ -4362,6 +4346,11 @@ namespace TestSheet
                        {
                            Standard.DrawString("To equip the weapon, Left-click the card. ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.White);
                            Standard.DrawString("To equip the weapon, Left-click the card. ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.Red * (Math.Min(Standard.FrameTimer % 60, 60 - Standard.FrameTimer % 60) / 30.0f));
+                       }
+                       else if(CardIndex<100)
+                       {
+                           Standard.DrawString("This was activated when it's opened. ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.White);
+                           Standard.DrawString("This was activated when it's opened. ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.Red * (Math.Min(Standard.FrameTimer % 60, 60 - Standard.FrameTimer % 60) / 30.0f));
                        }
                    });
         }

@@ -9,6 +9,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using System.Drawing;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace TestSheet
 {
@@ -226,22 +228,29 @@ namespace TestSheet
 					}
 				}
 
-				bool GhostAnimate = Standard.FrameTimer % 30 < 15;
 				if (!Tester.GameOver && !Tester.ShowMenu && Tester.FreezeTimer < 0)
 				{
+                 
+
 					for (int i = 0; i < Tester.bludgers.Count; i++)
 					{
-						Tester.bludgers[i].Draw();
-						if (GhostAnimate)
-							Standard.DrawAddon(Tester.bludgers[i].bludger, Color.LightYellow, 0.1f, "GhostHead_1");
-						else
-							Standard.DrawAddon(Tester.bludgers[i].bludger, Color.LightYellow, 0.1f, "GhostHead_2");
-
+						Tester.bludgers[i].Draw();               
 						Standard.DrawAddon(Tester.bludgers[i].bludger, Color.LightYellow, 1f, "BludgerFace");
+                        if (Tester.bludgers[i].FrozenTimer > 0 && Standard.FrameTimer % 5 == 0)
+                        {
+                            Standard.FadeAnimation(new DrawingLayer("frozen", new Rectangle(Tester.bludgers[i].bludger.GetPos(), new Point(100, 100))), 8, Color.FloralWhite);
+                            return;
+                        }
+                        if (!Tester.ShowMenu && !Tester.GameOver && Standard.FrameTimer % 3 == 0)
+                        {
+                            if (Standard.FrameTimer % 30 < 15)
+                                Standard.FadeAnimation(new DrawingLayer("BludgerFire", new Rectangle(Tester.bludgers[i].bludger.GetPos(), new Point(100, 100))), 8, Tester.Bludger.BludgerColor);
+                            else
+                                Standard.FadeAnimation(new DrawingLayer("BludgerFire2", new Rectangle(Tester.bludgers[i].bludger.GetPos(), new Point(100, 100))), 16, Tester.Bludger.BludgerColor);
+                        }
+                    }
 
-					}
-
-				}
+                }
 				Checker.ShowStatus();
                 Standard.ViewportSwapDraw(new Viewport(MasterInfo.FullScreen),
     () =>

@@ -1850,14 +1850,14 @@ namespace TestSheet
                             Sight = 1100 - ChainTimer * ChainTimer / 2;
                         }
 
-                        if (Checker.Weapon_Melee == 14)
+                        if (Checker.Weapon_Melee == 14&&!IsEndPhase)
                         {
-                            if (!ShotMode && !IsEndPhase && !GameOver && !SlowMode)
+                            if (!ShotMode && !GameOver && !SlowMode)
                             {
                                 KatanaTimer++;
                                 Sight = Math.Max(-2000, 1600 - KatanaTimer * KatanaTimer);
                             }
-                            else if (!IsEndPhase)
+                            else
                             {
                                 KatanaTimer = Math.Min(100, (int)(KatanaTimer / 1.1));
                                 Sight = 1600 - KatanaTimer * KatanaTimer;
@@ -2806,19 +2806,7 @@ namespace TestSheet
             public void Draw()
             {
                 bludger.Draw(BludgerColor*0.5f);
-                if (FrozenTimer > 0 && Standard.FrameTimer % 5 == 0)
-                {
-                    Standard.FadeAnimation(new DrawingLayer("frozen", new Rectangle(bludger.GetPos(), new Point(100, 100))), 8, Color.FloralWhite);
-                    return;
-                }
-                if (!ShowMenu && !GameOver && Standard.FrameTimer % 3 == 0)
-                {
-                    if (Standard.FrameTimer % 30 < 15)
-                        Standard.FadeAnimation(new DrawingLayer("BludgerFire", new Rectangle(bludger.GetPos(), new Point(100, 100))), 8, BludgerColor);
-                    else
-                        Standard.FadeAnimation(new DrawingLayer("BludgerFire2", new Rectangle(bludger.GetPos(), new Point(100, 100))), 16, BludgerColor);
-
-                }
+        
                 Standard.DrawAddon(bludger, Color.LightYellow, 1f, "BludgerFace");
             }
 
@@ -3839,6 +3827,9 @@ namespace TestSheet
 
         public static void ShowBuffString(Status status)
         {
+            Color color = Color.White;
+            if (status == Status.Bloodthirst && Checker.weapon_Melee == 12 && !Tester.ShotMode)
+                color = Color.Red;
             int checker = -1;
             Type type = typeof(Checker);
             FieldInfo FInfo = type.GetField(status.ToString());
@@ -3851,7 +3842,7 @@ namespace TestSheet
                     InfoString = InfoString + "I";
                 }
                 StringBackGround.Draw(Tester.FixedCamera, Color.Black * 0.5f);
-                Standard.DrawString(Tester.FixedCamera, InfoString, InfoVector, Color.White * (float)(Math.Min(Standard.FrameTimer % 240, 240 - Standard.FrameTimer % 240) / 120.0 + 0.3f));
+                Standard.DrawString(Tester.FixedCamera, InfoString, InfoVector, color * (float)(Math.Min(Standard.FrameTimer % 240, 240 - Standard.FrameTimer % 240) / 120.0 + 0.3f));
                 InfoVector += new Vector2(0, 35);
                 StringBackGround.SetBound(new Rectangle(StringBackGround.GetBound().X, StringBackGround.GetBound().Y + 35, StringBackGround.GetBound().Width, StringBackGround.GetBound().Height));
 
@@ -3947,7 +3938,7 @@ namespace TestSheet
             InfoTable.Add(9, "Luck 1$Chance of avoiding death: 5%$A little clover was put in a book.");
             InfoTable.Add(10, "Luck 2$Chance of avoiding death: 10%$Little clovers were put in a book.");
             InfoTable.Add(11, "Luck 3$Chance of avoiding death: 15%$Little clovers were put in a book.");
-            InfoTable.Add(12, "Soul Harvester$Range+2, AttackSpeed-10%\n\n <Blood Flow Acceleration> :\n Get doubled bloodthirst effect.$");
+            InfoTable.Add(12, "Soul Harvester$Range+2, AttackSpeed-10%\n\n <Blood Trail> :\n Blood follows Ortolan.\n Get doubled bloodthirst effect.$");
             InfoTable.Add(13, "Thorn Whip$Range+2.$It's looked like not so much weapon,\n but rather instrument of torture.");
             InfoTable.Add(14, "Yomi$Range+999. \n\n <Shadow Hunting> :\n Ortolan Disappears in the darkness.\nTake the monster's position \nafter killing that enemy. $The sword slightly better than \na kitchen knife.");
             InfoTable.Add(15, "Moonlight$Range-1.\n\n<Sheer Celerity> :\n Get doubled attack-speed. $");
@@ -3956,7 +3947,7 @@ namespace TestSheet
             InfoTable.Add(18, "Yume Diary$Range+1, AttackSpeed-10%\n\n <Yume Drive> :\n While using overclock, \nAttack-speed and Move-speed bulid up. $Dear Yume, you were always with me.\n I love you, Sincerely.");
             InfoTable.Add(50, "Fancy Roulette$6 bullets. Fast reloading. Small hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$This was not edible for them.");
             InfoTable.Add(52, "Good Negociator$2 bullets. Medium reloading. Medium hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$this was not edible.");
-            InfoTable.Add(53, "PeaceMaker$1 bullet. Very slow reloading. Very large hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$this was not edible.");
+            InfoTable.Add(53, "PeaceMaker$1 bullet. Very slow reloading. Very large hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$And then there were none.");
             InfoTable.Add(54, "Merry Christmas$2 bullet. Slow reloading. large hit-range. \n <Winter is Coming!> :\n The gun freezes" +
                 " all creatures in its hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$This was concealed under\n the ridiculous red hat.");
             InfoTable.Add(100, "Dear Ortolan$$Ortolan, we have a party tonight.\n\nA lot of delicacies and amusements " +
@@ -5049,9 +5040,10 @@ namespace TestSheet
         public static Dictionary<DrawingLayer, int> Timers = new Dictionary<DrawingLayer, int>();
         public static Dictionary<DrawingLayer, Point> Vectors = new Dictionary<DrawingLayer, Point>();
         public static Color BloodColor = Color.DarkRed * 5f;
-        public static void GenerateParticle(Point Origin, int Timer, int Size, Action<DrawingLayer> ParticleAction, params Color[] colors)
+        public static void GenerateParticle(Point Origin, int Timer, int Size, Action<DrawingLayer> ParticleAction, params Color[] colors) => GenerateParticle("Range", Origin, Timer, Size, ParticleAction, colors);
+        public static void GenerateParticle(string ParticleTextureName, Point Origin, int Timer, int Size, Action<DrawingLayer> ParticleAction, params Color[] colors)
         {
-            DrawingLayer particle = new DrawingLayer("Range", new Rectangle(Origin.X + Standard.Random(-20, 0), Origin.Y + Standard.Random(-20, 0), Size, Size));
+            DrawingLayer particle = new DrawingLayer(ParticleTextureName, new Rectangle(Origin.X + Standard.Random(-20, 0), Origin.Y + Standard.Random(-20, 0), Size, Size));
             ParticleActions.Add(particle, ParticleAction);
             Timers.Add(particle, Timer);
             foreach (Color c in colors)
@@ -5059,9 +5051,15 @@ namespace TestSheet
                 Standard.FadeAnimation(particle, Timer, c);
             }
         }
-        public static void GenerateVectorParticle(Point Origin, Point v, int Timer, int Size, Action<DrawingLayer> ParticleAction, params Color[] colors)
+        public static DrawingLayer GenerateVectorParticle(Point Origin, Point v, int Timer, int Size, Action<DrawingLayer> ParticleAction, params Color[] colors)
         {
-            DrawingLayer particle = new DrawingLayer("Range", new Rectangle(Origin.X + Standard.Random(-20, 0), Origin.Y + Standard.Random(-20, 0), Size, Size));
+            return GenerateVectorParticle("Range", Origin, v, Timer, Size, ParticleAction, colors);
+        }
+    
+
+    public static DrawingLayer GenerateVectorParticle(string ParticleTextureName, Point Origin, Point v, int Timer, int Size, Action<DrawingLayer> ParticleAction, params Color[] colors)
+        {
+            DrawingLayer particle = new DrawingLayer(ParticleTextureName, new Rectangle(Origin.X + Standard.Random(-20, 0), Origin.Y + Standard.Random(-20, 0), Size, Size));
             ParticleActions.Add(particle, ParticleAction);
             Timers.Add(particle, Timer);
             Vectors.Add(particle, v);
@@ -5069,6 +5067,7 @@ namespace TestSheet
             {
                 Standard.FadeAnimation(particle, Timer, c);
             }
+            return particle;
         }
 
         public static void GenerateSmallGravityParticle(Point Origin, int Random_i, int Random_j, params Color[] colors) =>
@@ -5076,6 +5075,7 @@ namespace TestSheet
         public static void Update()
         {
             List<DrawingLayer> list = ParticleActions.Keys.ToList();
+       
             for (int i = 0; i < list.Count; i++)
             {
                 if(ParticleActions.ContainsKey(list[i]))
@@ -5120,7 +5120,8 @@ namespace TestSheet
                 return;
             int r = BloodBranch.GetBound().Width / 2;
             Point v = Vectors[BloodBranch];
-            GenerateVectorParticle(new Point(BloodBranch.GetCenter().X + v.X, BloodBranch.GetCenter().Y + v.Y), v, Timers[BloodBranch], (int)(r * 2 * 0.6f), Blood_Branch_Action, BloodColor);
+           GenerateVectorParticle(new Point(BloodBranch.GetCenter().X + v.X, BloodBranch.GetCenter().Y + v.Y), v, Timers[BloodBranch], (int)(r * 2 * 0.6f), Blood_Branch_Action, BloodColor);
+
         }
 
         public static void Blood_Seed_Action(DrawingLayer d)
@@ -5137,11 +5138,30 @@ namespace TestSheet
         }
         public static void Blood_Branch_Action(DrawingLayer d)
         {
-            if (Standard.FrameTimer % 4 == 0&&d.GetBound().Width>=2)
+            if (Standard.FrameTimer % 4 == 0&&d.GetBound().Width>=10)
             {
-                GrowBloodBranch(d);
-                RemoveParticle(d);
+                if(Checker.Weapon_Melee==12&&!Tester.ShotMode)
+                {
+                    if(Standard.FrameTimer %8==0)
+                    {
+                        AbsorbBloodBranch(d);
+                        RemoveParticle(d);
+                    }
+                }
+                else
+                {
+                    GrowBloodBranch(d);
+                    RemoveParticle(d);
+                }
             }
+        }
+
+        public static void AbsorbBloodBranch(DrawingLayer BloodBranch)
+        {
+            int r = BloodBranch.GetBound().Width / 2;
+            Point v = Vectors[BloodBranch];
+            GenerateVectorParticle(new Point(BloodBranch.GetCenter().X, BloodBranch.GetCenter().Y), v, Timers[BloodBranch]+6, (int)(r * 2 * 0.8f), Blood_Branch_Action, BloodColor).MoveTo(Tester.player.GetCenter().X, Tester.player.GetCenter().Y,40);
+
         }
 
         public static void RemoveParticle(DrawingLayer d)

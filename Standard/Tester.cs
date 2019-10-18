@@ -1776,7 +1776,7 @@ namespace TestSheet
 
                     if (!IsEndPhase)
                     {
-                        Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 0.2f + (float)Lightr, Standard.LightMode.Absolute);
+                        Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 0.2f + (float)Lightr, Standard.LightMode.Absolute);                 
                         Standard.DrawLight(MasterInfo.FullScreen, Color.DarkBlue, 0.3f, Standard.LightMode.Absolute);
                     }
                     if (MadMoonSelected)
@@ -2195,6 +2195,8 @@ namespace TestSheet
                 player.Draw(Color.White);
             }
 
+     
+
             public void MoveUpdate()
             {
                 player.Animate(true);
@@ -2202,7 +2204,6 @@ namespace TestSheet
                 {
                     if (!ShotMode)
                     {
-
                         if (Checker.Weapon_Melee == 14 && AttackTimer > AttackSpeed - 4)
                         {
                             Standard.FadeAnimation(player, Standard.Random(1, 8), Color.WhiteSmoke);
@@ -4769,6 +4770,11 @@ namespace TestSheet
                 int HeartNum = Int32.Parse(s[1]);
                 Checker.Hearts = HeartNum;
             }
+            if (s.Length >= 2 && s[0] == "b")
+            {
+                int BNum = Int32.Parse(s[1]);
+                Checker.Bloodthirst = BNum;
+            }
 
             if (s.Length >= 2 && s[0] == "c")
             {
@@ -5127,19 +5133,21 @@ namespace TestSheet
         }
         public static void Blood_Branch_Action(DrawingLayer d)
         {
-            if (Standard.FrameTimer % 4 == 0&&d.GetBound().Width>=10)
+            if (Standard.FrameTimer % 4 == 0&&d.GetBound().Width>=5)
             {
-                if(Checker.Weapon_Melee==12&&!Tester.ShotMode)
+                if(Checker.Weapon_Melee==12&&!Tester.ShotMode&&Checker.Bloodthirst>=1)
                 {
-                    if(Standard.FrameTimer %8==0)
-                    {
+                    
                         AbsorbBloodBranch(d);
                         RemoveParticle(d);
-                    }
+                    
                 }
                 else
                 {
-                    GrowBloodBranch(d);
+                    if (Standard.Random() < 0.2 * Checker.Bloodthirst)
+                        AbsorbBloodBranch(d);
+                    else
+                        GrowBloodBranch(d);
                     RemoveParticle(d);
                 }
             }
@@ -5149,7 +5157,7 @@ namespace TestSheet
         {
             int r = BloodBranch.GetBound().Width / 2;
             Point v = Vectors[BloodBranch];
-            GenerateVectorParticle(new Point(BloodBranch.GetCenter().X, BloodBranch.GetCenter().Y), v, Timers[BloodBranch]+6, (int)(r * 2 * 0.8f), Blood_Branch_Action, BloodColor).MoveTo(Tester.player.GetCenter().X, Tester.player.GetCenter().Y,40);
+            GenerateVectorParticle(new Point(BloodBranch.GetCenter().X, BloodBranch.GetCenter().Y), v, Timers[BloodBranch]+8, (int)(r * 2 * 0.9f), Blood_Branch_Action, BloodColor).MoveTo(Tester.player.GetCenter().X, Tester.player.GetCenter().Y,40);
 
         }
 

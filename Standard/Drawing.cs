@@ -7,7 +7,14 @@ using Microsoft.Xna.Framework;
 
 namespace TestSheet
 {
-	public interface IGraphicLayer
+    public interface IHasDrInst
+    {
+        void DrawInstruction();
+        void DrawInstruction(params Color[] cs);
+
+    }
+
+    public interface IGraphicLayer
 	{
 		void SetPos(int x, int y);
 		void SetPos(Point p);
@@ -93,7 +100,7 @@ namespace TestSheet
 	 * 스프라이트 애니메이션이 지원됩니다.
 	 * 스프라이트 애니메이션이 지원됩니다.
 	 * */
-	public class DrawingLayer : IGraphicLayer
+	public class DrawingLayer : IGraphicLayer, IHasDrInst
 	{
 		private Rectangle Bound;//화면에서 그림이 그려지는 영역을 표시합니다.
 		private Texture2D spriteTexture;
@@ -356,6 +363,16 @@ namespace TestSheet
                 Draw(cam, c);
         }
 
+        public void DrawInstruction()
+        {
+            Game1.spriteBatch.Draw(spriteTexture, Bound, Color.White);
+        }
+
+        public void DrawInstruction(params Color[] cs)
+        {
+            foreach(Color c in cs)
+                Game1.spriteBatch.Draw(spriteTexture, Bound, c);
+        }
 
 
 
@@ -530,7 +547,7 @@ namespace TestSheet
 
 
 	/*파생 클래스*/
-	public class DrawingLayerWithTimer
+	public class DrawingLayerWithTimer : IHasDrInst
 	{
 		public DrawingLayer drawingLayer;
 		public int Timer;
@@ -539,7 +556,10 @@ namespace TestSheet
 			drawingLayer = d;
 			Timer = t;
 		}
-	}
+        public void DrawInstruction() => drawingLayer.DrawInstruction();
+
+        public void DrawInstruction(params Color[] cs) => drawingLayer.DrawInstruction(cs);
+    }
 
 
 	public class DrawingLayerWithVector
@@ -720,26 +740,22 @@ namespace TestSheet
 			}
 		}
 
-		public void FadeAnimationDraw(Color color, double Opacity)
-		{
+        public void FadeAnimationDraw(Color color)
+        {
+            Standard.DrawChunk(Standard.MainCamera, color, () =>
+            {
+                for (int i = 0; i < Animationlist.Count; i++)
+                {
+                    Animationlist[i].drawingLayer.DrawInstruction(color * (float)(Animationlist[i].Timer * DefaultOpacityCoefficient));
+                }
 
-			for (int i = 0; i < Animationlist.Count; i++)
-			{
-				Animationlist[i].drawingLayer.Draw(color * (float)(Animationlist[i].Timer * Opacity));
-			}
-		}
+            });
+        
 
-		public void FadeAnimationDraw(Color color)
-		{
-
-			for (int i = 0; i < Animationlist.Count; i++)
-			{
-				Animationlist[i].drawingLayer.Draw(color * (float)(Animationlist[i].Timer * DefaultOpacityCoefficient));
-			}
-		}
+        }
 
 
-	}
+    }
 
 
     public class Camera2D

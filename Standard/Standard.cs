@@ -687,14 +687,55 @@ namespace TestSheet
         {
             StandardTimer.Elapsed -= e;
         }
+
+        public static void DrawChunk(Camera2D cam, Color color, Action DrawInstructions)
+        {
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+               BlendState.AlphaBlend,
+               null,
+               null,
+               null,
+               null,
+               cam.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            DrawInstructions();
+            Game1.spriteBatch.End();
+            return;
+        }
+        public static void DrawChunk(Camera2D cam, Action DrawInstructions)
+        {
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+               BlendState.AlphaBlend,
+               null,
+               null,
+               null,
+               null,
+               cam.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            DrawInstructions();
+            Game1.spriteBatch.End();
+            return;
+        }
+        public static void DrawChunk(Action DrawInstructions)
+        {
+            Game1.spriteBatch.Begin(SpriteSortMode.BackToFront,
+               BlendState.AlphaBlend,
+               null,
+               null,
+               null,
+               null,
+               MainCamera.get_transformation(Game1.graphics.GraphicsDevice /*Send the variable that has your graphic device here*/));
+            DrawInstructions();
+            Game1.spriteBatch.End();
+            return;
+        }
+
     }
 
 
 
 
-	/*게임 전체를 총괄하는 정보를 저장하는 클래스*/
+    /*게임 전체를 총괄하는 정보를 저장하는 클래스*/
 
-	public class MasterInfo
+    public class MasterInfo
 	{
 		public static readonly Rectangle PreferredScreen = new Rectangle(0, 0, 1280, 720);
 		public static Rectangle FullScreen = new Rectangle(0, 0, 1920, 1080);

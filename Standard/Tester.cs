@@ -679,6 +679,10 @@ namespace TestSheet
         {
             RewardCards.Add(new Card(Table.Pick(), Card.CardClass.Reward));
         }
+        public static void AddReward(int i)
+        {
+            RewardCards.Add(new Card(i, Card.CardClass.Reward));
+        }
 
         public static void AddLetter()
         {        
@@ -769,6 +773,9 @@ namespace TestSheet
             Standard.PlayLoopedSong("WindOfTheDawn");
             GamePhase = Phase.Game;
             Checker.Bloodthirst = 3;
+            Table.RemoveDrop(6);
+            Table.RemoveDrop(7);
+            Table.RemoveDrop(8);
             Checker.Hearts = 1;
         }
 
@@ -1436,7 +1443,12 @@ namespace TestSheet
                         for (int i = 0; i < RewardCards.Count; i++)
                         {
                             RewardCards[i].Update();
-                            RewardCards[i].Frame.CenterMoveTo(CardPos.X + (Card.CardWidth + 10) * i, CardPos.Y, 50);
+                            RewardCards[i].Frame.CenterMoveTo(CardPos.X + (Card.CardWidth + 10) * (i%7), CardPos.Y + (RewardCards[i].Frame.GetBound().Height + 10) * (i / 7), 50);
+                            /*
+                            if (i<=6)
+                                RewardCards[i].Frame.CenterMoveTo(CardPos.X + (Card.CardWidth + 10) * i, CardPos.Y, 50);
+                            else
+                                RewardCards[i].Frame.CenterMoveTo(CardPos.X + (Card.CardWidth + 10) * (i-7), CardPos.Y+RewardCards[i].Frame.GetBound().Height+10, 50);*/
                             if (FadeTimer > 50)
                                 RewardCards[i].Frame.SetRatio((1.5f * (FadeTimer - 50) + (0.75) * (100 - FadeTimer)) / 50f);
                             if (Cursor.IsOn(RewardCards[i].Frame) && RewardCards[i].FlipTimer == 0&&RewardCards[i].RemoveTimer==-1)
@@ -1710,7 +1722,9 @@ namespace TestSheet
                         {
                             Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 1f, Standard.LightMode.Absolute);
                         }
-                        if(CardInfoUI.CardIndex==100)
+                        if(CardInfoUI.CardIndex==666)
+                            Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 1f, Standard.LightMode.Absolute);
+                        if (CardInfoUI.CardIndex==100)
                             Standard.DrawLight(MasterInfo.FullScreen, Color.Black, 1f, Standard.LightMode.Absolute);
                     }
                     /*풀스크린 라이트 레이어 처리*/
@@ -1736,6 +1750,7 @@ namespace TestSheet
                         {
                             RewardCards[i].Draw();
                         }
+                        Standard.FadeAnimationDraw(ParticleEngine.BloodColor);//별이 사라지는 페이드애니메이션(컬러는 LighteaGreen으로 지정)은 아래 라이트레이어 전에 발생해야 보기 좋으므로 별도로 처리함.
                         DungeonMaster.Draw();
                         Monolog.Draw();
                     }
@@ -2695,7 +2710,7 @@ namespace TestSheet
                     /*
                     if (player.getAttackIndex() != -1 && this != enemies[player.getAttackIndex()])
                         return;*/
-                    if (!Checker.LuckCheck())
+                    if (!GameOver&&!Checker.LuckCheck())
                     {
                         ThisIsTheKiller = true;
 
@@ -2768,7 +2783,7 @@ namespace TestSheet
                 {
 
 
-                    if (!Checker.LuckCheck())
+                    if (!GameOver && !Checker.LuckCheck())
                     {
                         Game1.AttachDeadScene(() => Tester.KillCard = new DrawingLayer("SDead_333", new Point(0, 0), 0.6f));
                         //KillerZombieIndex = -1;
@@ -3946,6 +3961,8 @@ namespace TestSheet
             InfoTable.Add(107, "Dear Ortolan$$You don't have to be with us anymore.\n\nWe will let you do all you want.\n\n So, just one thing--don't come upstairs.\n\n\n Sincerely, Your Best Ever Friend");
             InfoTable.Add(108, "Dear Ortolan$$I will tell you about the truth.\n\nThere is no way to go outside.\n\nThis dungeon is underground cavern. \n\n That's why couldn't you see other people.\n\n Killing us is not a solution. \n\n Let's live with each other.");
             InfoTable.Add(109, "Dear....$$You've done a lot to us.\n\n At first you were designed as a meat, \n\nbut now you've survived this far.\n\nWell, we've gathered all together.\n\nLet's dance with each other, a last dance.");
+            InfoTable.Add(666, "Blood Oath$You sacrifice 3 hearts and get 1 card.$");
+
 
         }
 
@@ -3961,6 +3978,10 @@ namespace TestSheet
             if (GetIndex() >= 3 && GetIndex() <= 11)
             {
                 BackFrameName = WhatClass.ToString() + "Card" + "_Enchant";
+            }
+            if(Number==666)
+            {
+                BackFrameName = WhatClass.ToString() + "Card" + "_BloodOath";
             }
 
             if (WhatClass == CardClass.Reward)
@@ -4069,7 +4090,7 @@ namespace TestSheet
             }
             if (FlipTimer == 1 && CardOpenEvents != null)
             {
-                if (!IsWeapon())
+                if (!IsWeapon()&&GetIndex()!=666)
                     CardOpenEvents(GetIndex());
             }
 
@@ -4097,6 +4118,7 @@ namespace TestSheet
                     RemoveTimer = 30;
                     Tester.WeaponIconTimer = 30;
                 }
+         
                 else
                 {
                     Tester.ShotModeBuffer = true;
@@ -4107,12 +4129,30 @@ namespace TestSheet
                 }
                 return;
             }
+            if (Cursor.JustdidLeftClick(Frame) && FlipTimer == 0 && GetIndex()==666) //BloodOath
+            {
+
+                if(Checker.Hearts>3)
+                {
+                    FlipTimer = -1;
+                    CardOpenEvents(666);
+
+                    Standard.PlayFadedSE("KnifeSound", 0.4f);
+                    Standard.PlayFadedSE("GunSound", 0.3f);
+                    ParticleEngine.GenerateBlood(Tester.player.player.GetPos());
+                }
+
+                return;
+            }
+
 
             if (Cursor.JustdidLeftClick(Frame) && FlipTimer == 0 && RemoveTimer == -1)
             {
                 RemoveTimer = 30;
                 if (GetIndex() == 100)
                 {
+                    if (Tester.LetterNum <= 3)
+                        Tester.AddReward(666);
                     switch (Tester.LetterNum)
                     {
                         case 0:
@@ -4234,6 +4274,14 @@ namespace TestSheet
                         Checker.Luck = 3;
                     Tester.Monolog.RandomAttach("I found a clover.", "Is this helpful?");
                     break;
+                case 666:
+                    if (Checker.Hearts>3)
+                    {
+                        Checker.Hearts -= 3;
+                        Tester.AddReward();
+                    }
+                    Tester.Monolog.RandomAttach("It hurts...");
+                    break;
 
 
             }
@@ -4301,7 +4349,7 @@ namespace TestSheet
         public static int CardIndex;
         public static void Draw()
         {
-            if(CardIndex<100)
+            if(CardIndex<100||CardIndex==666)
             {
                 if (Card.InfoTable.ContainsKey(CardIndex))
                 {
@@ -4343,6 +4391,8 @@ namespace TestSheet
                    {
                        InfoFrame.Draw(Tester.FixedCamera, Color.Black * 0.5f);
                        Standard.DrawString(InfoString, new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 40), Color.White);
+                       if(CardIndex==666)
+                           Standard.DrawString(InfoString, new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 40), Color.DarkRed*0.6f);
                        if (Card.IsWeapon(CardIndex))
                        {
                            Standard.DrawString("To equip the weapon, Left-click the card. ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.White);
@@ -4352,6 +4402,11 @@ namespace TestSheet
                        {
                            Standard.DrawString("This was activated when it was opened. ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.White);
                            Standard.DrawString("This was activated when it was opened. ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.Red * (Math.Min(Standard.FrameTimer % 60, 60 - Standard.FrameTimer % 60) / 30.0f));
+                       }
+                       else if(CardIndex==666)
+                       {
+                           Standard.DrawString("OPEN IT! ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.White);
+                           Standard.DrawString("OPEN IT! ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.Red * (Math.Min(Standard.FrameTimer % 60, 60 - Standard.FrameTimer % 60) / 30.0f));
                        }
                    });
         }
@@ -4408,7 +4463,6 @@ namespace TestSheet
             ValueTable.Add(52, 25);//샷건
             ValueTable.Add(53, 60);//피스메이커
             ValueTable.Add(54, 60);//얼음총
-
             ValueTable.Add(18, 35);//전기톱 35
 
             foreach (KeyValuePair<int, double> v in ValueTable)
@@ -4506,134 +4560,6 @@ namespace TestSheet
 
 
     }
-
-
-
-
-
-    public class Dialog
-    {
-        List<string> Dialogs = new List<string>();
-        DrawingLayer SCG;
-        float DefaultSize = 0.75f;
-        Point DefaultPoint = new Point(700, 50);
-        string CurrentDialog;
-        //string ViewDialog;
-
-
-        private void SetSCG(string s)
-        {
-            if (Game1.content.assetExists(s))
-            {
-                SCG = new DrawingLayer(s, DefaultPoint, DefaultSize);
-            }
-            else
-            {
-                SCG = new DrawingLayer("EmptySpace", DefaultPoint, DefaultSize);
-            }
-        }
-
-        private void Parse()
-        {
-            string[] pieces = Dialogs[0].Split(':');
-            if (pieces.Length == 3)//A:B:C형태. 예를 들면 벌레:0:안녕? 같은 형태라면, 캐릭터는 벌레이고, CG는 "벌레_0"을 쓴다. 대사창은 "안녕?"임.
-            {
-                SetSCG(pieces[0] + "_" + pieces[1]);
-                CurrentDialog = pieces[2];
-            }
-            else if (pieces.Length == 2)//벌레:안녕? 형태. 디폴트 SCG를 적용한다.
-            {
-                SetSCG(pieces[0]);
-                CurrentDialog = pieces[1];
-
-            }
-            //여기서 발생하는 에셋 저장 방식 : 디폴트는 넘버링을 하지 않는다. 디폴트 이외는 넘버링을 하고, 대사집을 쓸 때도 넘버를 써서 작성한다.
-        }
-
-        public void Update()
-        {
-            if (Dialogs.Count > 0)
-            {
-                if (Cursor.JustdidLeftClick())
-                {
-                    Parse();
-
-                }
-            }
-        }
-
-        public void Draw()
-        {
-
-        }
-    }
-
-
-    public static class BuffAnimation
-    {
-        public static DrawingLayer BuffAnimator = new DrawingLayer();
-
-    }
-
-
-
-    /// <summary>
-    /// </summary>
-    /*
-    public class SafeInt
-    {
-        private int Value = 15235;
-        private int isoValue = 0;
-        private int InternalTimer;
-
-        private static int GetHashValue(int x)
-        {
-            return x * 15235 * (x + 123) % 2328;
-        }
-
-        public SafeInt(int x)
-        {
-            Set(x);
-        }
-
-        public void Set(int x)
-        {
-            Vibe();
-            isoValue = x - Value;
-        }
-
-        public override string ToString()
-        {
-            Vibe();
-            return Get().ToString();
-        }
-
-        public int Get()
-        {
-            Vibe();
-            return Value + isoValue;
-        }
-
-        private void Vibe()
-        {
-            if (InternalTimer != Standard.FrameTimer)
-            {
-                Value++;
-                isoValue--;
-                InternalTimer = Standard.FrameTimer;
-            }
-
-        }
-
-
-        public static SafeInt operator ++(SafeInt i)
-        {
-            i.Set(i.Get() + 1);
-            return i;
-        }
-
-    }
-    */
 
     public class SafeInt
     {
@@ -5138,8 +5064,10 @@ namespace TestSheet
                 if(Checker.Weapon_Melee==12&&!Tester.ShotMode&&Checker.Bloodthirst>=1)
                 {
                     
-                        AbsorbBloodBranch(d);
-                        RemoveParticle(d);
+                    AbsorbBloodBranch(d);
+                    if(Standard.Random() <0.2)
+                        GrowBloodBranch(d);
+                    RemoveParticle(d);
                     
                 }
                 else
@@ -5157,7 +5085,7 @@ namespace TestSheet
         {
             int r = BloodBranch.GetBound().Width / 2;
             Point v = Vectors[BloodBranch];
-            GenerateVectorParticle(new Point(BloodBranch.GetCenter().X, BloodBranch.GetCenter().Y), v, Timers[BloodBranch]+8, (int)(r * 2 * 0.9f), Blood_Branch_Action, BloodColor).MoveTo(Tester.player.GetCenter().X, Tester.player.GetCenter().Y,40);
+            GenerateVectorParticle(new Point(BloodBranch.GetCenter().X, BloodBranch.GetCenter().Y), v, Timers[BloodBranch]+8, (int)(r * 2 * 0.8f), Blood_Branch_Action, BloodColor).MoveTo(Tester.player.GetCenter().X, Tester.player.GetCenter().Y,40);
 
         }
 

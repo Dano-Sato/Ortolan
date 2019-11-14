@@ -33,7 +33,7 @@ namespace TestSheet
                 Score.var++;
                 if (LiteMode && Score.var % 4 == 2)
                     Score.var++;
-            
+
             }
         }
 
@@ -74,7 +74,26 @@ namespace TestSheet
 
         public static Player player;
         public static List<Enemy> enemies = new List<Enemy>();
-        public static bool GameOver = false;
+        public static bool gameOver = false;
+        public static bool GameOver {
+            get
+            {
+            return gameOver;
+            }
+    set
+    {
+                if(value==true&&gameOver==false&&Standard.Random()<0.2)
+                {
+                    if (LeftOvers.ContainsKey(Room.Number))
+                        LeftOvers[Room.Number]++;
+                    else
+                        LeftOvers.Add(Room.Number,1);
+
+                }
+                gameOver = value;
+    }
+
+        } 
         public static SafeInt Score = new SafeInt(0);
         public static int ZombieTime = 40;
         public static double Lightr = 0;//화면이 좀 깜빡거리도록 하기 위해 넣은 변수
@@ -94,13 +113,13 @@ namespace TestSheet
         public static Point Wind = new Point(0, 1);
 
         public static bool ShowMenu = false;
-        public static DrawingLayer MenuLayer = new DrawingLayer("WhiteSpace", new Rectangle(100, 50, 1000, 700));
+        public static DrawingLayer MenuLayer = new DrawingLayer("WhiteSpace", new Rectangle(100, 50, 1000, 630));
         public static ScrollBar ScrollBar_Sensitivity = new ScrollBar(new DrawingLayer("BarFrame2", new Rectangle(200, 400, 500, 50)), "Bar2", 50, false,() => MasterInfo.SetFullScreen(ScrollBar_Sensitivity.Coefficient * 4 + 1f));
         public static ScrollBar ScrollBar_SongVolume = new ScrollBar(new DrawingLayer("BarFrame2", new Rectangle(200, 220, 500, 50)), "Bar2", 50, false, () => Standard.SetSongVolume(ScrollBar_SongVolume.Coefficient));
         public static ScrollBar ScrollBar_SEVolume = new ScrollBar(new DrawingLayer("BarFrame2", new Rectangle(200, 290, 500, 50)), "Bar2", 50, false, () => Standard.SetSEVolume(ScrollBar_SEVolume.Coefficient));
         public static DrawingLayer YouDieLayer = new DrawingLayer("Dream", new Point(200, 500), 1.0f);
-        public static DrawingLayer ExitButton = new DrawingLayer("Exit", new Point(850, 650), 1.0f);
-        public static DrawingLayer RestartButton = new DrawingLayer("Restart", new Point(650, 650), 1.0f);
+        //public static DrawingLayer ExitButton = new DrawingLayer("Exit", new Point(450, 550), 1.0f);
+        public static DrawingLayer RestartButton = new DrawingLayer("Exit", new Point(250, 550), 1.0f);
 
         public static List<int> RandomInts = new List<int>();
         public static int RandomIntCounter = 0;
@@ -162,10 +181,115 @@ namespace TestSheet
         }
 
 
-        public enum Phase { Main, Tutorial, Game, Ending, Dead };
+        public enum Phase { Main, Tutorial, Game, Ending, Dead, Extra };
 
-        public static Button StartButton = new Button(new StringLayer("Game Start", new Vector2(400, 600)), () => GamePhase = Phase.Tutorial);
-        public static Button GameExitButton = new Button(new StringLayer("Exit", new Vector2(700, 600)), Exit);
+        public static Button StartButton = new Button(new StringLayer("Game Start", new Vector2(500, 600)), () => GamePhase = Phase.Tutorial);
+        public static Button GameExitButton = new Button(new StringLayer("Exit", new Vector2(800, 600)), Exit);
+        public static Button ExtraButton = new Button(new StringLayer("Extra", new Vector2(200, 600)), ()=> {
+            GamePhase = Phase.Extra;
+            ShopComponent.Refresh();
+            });
+        public static Button InShop_GoBackButton = new Button(new StringLayer("Go Back", new Vector2(412, 64)), () => { GamePhase = Phase.Main; });
+        public static bool ExtraMenualEnabled = true;
+        public static int WeaponChangedTimer = 0;
+
+        public static class ShopComponent
+        {
+            public static List<DrawingLayer> Components = new List<DrawingLayer>();
+            public static Dictionary<DrawingLayer, int> ComponentPrices = new Dictionary<DrawingLayer, int>();
+            public static Dictionary<DrawingLayer, Action> ComponentBuyActions = new Dictionary<DrawingLayer, Action>();
+            public static Dictionary<DrawingLayer, string> ComponentString = new Dictionary<DrawingLayer, string>();
+
+            public static List<int> BoughtComponents = new List<int>();
+            public static void Init()
+            {
+                AddWeapon(0, 0, 10,13);//채찍
+                AddWeapon(1, 3, 30,15);//은장
+                AddWeapon(2, 15,30,18);//전기
+                AddWeapon(3, 25,30,12);//낫
+                AddWeapon(4, 26,30,14);//요미
+                AddWeapon(5, 35, 50,16);//시계
+                AddRangeWeapon(0, 0, 1, 51);//쓰레기
+                AddRangeWeapon(1, 3, 15, 54);//산타
+                AddRangeWeapon(2, 15, 25, 52);//샷건
+                AddRangeWeapon(3, 15, 35, 53);//라이플
+                Add(new Rectangle(new Point(493, 66), new Point(400,600)), 9999, "BC/2");
+                Add(new Rectangle(new Point(885, 44), new Point(400, 600)), 100, "BC/1");
+                Refresh();
+            }
+
+
+            public static void Refresh()
+            {
+                BoughtComponents.Clear();
+                HeartShop.ReadAccount("BW", (i) => { BoughtComponents.Add(i); }, () => { return; });
+                HeartShop.ReadAccount("BC", (i) => { BoughtComponents.Add(i); }, () => { return; });
+
+            }
+            public static void Add(Rectangle r, int price,string Account)
+            {
+                DrawingLayer d = new DrawingLayer("WhiteSpace", r);
+                Components.Add(d);
+                ComponentPrices.Add(d, price);
+                ComponentString.Add(d, Account);
+            }
+
+            public static void AddWeapon(int pos_i, int Pad, int price, int WeaponNum)
+            {
+                Add(new Rectangle(155, 115 + 70 * pos_i+Pad, 70, 70),price, "BW/" + WeaponNum);
+            }
+
+            public static void AddRangeWeapon(int pos_i, int Pad, int price, int WeaponNum)
+            {
+                Add(new Rectangle(287, 115 + 70 * pos_i + Pad, 70, 70), price, "BW/" + WeaponNum);
+            }
+
+
+            public static void Update()
+            {
+                foreach(DrawingLayer d in Components)
+                {
+                    if(d.MouseJustLeftClickedThis()&&HeartShop.HeartCoin >= ComponentPrices[d]&&!BoughtComponents.Contains(Int32.Parse(ComponentString[d].Split('/')[1])))
+                    {
+                        HeartShop.AddAccount("M/-" + ComponentPrices[d]);
+                        HeartShop.AddAccount(ComponentString[d]);
+                        Refresh();
+                    }
+                    //if Click d && HeartCoin>=Price[d]
+                    //AddAccount("M/-"+Price[d]);
+                    //AddAccount("BW/"+Num[d]);
+                    //Refresh();
+
+                }
+            }
+            public static void Draw()
+            {
+                foreach (DrawingLayer d in Components)
+                {
+                    if(d.MouseIsOnThis())
+                    {
+                        d.Draw(Color.White * 0.3f);
+                        if(BoughtComponents.Contains(Int32.Parse(ComponentString[d].Split('/')[1])))
+                        {
+                            d.Draw(Color.Red*0.5f);//나중에 Sold Out으로 교체.
+                            Standard.DrawString("Sold Out", new Vector2(d.GetCenter().X, d.GetCenter().Y), Color.Blue);
+                        }
+                        string s = "Price:" + ComponentPrices[d];
+                        if (ComponentPrices[d] == 9999)
+                            s = "Preparing...";
+                        StringLayer Info = new StringLayer(s, new Vector2(d.GetPos().X, d.GetPos().Y-40));
+                        Standard.DrawLight(Info.GetBound(), Color.Black, 1f, Standard.LightMode.Absolute);
+                        Info.Draw(Color.White);
+                    }
+                }
+            }
+
+
+        }
+
+
+
+
 
         public static Button RetryButton = new Button(new StringLayer("Retry", new Vector2(640, 600)), () => GamePhase = Phase.Main);
 
@@ -196,6 +320,8 @@ namespace TestSheet
                 Nightmare_GameInit();
             }
         });
+
+        public static Dictionary<int, int> LeftOvers=new Dictionary<int, int>();
 
         public static int MadMoonGauge = 0;
         public static int SCGClickTimer = 0;
@@ -451,6 +577,7 @@ namespace TestSheet
         public static readonly int BubbleTimer_Max = 60;
 
         public static int EndTimer = 0;
+        public static string EndingString;
         public static readonly int BeforeEndTimer_Max = 200;
         public static int BeforeEndTimer = BeforeEndTimer_Max;
         public static List<string> EndCGList = new List<string>();
@@ -485,30 +612,36 @@ namespace TestSheet
                 isDead = false;
                 Dialogs.Clear();
                 Dialogs.Add(" ");
-                Dialogs.Add("Hello, Ortolan.I'm the master of this dungeon.");
+                Dialogs.Add("Hello, Ortolan. I'm the origin of the dungeon.");
                 Dialogs.Add("You wouldn't know why this happened to you.");
-                Dialogs.Add("The creatures you killed was my children.");
-                Dialogs.Add("You know, I needed to feed my children.");
-                Dialogs.Add("But there was no one else who wanted to visit our dungeon,");
+                Dialogs.Add("The creatures you killed were my children.");
+                Dialogs.Add("...Hey, I needed to feed my children.");
+                Dialogs.Add("But there was no one who wanted to visit our dungeon,");
                 Dialogs.Add("because my dungeon was notorious.");
                 Dialogs.Add("But my little devils eat fresh hearts only. They were starving...");
                 Dialogs.Add("So I made some imitation hearts for them, but they didn't eat it.");
-                Dialogs.Add("That's why I made you.");
-                Dialogs.Add("you are Magic Golem... working with artificial heart.");
-                Dialogs.Add("You were living...");
-                Dialogs.Add("so you gave the sign of some 'freshness' to my children.");
+                Dialogs.Add("That's why I made you... to feed them.");
+                Dialogs.Add("I thought that was a good idea.");
+                Dialogs.Add("you are Homunculus... working with artificial heart.");
+                Dialogs.Add("You are living...");
+                Dialogs.Add("So you gave the sign of some 'freshness' to my children.");
                 Dialogs.Add("So they ate your heart, endlessly..");
                 Dialogs.Add("But I didn't expect you to murder all of my children...");
                 Dialogs.Add("You must be a prey... I designed you as a prey...");
                 Dialogs.Add("$There's one thing you'd never known.");
-                Dialogs.Add("$I, as a Golem, had all memories of my whole life...");
-                Dialogs.Add("$That's why I became stronger, because of my memory..");
-                Dialogs.Add("$I died, soft reset, and died, hard reset, and died.");
+                Dialogs.Add("$I, as a Homunculus,");
+                Dialogs.Add("$Recorded, all the things happened to me.");
+                Dialogs.Add("$Had all memories of my whole life and death...");
+                Dialogs.Add("$...");
+                Dialogs.Add("$That made me become stronger.");
                 Dialogs.Add("$I remember all the sufferings that I'd ever had.");
                 Dialogs.Add("Well...Ortolan, I didn't mean to. I didn't think you suffered like that.");
+                Dialogs.Add("$Why? Did you think that");
+                Dialogs.Add("$This Artificial one, would not suffer any pain?");
+                Dialogs.Add("Sorry, Ortolan.");
                 Dialogs.Add("I apologize...If you want to kill me, do so.");
                 Dialogs.Add("There's nothing left... And I have no power to defeat you.");
-                Dialogs.Add("Go upstairs. You can go outside.");
+                Dialogs.Add("Go upstairs. You can go OUTSIDE.");
             }
             public static void Update()
             {
@@ -525,6 +658,8 @@ namespace TestSheet
                         isDead = true;
                         Standard.PlayFadedSE("KnifeSound", 1f);
                         Standard.PlayFadedSE("GunSound", 0.9f);
+                        ParticleEngine.GenerateBlood(new Point(654,729));
+                        Monolog.RandomAttach("You get what you fucking deserve.");
                     }
                 }
             }
@@ -608,7 +743,7 @@ namespace TestSheet
                 }
 
                 f.Update();
-                if(DungeonMaster.Dialogs.Count > 0 && DungeonMaster.Dialogs[0][0] == '$')
+                if((DungeonMaster.Dialogs.Count > 0 && DungeonMaster.Dialogs[0][0] == '$')|| CardInfoUI.CardIndex == 666)
                 {
                     Script.Draw(Color.White * f.Fader);
                 }
@@ -616,8 +751,6 @@ namespace TestSheet
                 {
                     Script.Draw(Color.Black * f.Fader);
                 }
-
-
             }
         }
 
@@ -679,9 +812,16 @@ namespace TestSheet
         {
             RewardCards.Add(new Card(Table.Pick(), Card.CardClass.Reward));
         }
+        public static void AddLeftOver()
+        {
+            Card c = new Card(Table.Pick(), Card.CardClass.Reward);
+            c.BackFrameName = "RewardCard_Leftover";
+            RewardCards.Add(c);
+
+        }
         public static void AddReward(int i)
         {
-            RewardCards.Add(new Card(i, Card.CardClass.Reward));
+            RewardCards.Add(new Card(i, Card.CardClass.Reward,RewardCards[RewardCards.Count-1].Frame.GetCenter()));
         }
 
         public static void AddLetter()
@@ -745,13 +885,13 @@ namespace TestSheet
             DungeonMaster.Init();
             IsEndPhase = true;
             Monolog.RandomAttach(" ");
-            
-
+            HeartShop.ReadAccount("BC", (i) => { Costume.CostumeNumber = i; }, () => { });
             Checker.Init();
             Table.Init();
             Standard.PlayLoopedSong("WindOfTheDawn");
 
             AddLetter();
+            HeartShop.InitWeapon();
 
             LetterNum = 0;
             
@@ -772,6 +912,9 @@ namespace TestSheet
             Table.Init();
             Standard.PlayLoopedSong("WindOfTheDawn");
             GamePhase = Phase.Game;
+
+            HeartShop.ReadAccount("BC", (i) => { Costume.CostumeNumber = i; }, () => { });
+            //Tester.player.player.AttachAnimation(30, Costume.GetCostume("Player_Ani11"), Costume.GetCostume("Player_Ani12"));
             Checker.Bloodthirst = 3;
             Table.RemoveDrop(6);
             Table.RemoveDrop(7);
@@ -797,6 +940,7 @@ namespace TestSheet
             Room.Init();
             Card.Init();
             Costume.Init();
+            ShopComponent.Init();
 
 
         }
@@ -943,6 +1087,7 @@ namespace TestSheet
                         Game1.GameExit = true;
                     StartButton.Enable();
                     GameExitButton.Enable();
+                    ExtraButton.Enable();
                     break;
                 case Phase.Tutorial:
                     if (Standard.SongName != "TutorialSong" && MadMoonGauge <= 10)
@@ -1007,6 +1152,7 @@ namespace TestSheet
                                 Nightmare_GameInit();
                         }
                     }
+
                     break;
                 case Phase.Game:
 
@@ -1107,6 +1253,10 @@ namespace TestSheet
                     DungeonMaster.Update();
 
                     /*키보드 입력 처리*/
+
+
+                    #region Debug Setting 01
+                    /*
                     if (Standard.JustPressed(Keys.H))
                     {
                         int w = Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth;
@@ -1139,14 +1289,21 @@ namespace TestSheet
                         }
                         DeadBodys.Clear();
                     }
-                    if (Standard.JustPressed(Keys.Z))
-                    {
-                        HeartShop.AddAccount("M/10");
-                    }
+              
                     if (Standard.JustPressed(Keys.X))
                     {
                         HeartShop.AddAccount("M/-10");
                     }
+                       if (Standard.JustPressed(Keys.T))
+                    {
+                        Score.var=95;
+                    }
+                    */
+                    if (Standard.JustPressed(Keys.Z))
+                    {
+                        HeartShop.AddAccount("M/10");
+                    }
+                    #endregion
 
                     if (Standard.JustPressed(Keys.Escape) || Cursor.JustDidScrollButton())//세팅으로
                     {
@@ -1229,10 +1386,7 @@ namespace TestSheet
                     {
                         SlowMode = false;
                     }
-                    if (Standard.JustPressed(Keys.T))
-                    {
-                        Score.var=95;
-                    }
+                 
 
                     if (SlowMode)
                     {
@@ -1264,8 +1418,8 @@ namespace TestSheet
                         ScrollBar_Sensitivity.Update();
                         ScrollBar_SongVolume.Update();
                         ScrollBar_SEVolume.Update();
-                        if (ExitButton.MouseJustLeftClickedThis())
-                            Game1.GameExit = true;
+                        //if (ExitButton.MouseJustLeftClickedThis())
+                           // Game1.GameExit = true;
                         if (RestartButton.MouseJustLeftClickedThis())
                         {
                             GamePhase = Phase.Main;
@@ -1420,6 +1574,12 @@ namespace TestSheet
                         if(LetterNum<9)
                             AddLetter();
                         LetterNum++;
+                        if(LeftOvers.ContainsKey(Room.Number))
+                        {
+                            for (int i = 0; i < LeftOvers[Room.Number]; i++)
+                                AddLeftOver();
+                            LeftOvers.Remove(Room.Number);
+                        }
                     }
                     if (IsEndPhase && StartStageTimer == 0)
                     {
@@ -1506,6 +1666,17 @@ namespace TestSheet
 
                     if (BeforeEndTimer == 0)
                     {
+                        if(LiteMode)
+                        {
+                            HeartShop.AddAccount("M/" + Checker.Hearts / 2);
+                            EndingString = "You earned " + Checker.Hearts / 2 + " Heart Coins!";
+                        }
+                        else
+                        {
+                            HeartShop.AddAccount("M/" + Checker.Hearts);
+                            EndingString = "You earned " + Checker.Hearts + " Heart Coins!";
+                        }
+
                         GamePhase = Phase.Ending;
                         Credit.Init();
                         EndCGList.Clear();
@@ -1562,11 +1733,24 @@ namespace TestSheet
                     RetryButton.Enable();
 
                     break;
-
+                case Phase.Extra:
+                    if (Standard.SongName != "TutorialSong")
+                    {
+                        Standard.PlayLoopedSong("TutorialSong");
+                    }
+                    if (ExtraMenualEnabled && Cursor.JustdidLeftClick())
+                        ExtraMenualEnabled = false;
+                    if (!ExtraMenualEnabled)
+                    {
+                        InShop_GoBackButton.Enable();
+                        ShopComponent.Update();
+                    }
+                    break;
             }
 
-            GameConsole.Update();
-
+            #region Debug Setting 02
+           // GameConsole.Update();
+            #endregion
 
         }
 
@@ -1582,6 +1766,7 @@ namespace TestSheet
                     s.Draw();
                     StartButton.Draw(Color.White, Color.Red);
                     GameExitButton.Draw(Color.White, Color.Red);
+                    ExtraButton.Draw(Color.White, Color.Red);
                     Standard.DrawLight(MasterInfo.FullScreen, Color.Black, (float)(Math.Abs(90 - Standard.FrameTimer % 180) / 500.0) + 0.2f, Standard.LightMode.Absolute);
                     break;
                 case Phase.Tutorial:
@@ -1623,12 +1808,47 @@ namespace TestSheet
                             TutorialButton01.Draw(Color.AntiqueWhite * 0.8f, Color.White);
                             TutorialButton02.Draw(Color.AntiqueWhite * 0.3f, Color.White);
                             TutorialButton03.Draw(Color.Red * 0.3f, Color.Red);
+                            if(Cursor.IsOn(new Rectangle(69,34, 450, 120)))
+                            {
+                                Standard.DrawString("If you lose all of your heart, you will experience hard-reset.",new Vector2(327,291),Color.White);
+                            }
+                            if (Cursor.GetPos().X>800)
+                            {
+                                Standard.DrawString("If you are clicking the mouse, then everything will slow down. That's the effect of overclock.", new Vector2(327, 291), Color.White);
+                            }
+                            if (Cursor.IsOn(new Rectangle(488,320, 230, 200)))
+                            {
+                                Standard.DrawString("This is you. A little girl with small kitchen knife.", new Vector2(327, 291), Color.White);
+                            }
+                            if (Cursor.IsOn(new Rectangle(326, 284, 150, 200)))
+                            {
+                                Standard.DrawString("This is blood.", new Vector2(327, 291), Color.White);
+                            }
+                            if (Cursor.IsOn(new Rectangle(35, 180, 240, 370)))
+                            {
+                                Standard.DrawString("If you run out of your gauge, you can't use the overclock.", new Vector2(327, 291), Color.White);
+                            }
+
+
                         }
                         else
                         {
                             TutorialButton01.Draw(Color.AntiqueWhite * 0.3f, Color.White);
                             TutorialButton02.Draw(Color.AntiqueWhite * 0.8f, Color.White);
                             TutorialButton03.Draw(Color.Red * 0.3f, Color.Red);
+                            if (Cursor.IsOn(new Rectangle(25,240,330,230)))
+                            {
+                                Standard.DrawString("you can slash your enemy by rolling over your mouse. And you don't have to click to slash. \n Instead, gun shot needs your clicking.", new Vector2(327, 291), Color.White);
+                            }
+                            if (Cursor.IsOn(new Rectangle(406, 287, 320, 270)))
+                            {
+                                Standard.DrawString("If enemy touches your heart, you die.", new Vector2(327, 291), Color.White);
+                            }
+                            if (Cursor.GetPos().X > 800)
+                            {
+                                Standard.DrawString("Move your mouse to dodge & slash.", new Vector2(327, 291), Color.White);
+                            }
+
                         }
 
 
@@ -1754,7 +1974,8 @@ namespace TestSheet
                         DungeonMaster.Draw();
                         Monolog.Draw();
                     }
-                  
+
+                    Standard.FadeAnimationDraw(Color.FloralWhite);
                     player.Draw();
                     player.DrawAttack();
 
@@ -1895,7 +2116,7 @@ namespace TestSheet
                         if (Sight < 0&& KatanaTimer>0)
                         {
                             Bludger.BludgerColor = Color.Lime;
-                            Enemy.GhostColor = Color.Crimson;
+                            Enemy.GhostColor = Color.Bisque;
                         }
                         else
                         {
@@ -1911,8 +2132,9 @@ namespace TestSheet
                         PlayerSight.Draw();
                         if (Checker.Weapon_Melee == 16 && SlowMode && !ShotMode)
                         {
-                            Standard.DrawAddon(PlayerSight, Color.White, 0.4f, "TheWorldClock");
+                            Standard.DrawAddon(PlayerSight, Color.White, 0.1f, "TheWorldClock");
                         }
+                        /*
                         if (Standard.FrameTimer % 30 < 15)
                         {
                             //Standard.DrawAddon(PlayerSight, Color.White, Zoom_Coefficient * 2, "Con1");
@@ -1922,7 +2144,7 @@ namespace TestSheet
                         {
                             //Standard.DrawAddon(PlayerSight, Color.White, Zoom_Coefficient * 2, "Con2");
                             Standard.DrawAddon(PlayerSight, Color.Black, Zoom_Coefficient * 2, "Con2");
-                        }
+                        }*/
 
                         if(Sight<0)
                         {
@@ -1958,20 +2180,6 @@ namespace TestSheet
                     {
                         Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
                         MenuLayer.Draw(Color.Black * 0.7f);
-                        Standard.DrawString("Mouse Sensitivity", new Vector2(ScrollBar_Sensitivity.Frame.GetPos().X, ScrollBar_Sensitivity.Frame.GetPos().Y - 20), Color.White);
-                        ScrollBar_Sensitivity.Draw();
-                        Standard.DrawString(String.Format("{0:0.0}", ScrollBar_Sensitivity.Coefficient + 0.5f), new Vector2(ScrollBar_Sensitivity.Frame.GetPos().X + 500, ScrollBar_Sensitivity.Frame.GetPos().Y), Color.White);
-                        Standard.DrawString("(Default:1)", new Vector2(ScrollBar_Sensitivity.Frame.GetPos().X + 500, ScrollBar_Sensitivity.Frame.GetPos().Y + 20), Color.White);
-                        ScrollBar_SongVolume.Draw();
-                        Standard.DrawString("Song Volume", new Vector2(ScrollBar_SongVolume.Frame.GetPos().X, ScrollBar_SongVolume.Frame.GetPos().Y - 20), Color.White);
-                        ScrollBar_SEVolume.Draw();
-                        Standard.DrawString("SE Volume", new Vector2(ScrollBar_SEVolume.Frame.GetPos().X, ScrollBar_SEVolume.Frame.GetPos().Y - 20), Color.White);
-                        ExitButton.Draw();
-                        if (ExitButton.MouseIsOnThis())
-                            ExitButton.Draw(Color.DarkRed);
-                        RestartButton.Draw();
-                        if (RestartButton.MouseIsOnThis())
-                            RestartButton.Draw(Color.DarkRed);
                         DrawingLayer SCGSample = new DrawingLayer(Costume.GetCostume("SCGSample"), new Point(600, 0), 0.45f);
                         if (Checker.Hearts < 5)
                         {
@@ -1984,6 +2192,21 @@ namespace TestSheet
                         if (MadMoonGauge > 10)
                             SCGSample.SetSprite(Costume.GetCostume("SCG_Crazy"));
                         SCGSample.Draw();
+                        Standard.DrawString("Mouse Sensitivity", new Vector2(ScrollBar_Sensitivity.Frame.GetPos().X, ScrollBar_Sensitivity.Frame.GetPos().Y - 20), Color.White);
+                        ScrollBar_Sensitivity.Draw();
+                        Standard.DrawString(String.Format("{0:0.0}", ScrollBar_Sensitivity.Coefficient + 0.5f), new Vector2(ScrollBar_Sensitivity.Frame.GetPos().X, ScrollBar_Sensitivity.Frame.GetPos().Y+50), Color.White);
+                        Standard.DrawString("(Default:1)", new Vector2(ScrollBar_Sensitivity.Frame.GetPos().X, ScrollBar_Sensitivity.Frame.GetPos().Y + 70), Color.White);
+                        ScrollBar_SongVolume.Draw();
+                        Standard.DrawString("Song Volume", new Vector2(ScrollBar_SongVolume.Frame.GetPos().X, ScrollBar_SongVolume.Frame.GetPos().Y - 20), Color.White);
+                        ScrollBar_SEVolume.Draw();
+                        Standard.DrawString("SE Volume", new Vector2(ScrollBar_SEVolume.Frame.GetPos().X, ScrollBar_SEVolume.Frame.GetPos().Y - 20), Color.White);
+                        //ExitButton.Draw();
+                        //if (ExitButton.MouseIsOnThis())
+                            //ExitButton.Draw(Color.DarkRed);
+                        RestartButton.Draw();
+                        if (RestartButton.MouseIsOnThis())
+                            RestartButton.Draw(Color.DarkRed);
+                      
                         Standard.FrameTimer--;
                     }
                     #endregion
@@ -2059,7 +2282,10 @@ namespace TestSheet
                     }
                     Credit.Draw();
                     if (EndCGList.Count == 1)
+                    {
                         GoBackMenu.Draw(Color.White, Color.Red);
+                        Standard.DrawString(EndingString, new Vector2(GoBackMenu.ButtonGraphic.GetPos().X, GoBackMenu.ButtonGraphic.GetPos().Y+40), Color.White);
+                    }
                     break;
                 case Phase.Dead:
                     Game1.graphics.GraphicsDevice.Viewport = new Viewport(MasterInfo.FullScreen);
@@ -2093,15 +2319,36 @@ namespace TestSheet
                     RetryButton.Draw(Color.White, Color.Red);
 
                     break;
+                case Phase.Extra:
+                    if(ExtraMenualEnabled)
+                    {
+                        DrawingLayer ExtraLayer = new DrawingLayer("ExtraMenual", new Point(0, 0), 0.67f);
+                        ExtraLayer.Draw();
+                        
+                    }
+                    else
+                    {
+                        DrawingLayer ExtraLayer = new DrawingLayer("ShopUI", new Point(0, 0), 0.67f);
+                        ExtraLayer.Draw();
+                        ShopComponent.Draw();
+                        Standard.DrawLight(InShop_GoBackButton.ButtonGraphic.GetBound(), Color.Black, 1f, Standard.LightMode.Absolute);
+                        InShop_GoBackButton.Draw(Color.White, Color.Red);
+
+                    }
+
+
+                    break;
+
             }
             #region Debug Setting
+            /*
             if (Standard.Pressing(Keys.LeftControl, Keys.Q))
                 Standard.DrawString(Cursor.GetPos().X.ToString() + "," + Cursor.GetPos().Y.ToString(), new Vector2(Cursor.GetPos().X - 20, Cursor.GetPos().Y - 30), Color.White);
             if (Standard.Pressing(Keys.LeftControl, Keys.W))
                 Standard.DrawString(Standard.FrameTimer.ToString(), new Vector2(Cursor.GetPos().X - 20, Cursor.GetPos().Y - 30), Color.White);
             if (Standard.Pressing(Keys.LeftControl, Keys.E))
                 Standard.DrawString(Table.m.ToString(), new Vector2(Cursor.GetPos().X - 20, Cursor.GetPos().Y - 30), Color.White);
-
+                */
             #endregion
 
             GameConsole.Draw();
@@ -2568,7 +2815,7 @@ namespace TestSheet
                     GhostAngle = Standard.Random() * 3;
                     MoveAction += Ghost_MoveAction;
                     DrawAction += Ghost_DrawAction;
-                    SDeadAction += () => Tester.KillCard = new DrawingLayer("SDead_22", new Point(0, 0), 0.6f);
+                    SDeadAction += () => Tester.KillCard = new DrawingLayer(Costume.GetCostume("SDead_22"), new Point(0, 0), 0.6f);
                     DrawAddonAction += () =>
                     {
                         if (Standard.FrameTimer % 50 < 25)
@@ -2602,7 +2849,7 @@ namespace TestSheet
                         enemy = new DrawingLayer("Enemy", new Rectangle(x, y, 100, 100));
                     else
                         enemy = new DrawingLayer("Enemy", new Rectangle(x + 200, y + 200, 100, 100));
-                    SDeadAction += () => Tester.KillCard = new DrawingLayer("SDead_11", new Point(0, 0), 0.6f);
+                    SDeadAction += () => Tester.KillCard = new DrawingLayer(Costume.GetCostume("SDead_11"), new Point(0, 0), 0.6f);
                     MoveAction += Rock_MoveAction;
                     DrawAction += Rock_DrawAction;
                     if (Room.Number != 66)
@@ -2632,6 +2879,7 @@ namespace TestSheet
             public void Draw()
             {
                 DrawAction();
+                
                 if (FrozenTimer > 0)
                     Standard.FadeAnimation(new DrawingLayer("frozen", enemy.GetBound()), 8, Color.FloralWhite);
             }
@@ -2785,7 +3033,7 @@ namespace TestSheet
 
                     if (!GameOver && !Checker.LuckCheck())
                     {
-                        Game1.AttachDeadScene(() => Tester.KillCard = new DrawingLayer("SDead_333", new Point(0, 0), 0.6f));
+                        Game1.AttachDeadScene(() => Tester.KillCard = new DrawingLayer(Costume.GetCostume("SDead_333"), new Point(0, 0), 0.6f));
                         //KillerZombieIndex = -1;
                         GameOver = true;
                         Checker.Hearts--;
@@ -3288,7 +3536,20 @@ namespace TestSheet
 
     public static class Checker
     {
-        public static int Hearts = 10;
+        private static SafeInt hearts=new SafeInt(0);
+
+        public static int Hearts {
+            get
+            {
+                return hearts.var;
+            }
+            set
+            {
+                hearts.var = value;
+            }
+
+        }
+
         public static int HeartStack = 0;
         public static int HeartTimer = 0;
 
@@ -3747,6 +4008,7 @@ namespace TestSheet
 
 
                 //Show Menual
+                /*
                 if (Tester.Room.Number == 0 && !Tester.IsEndPhase)
                 {
                     DrawingLayer Menual = new DrawingLayer("Menual", new Point(800, 500), 0.75f);
@@ -3756,6 +4018,15 @@ namespace TestSheet
                         Menual.Draw(Tester.FixedCamera, Color.White);
                     else
                         Menual.Draw(Tester.FixedCamera, Color.Goldenrod);
+                }*/
+                if(Tester.WeaponChangedTimer>0)
+                {
+                    Tester.WeaponChangedTimer--;
+                    if (Tester.IsEndPhase)
+                    {
+                        DrawingLayer d = new DrawingLayer("Weapon_Instruction", new Point(130, 190), 1f);
+                        d.Draw(Color.White * (Tester.WeaponChangedTimer / 20f));
+                    }
                 }
 
 
@@ -3909,6 +4180,8 @@ namespace TestSheet
         public event CardOpenEvent CardOpenEvents;
 
         public static Dictionary<int, string> InfoTable = new Dictionary<int, string>();
+        public static Dictionary<int, string> ExtraInfoTable = new Dictionary<int, string>();
+
         /* Card Index
 		 * 0:Heart 1
 		 * 1:Heart 2
@@ -3938,17 +4211,18 @@ namespace TestSheet
             InfoTable.Add(9, "Luck 1$Chance of avoiding death: 5%$A little clover was put in a book.");
             InfoTable.Add(10, "Luck 2$Chance of avoiding death: 10%$Little clovers were put in a book.");
             InfoTable.Add(11, "Luck 3$Chance of avoiding death: 15%$Little clovers were put in a book.");
-            InfoTable.Add(12, "Soul Harvester$Range+2, AttackSpeed-10%\n\n <Blood Trail> :\n Blood follows Ortolan.\n Get doubled bloodthirst effect.$");
-            InfoTable.Add(13, "Thorn Whip$Range+2.$It's looked like not so much weapon,\n but rather instrument of torture.");
+            InfoTable.Add(12, "Soul Harvester$Range+2, AttackSpeed-10%\n\n <Blood Trail> :\n Blood follows Ortolan.\n Get doubled bloodthirst effect.$The scythe was soaked in blood, crying.");
+            InfoTable.Add(13, "Thorn Whip$Range+2.$It's looked like not so much weapon,\n but rather an instrument of torture.");
             InfoTable.Add(14, "Yomi$Range+999. \n\n <Shadow Hunting> :\n Ortolan Disappears in the darkness.\nTake the monster's position \nafter killing that enemy. $The sword slightly better than \na kitchen knife.");
-            InfoTable.Add(15, "Moonlight$Range-1.\n\n<Sheer Celerity> :\n Get doubled attack-speed. $");
+            InfoTable.Add(15, "Moonlight$Range-1.\n\n<Sheer Celerity> :\n Get doubled attack-speed. $The sword reminded moonlight,\n as shining itself.");
             InfoTable.Add(16, "The World$Range+1.\n\n<Time Stop> :\n Enemies stop while using overclock. $Argent, mystic material was flowing\n inside the sword. ");
             InfoTable.Add(17, "Knife$Default Weapon.$A usual kitchen knife.");
             InfoTable.Add(18, "Yume Diary$Range+1, AttackSpeed-10%\n\n <Yume Drive> :\n While using overclock, \nAttack-speed and Move-speed bulid up. $Dear Yume, you were always with me.\n I love you, Sincerely.");
             InfoTable.Add(50, "Fancy Roulette$6 bullets. Fast reloading. Small hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$This was not edible for them.");
+            InfoTable.Add(51, "Kessler Syndrome$1 bullshit. not Fast reloading. Small hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$The most greatest legacy of the \ngreatest scientist.");
             InfoTable.Add(52, "Good Negociator$2 bullets. Medium reloading. Medium hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$this was not edible.");
             InfoTable.Add(53, "PeaceMaker$1 bullet. Very slow reloading. Very large hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$And then there were none.");
-            InfoTable.Add(54, "Merry Christmas$2 bullet. Slow reloading. large hit-range. \n <Winter is Coming!> :\n The gun freezes" +
+            InfoTable.Add(54, "Merry Christmas$2 bullet. Slow reloading. large hit-range. \n\n <Winter is Coming!> :\n The gun freezes" +
                 " all creatures in its hit-range. \n\nYou can swap weapon by 1,2 keypad\n or mouse wheel.$This was concealed under\n the ridiculous red hat.");
             InfoTable.Add(100, "Dear Ortolan$$Ortolan, we have a party tonight.\n\nA lot of delicacies and amusements " +
                 "\n\nare waiting for you.\n\nPlease come upstairs if you are \n\n ready to enjoy it.\n\n\n Sincerely, Your Best Friend");
@@ -3961,14 +4235,36 @@ namespace TestSheet
             InfoTable.Add(107, "Dear Ortolan$$You don't have to be with us anymore.\n\nWe will let you do all you want.\n\n So, just one thing--don't come upstairs.\n\n\n Sincerely, Your Best Ever Friend");
             InfoTable.Add(108, "Dear Ortolan$$I will tell you about the truth.\n\nThere is no way to go outside.\n\nThis dungeon is underground cavern. \n\n That's why couldn't you see other people.\n\n Killing us is not a solution. \n\n Let's live with each other.");
             InfoTable.Add(109, "Dear....$$You've done a lot to us.\n\n At first you were designed as a meat, \n\nbut now you've survived this far.\n\nWell, we've gathered all together.\n\nLet's dance with each other, a last dance.");
-            InfoTable.Add(666, "Blood Oath$You sacrifice 3 hearts and get 1 card.$");
-
+            InfoTable.Add(666, "Blood Oath$You sacrifice 3 hearts and get 1 item.$This is my pure love.");
+            ExtraInfoTable.Add(666, "Blood Oath$You sacrifice 3 hearts and get 1 item.$You don't have enough hearts. idiot.");
+           
 
         }
 
-        public Card(int Number, CardClass WhatClass)
+        public Card(int Number, CardClass WhatClass, Point CenterPos)
         {
-            //RewardCards.Add(new DrawingLayer("RewardCard_" + Standard.Random(0, 12), CardPos, 0.75f));
+            BackFrameName = WhatClass.ToString() + "Card";
+            Frame = new DrawingLayer(BackFrameName, Tester.CardPos, 0.75f);
+            Frame.SetCenter(CenterPos);
+            FrontFrameName = WhatClass.ToString() + "Card_" + Number;
+            if (IsWeapon())
+                BackFrameName = WhatClass.ToString() + "Card" + "_Weapon";
+            if (GetIndex() >= 3 && GetIndex() <= 11)
+            {
+                BackFrameName = WhatClass.ToString() + "Card" + "_Enchant";
+            }
+            if (Number == 666)
+            {
+                BackFrameName = WhatClass.ToString() + "Card" + "_BloodOath";
+            }
+
+            if (WhatClass == CardClass.Reward)
+                CardOpenEvents += CardRewardEvent;
+        }
+
+        public Card(int Number, CardClass WhatClass) : this(Number, WhatClass, new Point(Tester.CardPos.X + 800, Tester.CardPos.Y))
+        {
+            /*
             BackFrameName = WhatClass.ToString() + "Card";
             Frame = new DrawingLayer(BackFrameName, Tester.CardPos, 0.75f);
             Frame.SetCenter(new Point(Tester.CardPos.X + 800, Tester.CardPos.Y));
@@ -3985,61 +4281,7 @@ namespace TestSheet
             }
 
             if (WhatClass == CardClass.Reward)
-            {
-
-                /*
-                    switch (Number)
-                    {
-                        case 0:
-                            InfoString = "Heart 1: \n\nGet 1 Heart.";
-                            break;
-                        case 1:
-                            InfoString = "Heart 2:\n\nGet 2 Hearts.";
-                            break;
-                        case 2:
-                            InfoString = "Heart 3:\n\nGet 3 Hearts.";
-                            break;
-                        case 3:
-                            InfoString = "Swiftness 1:\n\nSpeed+10%, Attack Speed+7%";
-                            break;
-                        case 4:
-                            InfoString = "Swiftness 2:\n\nSpeed+20%, Attack Speed+15%";
-                            break;
-                        case 5:
-                            InfoString = "Swiftness 3:\n\nSpeed+30%, Attack Speed+25%";
-                            break;
-                        case 6:
-                            InfoString = "Bloodthirst 1:\n\nGet 1 heart when you kill 100. ";
-                            break;
-                        case 7:
-                            InfoString = "Bloodthirst 2:\n\nGet 1 heart when you kill 75. ";
-                            break;
-                        case 8:
-                            InfoString = "Bloodthirst 3:\n\nGet 1 heart when you kill 50. ";
-                            break;
-                        case 9:
-                            InfoString = "Luck 1:\n\nChance of avoiding death: 5%";
-                            break;
-                        case 10:
-                            InfoString = "Luck 2:\n\nChance of avoiding death: 10%";
-                            break;
-                        case 11:
-                            InfoString = "Luck 3:\n\nChance of avoiding death: 15%";
-                            break;
-                        case 12:
-                            InfoString = "Soul Harvester:\n\nRange+2, AttackSpeed-15%\n\n <Blood Flow Acceleration> : Get doubled bloodthirst effect.";
-                            break;
-                        case 15:
-                            InfoString = "Moonlight:\n\nRange-1\n\n<Sheer Celerity> : Get doubled attack-speed. ";
-                            break;
-                        default:
-                            InfoString = "Preparing..";
-                            break;
-                    }*/
-                CardOpenEvents += CardRewardEvent;
-            }
-
-
+                CardOpenEvents += CardRewardEvent;*/
         }
         public bool isOpened()
         {
@@ -4108,6 +4350,8 @@ namespace TestSheet
                     Tester.ShotModeBuffer = false;
                     int temp = Checker.Weapon_Melee;
                     Checker.Weapon_Melee = GetIndex();
+                    if(GetIndex()==12&& Checker.Bloodthirst < 1)
+                            Checker.Bloodthirst = 1;
                     FrontFrameName = "Reward" + "Card_" + temp;
                     Tester.WeaponIconTimer = 30;
                 }
@@ -4117,6 +4361,7 @@ namespace TestSheet
                     Checker.Weapon_Ranged = GetIndex();
                     RemoveTimer = 30;
                     Tester.WeaponIconTimer = 30;
+                    Tester.WeaponChangedTimer = 300;
                 }
          
                 else
@@ -4126,6 +4371,7 @@ namespace TestSheet
                     Checker.Weapon_Ranged = GetIndex();
                     FrontFrameName = "Reward" + "Card_" + temp;
                     Tester.WeaponIconTimer = 30;
+
                 }
                 return;
             }
@@ -4274,6 +4520,7 @@ namespace TestSheet
                         Checker.Luck = 3;
                     Tester.Monolog.RandomAttach("I found a clover.", "Is this helpful?");
                     break;
+       
                 case 666:
                     if (Checker.Hearts>3)
                     {
@@ -4286,7 +4533,11 @@ namespace TestSheet
 
             }
             if (IsWeaponMelee())
+            {
                 Checker.Weapon_Melee = EventNum;
+    
+
+            }
             if (IsWeaponRanged())
                 Checker.Weapon_Ranged = EventNum;
         }
@@ -4357,6 +4608,9 @@ namespace TestSheet
                     //InfoTable.Add(0, "Heart 1%Get 1 Heart.%There was a red bowel\n stuffed with warmness.);
 
                     string[] s = Card.InfoTable[CardIndex].Split('$');
+                    if (CardIndex == 666 && Checker.Hearts <= 3)
+                        s = Card.ExtraInfoTable[CardIndex].Split('$');
+           
                     if (s.Length <= 2)
                         InfoString = Card.InfoTable[CardIndex];
                     else
@@ -4397,6 +4651,7 @@ namespace TestSheet
                        {
                            Standard.DrawString("To equip the weapon, Left-click the card. ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.White);
                            Standard.DrawString("To equip the weapon, Left-click the card. ", new Vector2(InfoFrame.GetPos().X + 50, InfoFrame.GetPos().Y + 400), Color.Red * (Math.Min(Standard.FrameTimer % 60, 60 - Standard.FrameTimer % 60) / 30.0f));
+                          
                        }
                        else if(CardIndex<100)
                        {
@@ -4704,7 +4959,11 @@ namespace TestSheet
 
             if (s.Length >= 2 && s[0] == "c")
             {
-                Costume.CostumeNumber.var = Int32.Parse(s[1]);
+                Costume.CostumeNumber = Int32.Parse(s[1]);
+            }
+            if (s.Length >= 2 && s[0] == "bw")
+            {
+                HeartShop.AddAccount("BW/" + Int32.Parse(s[1]));
             }
         }
 
@@ -4783,28 +5042,19 @@ namespace TestSheet
         {
             get {
                 int value=0;
-                if(Validate())
-                {
-                    List<string> sList = File.ReadAllLines(AccountPath).ToList();
-                    for (int i = 0; i < sList.Count - 1; i++)
-                    {
-                        string[] s = sList[i].Split('/');
-                        if(s[0]=="M")
-                        {
-                          value += Int32.Parse(s[1]);
-                        }
-                    }
-                }
-                else
-                {
-                    value = -1;
-                }
-
+                ReadAccount("M", (i) => { value += i; }, () => { value = -1; });       
                 return value;
             }
         }
 
-        private static string AccountPath = "HeartAccount.txt";
+
+        public static void InitWeapon()
+        {
+            ReadAccount("BW", (i) => { Tester.AddReward(i); }, () => { return; });
+
+        }
+
+        public static string AccountPath = "HeartAccount.txt";
         private static string Seed = "OrtolanIsGreat!_"+System.Security.Principal.WindowsIdentity.GetCurrent().Name;
 
         private static byte[] SHA256_toByte(string inputString)
@@ -4881,6 +5131,31 @@ namespace TestSheet
             return sList[0];
         }
 
+        // M/숫자 : HeartCoin 증감.
+        // BW/숫자 : Weapon 구입
+        // BC/숫자 : Costume 구입
+
+        public static void ReadAccount(string Header, Action<int> ReadAct, Action ErrorAct)
+        {
+            if (Validate())
+            {
+                List<string> sList = File.ReadAllLines(AccountPath).ToList();
+                for (int i = 0; i < sList.Count - 1; i++)
+                {
+                    string[] s = sList[i].Split('/');
+                    if (s[0] == Header)
+                    {
+                        ReadAct(Int32.Parse(s[1]));
+                    }
+                }
+            }
+            else
+            {
+                ErrorAct();
+            }
+
+        
+        }
         public static void AddAccount(string Account)
         {
 
@@ -4926,7 +5201,31 @@ namespace TestSheet
     {
         public static Dictionary<string, string> BunnyCostumeTable=new Dictionary<string, string>();
         public static Dictionary<string, string> MaidCostumeTable = new Dictionary<string, string>();
-        public static SafeInt CostumeNumber=new SafeInt(0);
+        public static SafeInt costumeNumber=new SafeInt(0);
+        public static int CostumeNumber
+        {
+            get
+            {
+                return costumeNumber.var;
+            }
+            set
+            {
+                if(value!=costumeNumber.var)
+                {
+
+                    costumeNumber.var = value;
+                    Tester.player.player.ClearAnimation();
+                    Tester.player.player.AttachAnimation(30, Costume.GetCostume("Player_Ani11"), Costume.GetCostume("Player_Ani12"));
+                }
+                else
+                {
+                    costumeNumber.var = value;
+                }
+
+            }
+
+        }
+
 
         public static void Init()
         {
@@ -4934,12 +5233,17 @@ namespace TestSheet
             BunnyCostumeTable.Add("SCG_Crazy", "SCG_Bunny_Crazy");
             BunnyCostumeTable.Add("SCG_Happy", "SCG_Bunny_Happy");
             BunnyCostumeTable.Add("SCG_Dying", "SCG_Bunny_Dying");
-
+            BunnyCostumeTable.Add("SDead_11","Bunny_Dead_Rock");
+            BunnyCostumeTable.Add("SDead_333", "Bunny_Dead_Fire");
         }
 
         public static string GetCostume(string CostumeName)
         {
-            if (CostumeNumber.var == 1)
+            if(CostumeNumber == 0)
+            {
+                return CostumeName;
+            }
+            if (CostumeNumber == 1)
             {
                 if(BunnyCostumeTable.ContainsKey(CostumeName))
                      return BunnyCostumeTable[CostumeName];
@@ -4948,7 +5252,7 @@ namespace TestSheet
             }
 
 
-            if (CostumeNumber.var == 2&&MaidCostumeTable.ContainsKey(CostumeName))
+            if (CostumeNumber == 2&&MaidCostumeTable.ContainsKey(CostumeName))
                 return MaidCostumeTable[CostumeName];
             return CostumeName;
         }

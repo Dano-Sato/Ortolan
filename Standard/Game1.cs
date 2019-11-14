@@ -12,6 +12,8 @@ using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 
+using System.IO;
+
 namespace TestSheet
 {
     /// <summary>
@@ -74,8 +76,12 @@ namespace TestSheet
 			Game1.content = new LocalizedContentManager(base.Content.ServiceProvider, base.Content.RootDirectory);
 			Standard.LoadContent();
 			tester = new Tester();
-			// TODO: use this.Content to load your game content here
-		}
+            if (!File.Exists(HeartShop.AccountPath))
+            {
+                File.Create(HeartShop.AccountPath).Close();
+            }
+            // TODO: use this.Content to load your game content here
+        }
 
 		/// <summary>
 		/// UnloadContent will be called once per game and is the place to unload
@@ -236,12 +242,12 @@ namespace TestSheet
 					{
 						Tester.bludgers[i].Draw();               
 						Standard.DrawAddon(Tester.bludgers[i].bludger, Color.LightYellow, 1f, "BludgerFace");
-                        if (Tester.bludgers[i].FrozenTimer > 0 && Standard.FrameTimer % 5 == 0)
+                        
+                        if (Tester.bludgers[i].FrozenTimer > 0)
                         {
                             Standard.FadeAnimation(new DrawingLayer("frozen", new Rectangle(Tester.bludgers[i].bludger.GetPos(), new Point(100, 100))), 8, Color.FloralWhite);
-                            return;
                         }
-                        if (!Tester.ShowMenu && !Tester.GameOver && Standard.FrameTimer % 3 == 0)
+                        if (Tester.bludgers[i].FrozenTimer == 0&&!Tester.ShowMenu && !Tester.GameOver && Standard.FrameTimer % 3 == 0)
                         {
                             if (Standard.FrameTimer % 30 < 15)
                                 Standard.FadeAnimation(new DrawingLayer("BludgerFire", new Rectangle(Tester.bludgers[i].bludger.GetPos(), new Point(100, 100))), 8, Tester.Bludger.BludgerColor);
@@ -261,10 +267,17 @@ namespace TestSheet
  );
 
             }
-            #region DEMOSTRING
+            #region Debug Setting : DEMOSTRING
+            /*
             Standard.ViewportSwapDraw(new Viewport(MasterInfo.FullScreen), () => Standard.DrawString(Tester.FixedCamera, "DEMO PLAY", new Vector2(10, 10), Color.White));
-            Standard.ViewportSwapDraw(new Viewport(MasterInfo.FullScreen), () => Standard.DrawString(Tester.FixedCamera, HeartShop.HeartCoin.ToString(), new Vector2(200, 10), Color.White));
+            */
             #endregion
+
+            if (Tester.GamePhase==Tester.Phase.Extra)
+            {
+                Standard.ViewportSwapDraw(new Viewport(MasterInfo.FullScreen), () => Standard.DrawString(Tester.FixedCamera, "Heart Coins : " + Math.Max(HeartShop.HeartCoin,0).ToString(), new Vector2(200, 10), Color.White));
+            }
+           
             base.Draw(gameTime);
          
         }

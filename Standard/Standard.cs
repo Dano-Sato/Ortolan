@@ -400,6 +400,7 @@ namespace TestSheet
 			//FadeAnimation_ColorException.Add(ExampleColor);
 			//제외할 컬러들을 선택한다.
 			FadeAnimation_ColorException.Add(Color.LightSeaGreen);
+            FadeAnimation_ColorException.Add(Color.FloralWhite);
             FadeAnimation_ColorException.Add(ParticleEngine.BloodColor);
 
             //미리 계수를 조정하는 것도 가능하다.

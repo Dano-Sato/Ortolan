@@ -215,6 +215,8 @@ namespace TestSheet
                 AddRangeWeapon(3, 15, 35, 53);//라이플
                 Add(new Rectangle(new Point(493, 66), new Point(400,600)), 9999, "BC/2");
                 Add(new Rectangle(new Point(885, 44), new Point(400, 600)), 100, "BC/1");
+                Add(new Rectangle(new Point(344,525), new Point(90,80)), 0, "G/777");
+
                 Refresh();
             }
 
@@ -224,6 +226,7 @@ namespace TestSheet
                 BoughtComponents.Clear();
                 HeartShop.ReadAccount("BW", (i) => { BoughtComponents.Add(i); }, () => { return; });
                 HeartShop.ReadAccount("BC", (i) => { BoughtComponents.Add(i); }, () => { return; });
+                HeartShop.ReadAccount("G", (i) => { BoughtComponents.Add(i); }, () => { return; });
 
             }
             public static void Add(Rectangle r, int price,string Account)
@@ -249,11 +252,19 @@ namespace TestSheet
             {
                 foreach(DrawingLayer d in Components)
                 {
-                    if(d.MouseJustLeftClickedThis()&&HeartShop.HeartCoin >= ComponentPrices[d]&&!BoughtComponents.Contains(Int32.Parse(ComponentString[d].Split('/')[1])))
+                    if(d.MouseJustLeftClickedThis()&&!BoughtComponents.Contains(Int32.Parse(ComponentString[d].Split('/')[1])))
                     {
-                        HeartShop.AddAccount("M/-" + ComponentPrices[d]);
-                        HeartShop.AddAccount(ComponentString[d]);
-                        Refresh();
+                        if(HeartShop.HeartCoin >= ComponentPrices[d] || ComponentPrices[d]==0)
+                        {
+                            HeartShop.AddAccount("M/-" + ComponentPrices[d]);
+                            HeartShop.AddAccount(ComponentString[d]);
+                            if (ComponentString[d] == "G/777")
+                            {
+                                HeartShop.AddAccount("M/30");
+                            }
+                            Standard.PlayFadedSE("Buy", 0.3f);
+                            Refresh();
+                        }
                     }
                     //if Click d && HeartCoin>=Price[d]
                     //AddAccount("M/-"+Price[d]);
@@ -273,6 +284,11 @@ namespace TestSheet
                         {
                             d.Draw(Color.Red*0.5f);//나중에 Sold Out으로 교체.
                             Standard.DrawString("Sold Out", new Vector2(d.GetCenter().X, d.GetCenter().Y), Color.Blue);
+                            if(ComponentString[d]=="BC/1")
+                            {
+                                Standard.DrawString("Press C,D to change Costume.", new Vector2(d.GetCenter().X-100, d.GetCenter().Y+30), Color.Blue);
+
+                            }
                         }
                         string s = "Price:" + ComponentPrices[d];
                         if (ComponentPrices[d] == 9999)
@@ -638,10 +654,11 @@ namespace TestSheet
                 Dialogs.Add("Well...Ortolan, I didn't mean to. I didn't think you suffered like that.");
                 Dialogs.Add("$Why? Did you think that");
                 Dialogs.Add("$This Artificial one, would not suffer any pain?");
+                Dialogs.Add("$You laughed at me, at my dead body. You need to pay for it.");
                 Dialogs.Add("Sorry, Ortolan.");
                 Dialogs.Add("I apologize...If you want to kill me, do so.");
                 Dialogs.Add("There's nothing left... And I have no power to defeat you.");
-                Dialogs.Add("Go upstairs. You can go OUTSIDE.");
+                Dialogs.Add("You can go upstairs.");
             }
             public static void Update()
             {
@@ -1212,14 +1229,18 @@ namespace TestSheet
                                 Standard.FadeAnimation(new DrawingLayer("Dream", new Rectangle(200, 350, 600, 200)), 90, Color.DarkRed);
                             else
                                 Standard.FadeAnimation(new DrawingLayer("Dream2", new Rectangle(200, 350, 600, 200)), 90, Color.DarkRed);*/
-                            if (!RoomVoiceEnable)
+                            if (!RoomVoiceEnable&&Room.Number!=66)
                             {
-                                /*
                                 double r = Standard.Random();
-                                if (r < 0.5)
+                                if (r < 0.25)
                                     Standard.PlaySE("Voice6");
+                                else if(r<0.5)
+                                    Standard.PlaySE("Voice7");
+                                else if(r<0.75)
+                                    Standard.PlayFadedSE("Thanks1",0.7f);
                                 else
-                                    Standard.PlaySE("Voice7");*/
+                                    Standard.PlaySE("Thanks4");
+
                             }
                         }
                         Room.Set();
@@ -1294,15 +1315,16 @@ namespace TestSheet
                     {
                         HeartShop.AddAccount("M/-10");
                     }
-                       if (Standard.JustPressed(Keys.T))
+                  
+                    if (Standard.JustPressed(Keys.T))
                     {
-                        Score.var=95;
+                        Score.var = 95;
                     }
-                    */
-                    if (Standard.JustPressed(Keys.Z))
+                         if (Standard.JustPressed(Keys.Z))
                     {
                         HeartShop.AddAccount("M/10");
                     }
+                    */
                     #endregion
 
                     if (Standard.JustPressed(Keys.Escape) || Cursor.JustDidScrollButton())//세팅으로
@@ -1314,6 +1336,16 @@ namespace TestSheet
                         ShotModeBuffer = false;
                     if (Standard.JustPressed(Keys.D2))
                         ShotModeBuffer = true;
+
+
+                    if (Standard.JustPressed(Keys.C))
+                    {
+                        Costume.CostumeNumber = 0;
+                    }
+                    if(Standard.JustPressed(Keys.D))
+                    {
+                        HeartShop.ReadAccount("BC", (i) => { if (i == 1) Costume.CostumeNumber = 1; },()=>{ });
+                    }
 
 
                     if (ScrollValueFixTimer == 0 && Cursor.ScrollValueChanged())
@@ -1738,13 +1770,14 @@ namespace TestSheet
                     {
                         Standard.PlayLoopedSong("TutorialSong");
                     }
-                    if (ExtraMenualEnabled && Cursor.JustdidLeftClick())
-                        ExtraMenualEnabled = false;
                     if (!ExtraMenualEnabled)
                     {
                         InShop_GoBackButton.Enable();
                         ShopComponent.Update();
                     }
+                    if (ExtraMenualEnabled && Cursor.JustdidLeftClick())
+                        ExtraMenualEnabled = false;
+                  
                     break;
             }
 
@@ -2017,55 +2050,7 @@ namespace TestSheet
                     }
                     if (MadMoonSelected)
                         Standard.DrawLight(MasterInfo.FullScreen, Color.Red, 0.1f, Standard.LightMode.Absolute);
-
-                    /*스프라이트 바꾸기 장난*/
-                    /*
-					if (ScoreStack != 0 && Score.Get() > 10)
-					{
-						if (Score.Get() % 30 == 23 || Score.Get() % 30 == 24)
-						{
-							for (int i = 0; i < enemies.Count; i++)
-							{
-								enemies[i].enemy.SetSprite("Player_Broken2");
-							}
-						}
-						else if (Score.Get() % 30 == 25)
-						{
-							for (int i = 0; i < enemies.Count; i++)
-							{
-								enemies[i].enemy.SetSprite("Player_V6");
-							}
-						}
-						else if (Score.Get() % 30 == 22 || Score.Get() % 30 == 21)
-						{
-							for (int i = 0; i < enemies.Count; i++)
-							{
-								enemies[i].enemy.SetSprite("Player_Broken");
-							}
-						}
-						if (Score.Get() % 100 == 87)
-						{
-
-							for (int i = 0; i < enemies.Count; i++)
-							{
-								enemies[i].enemy.SetSprite("Tip");
-							}
-						}
-						if (Score.Get() % 70 == 9)
-						{
-							for (int i = 0; i < enemies.Count; i++)
-							{
-								enemies[i].enemy.SetSprite("Player2");
-								Standard.FadeAnimation(enemies[i].enemy, 30, Color.White);
-							}
-						}
-                        
-
-
-					}
-                    */
-                    
-
+                
                     #region 시야처리
                     if (!ShowMenu)
                     {
@@ -2133,19 +2118,7 @@ namespace TestSheet
                         if (Checker.Weapon_Melee == 16 && SlowMode && !ShotMode)
                         {
                             Standard.DrawAddon(PlayerSight, Color.White, 0.1f, "TheWorldClock");
-                        }
-                        /*
-                        if (Standard.FrameTimer % 30 < 15)
-                        {
-                            //Standard.DrawAddon(PlayerSight, Color.White, Zoom_Coefficient * 2, "Con1");
-                            Standard.DrawAddon(PlayerSight, Color.Black, Zoom_Coefficient * 2, "Con1");
-                        }
-                        else
-                        {
-                            //Standard.DrawAddon(PlayerSight, Color.White, Zoom_Coefficient * 2, "Con2");
-                            Standard.DrawAddon(PlayerSight, Color.Black, Zoom_Coefficient * 2, "Con2");
-                        }*/
-
+                        }            
                         if(Sight<0)
                         {
                             Standard.FadeAnimationDraw(ParticleEngine.BloodColor);//별이 사라지는 페이드애니메이션(컬러는 LighteaGreen으로 지정)은 아래 라이트레이어 전에 발생해야 보기 좋으므로 별도로 처리함.
@@ -2341,14 +2314,14 @@ namespace TestSheet
 
             }
             #region Debug Setting
-            /*
+            
             if (Standard.Pressing(Keys.LeftControl, Keys.Q))
                 Standard.DrawString(Cursor.GetPos().X.ToString() + "," + Cursor.GetPos().Y.ToString(), new Vector2(Cursor.GetPos().X - 20, Cursor.GetPos().Y - 30), Color.White);
             if (Standard.Pressing(Keys.LeftControl, Keys.W))
                 Standard.DrawString(Standard.FrameTimer.ToString(), new Vector2(Cursor.GetPos().X - 20, Cursor.GetPos().Y - 30), Color.White);
             if (Standard.Pressing(Keys.LeftControl, Keys.E))
                 Standard.DrawString(Table.m.ToString(), new Vector2(Cursor.GetPos().X - 20, Cursor.GetPos().Y - 30), Color.White);
-                */
+                
             #endregion
 
             GameConsole.Draw();
@@ -3193,9 +3166,8 @@ namespace TestSheet
                         //Standard.PlayLoopedSong("YouDieTheme8");
                         TheIceRoom = false;
                         //Monolog.RandomAttach("...What was that?");
-                        /*
-                        if(RoomVoiceEnable)
-                             Standard.PlaySE("Voice1");*/
+                        //if(RoomVoiceEnable)
+                             //Standard.PlayFadedSE("Room1",0.7f);
                         break;
                     case 14:
                         if (!LiteMode)
@@ -3694,7 +3666,7 @@ namespace TestSheet
                     {
 
                         return Method2D.Distance(Enemy_Center, Cursor.GetPos()) < 200;
-                    }, () => Standard.PlaySE("RifleReload"),
+                    }, () => Standard.PlaySE("SantaReload"),
                     () =>
                     {
                         Standard.PlayFadedSE("FrozenFire", 1f);
@@ -3704,7 +3676,7 @@ namespace TestSheet
                         );
 
                     Tester.Bullets_Max = 2;
-                    Tester.ReloadTime = 300;
+                    Tester.ReloadTime = 150;
 
                     break;
                 case -1:
@@ -5234,6 +5206,7 @@ namespace TestSheet
             BunnyCostumeTable.Add("SCG_Happy", "SCG_Bunny_Happy");
             BunnyCostumeTable.Add("SCG_Dying", "SCG_Bunny_Dying");
             BunnyCostumeTable.Add("SDead_11","Bunny_Dead_Rock");
+            BunnyCostumeTable.Add("SDead_22", "Bunny_Dead_Water");
             BunnyCostumeTable.Add("SDead_333", "Bunny_Dead_Fire");
         }
 

@@ -895,9 +895,9 @@ namespace TestSheet
             Checker.Weapon_Melee = 17;
 
             if (LiteMode)
-                Bludger.BludgerSpeed = 13;
+                Bludger.BludgerSpeed = 10;
             else
-                Bludger.BludgerSpeed = 14;
+                Bludger.BludgerSpeed = 13;
 
             DungeonMaster.Init();
             IsEndPhase = true;
@@ -1396,7 +1396,7 @@ namespace TestSheet
                             if (Checker.Weapon_Melee == 18 && !ShotMode)
                                 Gauge = Math.Max(0, Gauge - 0.003);
                             else
-                                Gauge = Math.Max(0, Gauge - 0.015);
+                                Gauge = Math.Max(0, Gauge - 0.010);
 
                             if (Gauge == 0)
                                 SlowMode = false;
@@ -1405,8 +1405,7 @@ namespace TestSheet
                         }
                         else
                         {
-
-                            Gauge = Math.Min(1, Gauge + 0.003);
+                            Gauge = Math.Min(1, Gauge + 0.006);
                             if ((Checker.Weapon_Melee == 16 && ShotMode) || (Checker.Weapon_Melee == 18 && !ShotMode))
                             {
                                 Gauge = Math.Min(1, Gauge + 0.0015);
@@ -2315,12 +2314,14 @@ namespace TestSheet
             }
             #region Debug Setting
             
+            /*
             if (Standard.Pressing(Keys.LeftControl, Keys.Q))
                 Standard.DrawString(Cursor.GetPos().X.ToString() + "," + Cursor.GetPos().Y.ToString(), new Vector2(Cursor.GetPos().X - 20, Cursor.GetPos().Y - 30), Color.White);
             if (Standard.Pressing(Keys.LeftControl, Keys.W))
                 Standard.DrawString(Standard.FrameTimer.ToString(), new Vector2(Cursor.GetPos().X - 20, Cursor.GetPos().Y - 30), Color.White);
             if (Standard.Pressing(Keys.LeftControl, Keys.E))
                 Standard.DrawString(Table.m.ToString(), new Vector2(Cursor.GetPos().X - 20, Cursor.GetPos().Y - 30), Color.White);
+                */
                 
             #endregion
 
